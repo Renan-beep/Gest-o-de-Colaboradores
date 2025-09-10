@@ -226,6 +226,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_chamadas: {
+        Args: { days_to_keep?: number }
+        Returns: number
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -244,6 +248,10 @@ export type Database = {
       }
       is_management: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_valid_email: {
+        Args: { email: string }
         Returns: boolean
       }
     }
