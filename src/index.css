@@ -1,0 +1,266 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Modern HR Management Design System */
+
+@layer base {
+  :root {
+    /* Core Brand Colors - Modern Corporate Purple/Blue Theme */
+    --background: 240 10% 99%;
+    --foreground: 240 10% 8%;
+
+    /* Card & Surface Colors with subtle gradient feel */
+    --card: 240 50% 98%;
+    --card-foreground: 240 10% 8%;
+
+    /* Interactive Elements */
+    --popover: 240 50% 98%;
+    --popover-foreground: 240 10% 8%;
+
+    /* Primary Brand - Modern Purple/Blue Gradient */
+    --primary: 250 85% 65%;
+    --primary-light: 250 90% 75%;
+    --primary-dark: 250 85% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - Sophisticated Grays */
+    --secondary: 240 20% 96%;
+    --secondary-foreground: 240 10% 20%;
+
+    /* Muted Elements */
+    --muted: 240 20% 95%;
+    --muted-foreground: 240 15% 45%;
+
+    /* Accent - Modern Teal */
+    --accent: 180 85% 55%;
+    --accent-light: 180 85% 65%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Status Colors - More vibrant and modern */
+    --success: 145 75% 50%;
+    --warning: 40 95% 55%;
+    --error: 0 85% 65%;
+    --info: 220 85% 60%;
+
+    /* Enhanced Presence Status Colors */
+    --status-present: 145 75% 50%;
+    --status-absent: 0 85% 65%;
+    --status-vacation: 280 85% 65%;
+    --status-sick: 40 95% 55%;
+    --status-break: 240 15% 50%;
+
+    /* Destructive */
+    --destructive: 0 85% 65%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border & Input */
+    --border: 240 20% 88%;
+    --input: 240 20% 95%;
+    --ring: 250 85% 65%;
+
+    /* Advanced Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(250 85% 65%), hsl(280 85% 70%));
+    --gradient-accent: linear-gradient(135deg, hsl(180 85% 55%), hsl(200 85% 60%));
+    --gradient-surface: linear-gradient(145deg, hsl(240 50% 99%), hsl(240 30% 97%));
+    --gradient-card: linear-gradient(145deg, hsl(240 50% 98%), hsl(240 40% 96%));
+    --gradient-hero: linear-gradient(135deg, hsl(250 85% 65%) 0%, hsl(280 85% 70%) 50%, hsl(200 85% 60%) 100%);
+
+    /* Enhanced Shadows with color tints */
+    --shadow-soft: 0 2px 8px hsl(240 20% 80% / 0.15);
+    --shadow-medium: 0 4px 16px hsl(240 20% 70% / 0.2);
+    --shadow-strong: 0 8px 32px hsl(240 20% 60% / 0.25);
+    --shadow-glow: 0 0 32px hsl(250 85% 65% / 0.15);
+    --shadow-card: 0 4px 12px hsl(240 20% 80% / 0.1);
+
+    /* Animation Variables */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* Spacing & Border Radius */
+    --radius: 0.875rem;
+
+    /* Sidebar with modern styling */
+    --sidebar-background: 240 30% 97%;
+    --sidebar-foreground: 240 15% 25%;
+    --sidebar-primary: 250 85% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 25% 94%;
+    --sidebar-accent-foreground: 240 15% 25%;
+    --sidebar-border: 240 20% 88%;
+    --sidebar-ring: 250 85% 65%;
+  }
+
+  .dark {
+    --background: 240 15% 6%;
+    --foreground: 240 20% 95%;
+
+    --card: 240 15% 8%;
+    --card-foreground: 240 20% 95%;
+
+    --popover: 240 15% 8%;
+    --popover-foreground: 240 20% 95%;
+
+    --primary: 250 85% 70%;
+    --primary-light: 250 85% 80%;
+    --primary-dark: 250 85% 60%;
+    --primary-foreground: 240 15% 6%;
+
+    --secondary: 240 15% 12%;
+    --secondary-foreground: 240 20% 85%;
+
+    --muted: 240 15% 12%;
+    --muted-foreground: 240 15% 60%;
+
+    --accent: 180 85% 60%;
+    --accent-light: 180 85% 70%;
+    --accent-foreground: 240 15% 6%;
+
+    --destructive: 0 85% 70%;
+    --destructive-foreground: 240 15% 6%;
+
+    --border: 240 15% 18%;
+    --input: 240 15% 12%;
+    --ring: 250 85% 70%;
+
+    /* Dark mode gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(250 85% 70%), hsl(280 85% 75%));
+    --gradient-accent: linear-gradient(135deg, hsl(180 85% 60%), hsl(200 85% 65%));
+    --gradient-surface: linear-gradient(145deg, hsl(240 15% 8%), hsl(240 15% 6%));
+    --gradient-card: linear-gradient(145deg, hsl(240 15% 10%), hsl(240 15% 8%));
+    --gradient-hero: linear-gradient(135deg, hsl(250 85% 70%) 0%, hsl(280 85% 75%) 50%, hsl(200 85% 65%) 100%);
+
+    /* Dark shadows */
+    --shadow-soft: 0 2px 8px hsl(240 15% 4% / 0.3);
+    --shadow-medium: 0 4px 16px hsl(240 15% 2% / 0.4);
+    --shadow-strong: 0 8px 32px hsl(240 15% 0% / 0.5);
+    --shadow-glow: 0 0 32px hsl(250 85% 70% / 0.2);
+    --shadow-card: 0 4px 12px hsl(240 15% 2% / 0.2);
+
+    --sidebar-background: 240 15% 4%;
+    --sidebar-foreground: 240 20% 85%;
+    --sidebar-primary: 250 85% 70%;
+    --sidebar-primary-foreground: 240 15% 6%;
+    --sidebar-accent: 240 15% 10%;
+    --sidebar-accent-foreground: 240 20% 85%;
+    --sidebar-border: 240 15% 18%;
+    --sidebar-ring: 250 85% 70%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter antialiased;
+  }
+}
+
+@layer components {
+  /* Enhanced Status Badge Variants */
+  .status-present {
+    @apply bg-success/10 text-success border border-success/20 backdrop-blur-sm;
+  }
+  
+  .status-absent {
+    @apply bg-error/10 text-error border border-error/20 backdrop-blur-sm;
+  }
+  
+  .status-vacation {
+    @apply bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 backdrop-blur-sm;
+  }
+  
+  .status-sick {
+    @apply bg-warning/10 text-warning border border-warning/20 backdrop-blur-sm;
+  }
+  
+  .status-break {
+    @apply bg-muted text-muted-foreground border border-border backdrop-blur-sm;
+  }
+
+  /* Enhanced Card Effects */
+  .card-hover {
+    transition: var(--transition-smooth);
+    @apply hover:shadow-medium hover:-translate-y-2 hover:scale-[1.02];
+  }
+
+  .card-interactive {
+    transition: var(--transition-bounce);
+    @apply hover:shadow-strong hover:-translate-y-3 hover:scale-105 cursor-pointer;
+  }
+
+  /* Gradient Backgrounds */
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+  
+  .gradient-surface {
+    background: var(--gradient-surface);
+  }
+  
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  /* Glass Effect */
+  .glass-effect {
+    @apply bg-background/80 backdrop-blur-md border border-border/50;
+  }
+
+  .glass-card {
+    @apply bg-card/90 backdrop-blur-lg border border-border/30 shadow-soft;
+  }
+
+  /* Glow Effects */
+  .glow-primary {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .glow-hover:hover {
+    box-shadow: var(--shadow-glow);
+    transition: var(--transition-smooth);
+  }
+
+  /* Modern Button Variants */
+  .btn-gradient {
+    @apply gradient-primary text-primary-foreground border-0 shadow-medium hover:shadow-strong;
+    transition: var(--transition-smooth);
+  }
+
+  .btn-glass {
+    @apply glass-effect hover:bg-background/90;
+    transition: var(--transition-smooth);
+  }
+
+  /* Floating Elements */
+  .floating {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Pulse Animation */
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: var(--shadow-glow); }
+    50% { box-shadow: 0 0 20px hsl(250 85% 65% / 0.3); }
+  }
+}
