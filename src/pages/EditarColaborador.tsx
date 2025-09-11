@@ -344,57 +344,129 @@ export default function EditarColaborador() {
 
               <div className="space-y-2">
                 <Label htmlFor="cargo">Cargo</Label>
-                <Input
-                  id="cargo"
-                  value={formData.cargo}
-                  onChange={(e) => handleChange('cargo', e.target.value)}
-                  placeholder="Digite o cargo"
+                <Select 
+                  value={formData.cargo} 
+                  onValueChange={(value) => handleChange('cargo', value)}
                   disabled={!isGerencia}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o cargo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Analista de Logística Sr">Analista de Logística Sr</SelectItem>
+                    <SelectItem value="Assistente de Estoque Jr">Assistente de Estoque Jr</SelectItem>
+                    <SelectItem value="Assistente de Estoque Pl">Assistente de Estoque Pl</SelectItem>
+                    <SelectItem value="Coordenador de Logística">Coordenador de Logística</SelectItem>
+                    <SelectItem value="Encarregado de Estoque">Encarregado de Estoque</SelectItem>
+                    <SelectItem value="Operador de Empilhadeira Jr">Operador de Empilhadeira Jr</SelectItem>
+                    <SelectItem value="Operador de Empilhadeira Pl">Operador de Empilhadeira Pl</SelectItem>
+                    <SelectItem value="Repositor de Estoque">Repositor de Estoque</SelectItem>
+                    <SelectItem value="Supervisor de Estoque">Supervisor de Estoque</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="setor">Setor</Label>
-                <Input
-                  id="setor"
-                  value={formData.setor}
-                  onChange={(e) => handleChange('setor', e.target.value)}
-                  placeholder="Digite o setor"
+                <Select 
+                  value={formData.setor} 
+                  onValueChange={(value) => handleChange('setor', value)}
                   disabled={!isGerencia}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o setor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Armazenagem">Armazenagem</SelectItem>
+                    <SelectItem value="Conferência">Conferência</SelectItem>
+                    <SelectItem value="Controle dos pedidos">Controle dos pedidos</SelectItem>
+                    <SelectItem value="Coordenação">Coordenação</SelectItem>
+                    <SelectItem value="Embalagem">Embalagem</SelectItem>
+                    <SelectItem value="Encarregado">Encarregado</SelectItem>
+                    <SelectItem value="Expedição">Expedição</SelectItem>
+                    <SelectItem value="Garantia">Garantia</SelectItem>
+                    <SelectItem value="Inventário">Inventário</SelectItem>
+                    <SelectItem value="Logística">Logística</SelectItem>
+                    <SelectItem value="Operador de empilhadeira">Operador de empilhadeira</SelectItem>
+                    <SelectItem value="Recebimento">Recebimento</SelectItem>
+                    <SelectItem value="Ressuprimento">Ressuprimento</SelectItem>
+                    <SelectItem value="Retira">Retira</SelectItem>
+                    <SelectItem value="SAC">SAC</SelectItem>
+                    <SelectItem value="Separação">Separação</SelectItem>
+                    <SelectItem value="Separação Retira">Separação Retira</SelectItem>
+                    <SelectItem value="Supervisão">Supervisão</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="subsetor">Subsetor</Label>
-                <Input
-                  id="subsetor"
-                  value={formData.subsetor}
-                  onChange={(e) => handleChange('subsetor', e.target.value)}
-                  placeholder="Digite o subsetor"
+                <Select 
+                  value={formData.subsetor} 
+                  onValueChange={(value) => handleChange('subsetor', value)}
                   disabled={!isGerencia}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o subsetor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Estado">Estado</SelectItem>
+                    <SelectItem value="Gaiola/Retorno estoque">Gaiola/Retorno estoque</SelectItem>
+                    <SelectItem value="RAPDO">RAPDO</SelectItem>
+                    <SelectItem value="Ressuprimento">Ressuprimento</SelectItem>
+                    <SelectItem value="Transferências">Transferências</SelectItem>
+                    <SelectItem value="Transferências/Vendas">Transferências/Vendas</SelectItem>
+                    <SelectItem value="Transportadora">Transportadora</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="lideranca">Liderança</Label>
-                <Input
-                  id="lideranca"
-                  value={formData.lideranca}
-                  onChange={(e) => handleChange('lideranca', e.target.value)}
-                  placeholder="Digite a liderança"
+                <Select 
+                  value={formData.lideranca} 
+                  onValueChange={(value) => handleChange('lideranca', value)}
                   disabled={!isGerencia}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a liderança" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Alexson de Moura Dettmann">Alexson de Moura Dettmann</SelectItem>
+                    <SelectItem value="Almir Ribeiro de Queiroz">Almir Ribeiro de Queiroz</SelectItem>
+                    <SelectItem value="Arivaldo Arlindo da Silva">Arivaldo Arlindo da Silva</SelectItem>
+                    <SelectItem value="Bruno Martins Euzebio">Bruno Martins Euzebio</SelectItem>
+                    <SelectItem value="Carlos Eduardo Cavalcantes da Silva">Carlos Eduardo Cavalcantes da Silva</SelectItem>
+                    <SelectItem value="Davisson da Costa Rebuli">Davisson da Costa Rebuli</SelectItem>
+                    <SelectItem value="Josimar Santos Silva">Josimar Santos Silva</SelectItem>
+                    <SelectItem value="Klaine Xavier da Silva Martins">Klaine Xavier da Silva Martins</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="turno">Turno</Label>
-                <Input
-                  id="turno"
-                  value={formData.turno}
-                  onChange={(e) => handleChange('turno', e.target.value)}
-                  placeholder="Ex: (12:45 - 22:00)"
+                <Select 
+                  value={formData.turno} 
+                  onValueChange={(value) => handleChange('turno', value)}
                   disabled={!isGerencia}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o turno" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="06:00 - 15:15">06:00 - 15:15</SelectItem>
+                    <SelectItem value="06:00 - 16:03">06:00 - 16:03</SelectItem>
+                    <SelectItem value="07:00 - 17:03">07:00 - 17:03</SelectItem>
+                    <SelectItem value="08:00 - 17:15">08:00 - 17:15</SelectItem>
+                    <SelectItem value="08:00 - 18:03">08:00 - 18:03</SelectItem>
+                    <SelectItem value="10:00 - 20:03">10:00 - 20:03</SelectItem>
+                    <SelectItem value="10:45 - 20:03">10:45 - 20:03</SelectItem>
+                    <SelectItem value="12:00 - 22:03">12:00 - 22:03</SelectItem>
+                    <SelectItem value="12:45 - 22:00">12:45 - 22:00</SelectItem>
+                    <SelectItem value="22:00 - 06:52">22:00 - 06:52</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -439,24 +511,44 @@ export default function EditarColaborador() {
 
               <div className="space-y-2">
                 <Label htmlFor="horario_almoco">Horário de Almoço</Label>
-                <Input
-                  id="horario_almoco"
-                  value={formData.horario_almoco}
-                  onChange={(e) => handleChange('horario_almoco', e.target.value)}
-                  placeholder="Ex: 12:00 - 13:00"
+                <Select 
+                  value={formData.horario_almoco} 
+                  onValueChange={(value) => handleChange('horario_almoco', value)}
                   disabled={!isGerencia}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o horário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="01:30 - 02:45">01:30 - 02:45</SelectItem>
+                    <SelectItem value="11:00 - 12:15">11:00 - 12:15</SelectItem>
+                    <SelectItem value="11:45 - 13:00">11:45 - 13:00</SelectItem>
+                    <SelectItem value="12:15 - 13:30">12:15 - 13:30</SelectItem>
+                    <SelectItem value="13:00 - 14:15">13:00 - 14:15</SelectItem>
+                    <SelectItem value="14:45 - 16:00">14:45 - 16:00</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="horario_cafe">Horário do Café</Label>
-                <Input
-                  id="horario_cafe"
-                  value={formData.horario_cafe}
-                  onChange={(e) => handleChange('horario_cafe', e.target.value)}
-                  placeholder="Ex: 15:00 - 15:15"
+                <Select 
+                  value={formData.horario_cafe} 
+                  onValueChange={(value) => handleChange('horario_cafe', value)}
                   disabled={!isGerencia}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o horário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="05:00 - 05:10">05:00 - 05:10</SelectItem>
+                    <SelectItem value="15:00 - 15:10">15:00 - 15:10</SelectItem>
+                    <SelectItem value="15:15 - 15:25">15:15 - 15:25</SelectItem>
+                    <SelectItem value="15:30 - 15:40">15:30 - 15:40</SelectItem>
+                    <SelectItem value="17:00 - 17:10">17:00 - 17:10</SelectItem>
+                    <SelectItem value="19:00 - 19:10">19:00 - 19:10</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
