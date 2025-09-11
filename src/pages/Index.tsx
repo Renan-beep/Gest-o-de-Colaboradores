@@ -177,13 +177,45 @@ const Index = () => {
 
       {/* Enhanced Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total de Colaboradores" value={loading ? '...' : stats.totalColaboradores} subtitle="Ativos no sistema" icon={Users} variant="primary" loading={loading} className="animate-slide-in" />
+        <StatCard 
+          title="Total de Colaboradores" 
+          value={loading ? '...' : (stats.totalColaboradores + stats.afastados)} 
+          subtitle="Todos os colaboradores" 
+          icon={Users} 
+          variant="primary" 
+          loading={loading} 
+          className="animate-slide-in" 
+        />
         
-        <StatCard title="Colaboradores Afastados" value={loading ? '...' : stats.afastados} subtitle="Temporariamente ausentes" icon={UserX} variant="error" loading={loading} className="animate-slide-in" />
+        <StatCard 
+          title="Colaboradores Ativos" 
+          value={loading ? '...' : stats.totalColaboradores} 
+          subtitle="Trabalhando no sistema" 
+          icon={UserCheck} 
+          variant="success" 
+          loading={loading} 
+          className="animate-slide-in" 
+        />
         
-        <StatCard title="Presentes Hoje" value={loading ? '...' : stats.presentesHoje} subtitle="Registraram presença" icon={Clock} variant="success" loading={loading} className="animate-slide-in" />
+        <StatCard 
+          title="Colaboradores Afastados" 
+          value={loading ? '...' : stats.afastados} 
+          subtitle="Temporariamente ausentes" 
+          icon={UserX} 
+          variant="error" 
+          loading={loading} 
+          className="animate-slide-in" 
+        />
         
-        <StatCard title="Taxa de Presença" value={loading ? '...' : `${stats.taxaPresenca.toFixed(1)}%`} subtitle="Média do dia atual" icon={TrendingUp} variant="default" loading={loading} className="animate-slide-in" />
+        <StatCard 
+          title="Taxa de Presença" 
+          value={loading ? '...' : `${stats.taxaPresenca.toFixed(1)}%`} 
+          subtitle="Média do dia atual" 
+          icon={TrendingUp} 
+          variant="default" 
+          loading={loading} 
+          className="animate-slide-in" 
+        />
       </div>
 
       {/* Quick Actions */}
