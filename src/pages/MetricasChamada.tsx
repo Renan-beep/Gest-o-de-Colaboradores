@@ -47,6 +47,7 @@ import {
 import { AdvancedMetricsCard } from "@/components/stats/AdvancedMetricsCard"
 import { DateRangeFilter } from "@/components/stats/DateRangeFilter"
 import { StatCard } from "@/components/stats/StatCard"
+import HistoricoPendencias from "@/components/dashboard/HistoricoPendencias"
 
 interface MetricasSemana {
   semana: string
@@ -757,6 +758,9 @@ export default function MetricasChamada() {
           })()}
         </CardContent>
       </Card>
+
+      {/* Histórico de Pendências Mensais */}
+      <HistoricoPendencias />
     </div>
   )
 }

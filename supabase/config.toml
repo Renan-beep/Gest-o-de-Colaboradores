@@ -1,1 +1,4 @@
 project_id = "lctpfdhpplkxgkyiugik"
+
+[functions.processar-fechamento-mensal]
+verify_jwt = false

@@ -106,6 +106,33 @@ export type Database = {
         }
         Relationships: []
       }
+      historico_chamadas_pendentes: {
+        Row: {
+          created_at: string
+          data_fechamento: string
+          id: string
+          mes_ano: string
+          total_pendentes: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_fechamento?: string
+          id?: string
+          mes_ano: string
+          total_pendentes?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_fechamento?: string
+          id?: string
+          mes_ano?: string
+          total_pendentes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -252,6 +279,14 @@ export type Database = {
       }
       is_valid_email: {
         Args: { email: string }
+        Returns: boolean
+      }
+      processar_fechamento_mensal: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      verificar_limpeza_mensal: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
     }
