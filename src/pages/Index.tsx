@@ -32,8 +32,30 @@ const Index = () => {
     porHorarioCafe: {} as Record<string, number>
   });
   const [loading, setLoading] = useState(true);
+  
   useEffect(() => {
     fetchStats();
+    
+    // Setup real-time subscription for colaboradores table
+    const channel = supabase
+      .channel('colaboradores-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'colaboradores'
+        },
+        () => {
+          // Refresh stats when collaborators table changes
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
   const fetchStats = async () => {
     try {
