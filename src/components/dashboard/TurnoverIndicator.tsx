@@ -35,13 +35,12 @@ export default function TurnoverIndicator() {
 
       if (colaboradoresError) throw colaboradoresError
 
-      // Dados mockados de demissões até que a tabela seja configurada
-      const demissoesMock = [
-        { ano: 2024, demissoes: 3 },
-        { ano: 2023, demissoes: 8 },
-        { ano: 2022, demissoes: 5 },
-        { ano: 2021, demissoes: 12 }
-      ]
+      // Buscar demissões reais
+      const { data: demissoesData, error: demissoesError } = await supabase
+        .from('demissoes')
+        .select('data_demissao')
+
+      if (demissoesError) throw demissoesError
 
       // Agrupar admissões por ano
       const admissoesPorAno: { [key: number]: number } = {}
@@ -55,17 +54,33 @@ export default function TurnoverIndicator() {
         }
       })
 
+      // Agrupar demissões por ano
+      const demissoesPorAno: { [key: number]: number } = {}
+      
+      demissoesData?.forEach(demissao => {
+        const ano = new Date(demissao.data_demissao).getFullYear()
+        if (!isNaN(ano)) {
+          demissoesPorAno[ano] = (demissoesPorAno[ano] || 0) + 1
+        }
+      })
+
       // Obter anos disponíveis (apenas 2024 em diante)
       const anosUnicos = Array.from(new Set([
         ...Object.keys(admissoesPorAno).map(Number),
-        ...demissoesMock.map(d => d.ano)
+        ...Object.keys(demissoesPorAno).map(Number)
       ])).filter(ano => ano >= 2024).sort((a, b) => b - a)
 
       setAnosDisponiveis(anosUnicos)
 
+      // Se não há anos ou o ano selecionado não está na lista, usar o mais recente ou atual
+      if (anosUnicos.length > 0 && !anosUnicos.includes(anoSelecionado)) {
+        setAnoSelecionado(anosUnicos[0])
+        return
+      }
+
       // Calcular dados para o ano selecionado
       const admissoes = admissoesPorAno[anoSelecionado] || 0
-      const demissoes = demissoesMock.find(d => d.ano === anoSelecionado)?.demissoes || 0
+      const demissoes = demissoesPorAno[anoSelecionado] || 0
       const totalColaboradores = colaboradores?.length || 1
       const turnover = totalColaboradores > 0 ? ((demissoes / totalColaboradores) * 100) : 0
       const saldo = admissoes - demissoes

@@ -3,48 +3,75 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { UserMinus, Calendar } from "lucide-react"
+import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 
 interface DemissaoHistorico {
   id: string
-  matricula: string
-  colaborador: string
-  cargo: string
-  setor: string
-  motivo_demissao: string
+  colaborador_id: string
   data_demissao: string
+  motivo: string
+  tipo_demissao: string
+  observacoes?: string
+  colaboradores?: {
+    matricula: string
+    colaborador: string
+    cargo: string
+    setor: string
+  }
 }
 
 export default function HistoricoDemissoes() {
-  // Dados mockados até que a tabela seja configurada no Supabase
-  const [demissoes] = useState<DemissaoHistorico[]>([
-    {
-      id: "1",
-      matricula: "001234",
-      colaborador: "João Silva Santos",
-      cargo: "Operador de Produção",
-      setor: "Produção",
-      motivo_demissao: "Iniciativa empregadora/sem justa causa",
-      data_demissao: "2024-01-15T10:30:00Z"
-    },
-    {
-      id: "2", 
-      matricula: "005678",
-      colaborador: "Maria Oliveira Costa",
-      cargo: "Assistente Administrativo",
-      setor: "Administrativo",
-      motivo_demissao: "Fim do contrato de trabalho",
-      data_demissao: "2024-01-10T14:20:00Z"
-    },
-    {
-      id: "3",
-      matricula: "002345",
-      colaborador: "Carlos Eduardo Lima",
-      cargo: "Técnico de Manutenção", 
-      setor: "Manutenção",
-      motivo_demissao: "Transferência para outra filial",
-      data_demissao: "2024-01-05T09:15:00Z"
+  const { toast } = useToast()
+  const [demissoes, setDemissoes] = useState<DemissaoHistorico[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchDemissoes()
+  }, [])
+
+  const fetchDemissoes = async () => {
+    try {
+      // Buscar demissões
+      const { data: demissoesData, error: demissoesError } = await supabase
+        .from('demissoes')
+        .select('*')
+        .order('data_demissao', { ascending: false })
+        .limit(10)
+
+      if (demissoesError) throw demissoesError
+
+      if (!demissoesData || demissoesData.length === 0) {
+        setDemissoes([])
+        return
+      }
+
+      // Buscar dados dos colaboradores
+      const colaboradorIds = demissoesData.map(d => d.colaborador_id)
+      const { data: colaboradoresData, error: colaboradoresError } = await supabase
+        .from('colaboradores')
+        .select('id, matricula, colaborador, cargo, setor')
+        .in('id', colaboradorIds)
+
+      if (colaboradoresError) throw colaboradoresError
+
+      // Combinar os dados
+      const demissoesComColaboradores = demissoesData.map(demissao => ({
+        ...demissao,
+        colaboradores: colaboradoresData?.find(c => c.id === demissao.colaborador_id) || null
+      }))
+
+      setDemissoes(demissoesComColaboradores)
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar demissões: " + error.message,
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
     }
-  ])
+  }
 
   const formatarData = (dataString: string) => {
     const data = new Date(dataString)
@@ -55,11 +82,46 @@ export default function HistoricoDemissoes() {
     })
   }
 
-  const getMotivoColor = (motivo: string) => {
-    if (motivo.includes("justa causa")) return "destructive"
-    if (motivo.includes("Transferência")) return "secondary"
-    if (motivo.includes("Fim do contrato")) return "outline"
-    return "default"
+  const getMotivoColor = (tipo: string) => {
+    switch (tipo) {
+      case 'justa_causa': return "destructive"
+      case 'pedido': return "secondary"
+      case 'fim_contrato': return "outline"
+      case 'aposentadoria': return "default"
+      default: return "default"
+    }
+  }
+
+  const formatarTipo = (tipo: string) => {
+    const tipos: Record<string, string> = {
+      'pedido': 'Pedido do Funcionário',
+      'justa_causa': 'Demissão por Justa Causa',
+      'sem_justa_causa': 'Demissão sem Justa Causa',
+      'fim_contrato': 'Fim de Contrato',
+      'aposentadoria': 'Aposentadoria'
+    }
+    return tipos[tipo] || tipo
+  }
+
+  if (loading) {
+    return (
+      <Card className="shadow-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserMinus className="w-5 h-5 text-destructive" />
+            Últimas Demissões
+          </CardTitle>
+          <CardDescription>Carregando...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-12 bg-muted animate-pulse rounded" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -83,7 +145,7 @@ export default function HistoricoDemissoes() {
                 <TableHead>Cargo</TableHead>
                 <TableHead>Setor</TableHead>
                 <TableHead>Data</TableHead>
-                <TableHead>Motivo</TableHead>
+                <TableHead>Tipo</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -96,10 +158,12 @@ export default function HistoricoDemissoes() {
               ) : (
                 demissoes.map((demissao) => (
                   <TableRow key={demissao.id}>
-                    <TableCell className="font-medium">{demissao.colaborador}</TableCell>
-                    <TableCell>{demissao.matricula}</TableCell>
-                    <TableCell>{demissao.cargo}</TableCell>
-                    <TableCell>{demissao.setor}</TableCell>
+                    <TableCell className="font-medium">
+                      {demissao.colaboradores?.colaborador || 'N/A'}
+                    </TableCell>
+                    <TableCell>{demissao.colaboradores?.matricula || 'N/A'}</TableCell>
+                    <TableCell>{demissao.colaboradores?.cargo || 'N/A'}</TableCell>
+                    <TableCell>{demissao.colaboradores?.setor || 'N/A'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-muted-foreground" />
@@ -107,8 +171,8 @@ export default function HistoricoDemissoes() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getMotivoColor(demissao.motivo_demissao)} className="text-xs">
-                        {demissao.motivo_demissao}
+                      <Badge variant={getMotivoColor(demissao.tipo_demissao)} className="text-xs">
+                        {formatarTipo(demissao.tipo_demissao)}
                       </Badge>
                     </TableCell>
                   </TableRow>

@@ -106,6 +106,39 @@ export type Database = {
         }
         Relationships: []
       }
+      demissoes: {
+        Row: {
+          colaborador_id: string
+          created_at: string
+          data_demissao: string
+          id: string
+          motivo: string | null
+          observacoes: string | null
+          tipo_demissao: string
+          updated_at: string
+        }
+        Insert: {
+          colaborador_id: string
+          created_at?: string
+          data_demissao: string
+          id?: string
+          motivo?: string | null
+          observacoes?: string | null
+          tipo_demissao: string
+          updated_at?: string
+        }
+        Update: {
+          colaborador_id?: string
+          created_at?: string
+          data_demissao?: string
+          id?: string
+          motivo?: string | null
+          observacoes?: string | null
+          tipo_demissao?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       historico_chamadas_pendentes: {
         Row: {
           created_at: string
