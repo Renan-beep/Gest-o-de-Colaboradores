@@ -65,8 +65,8 @@ const Index = () => {
         error: colaboradoresError
       } = await supabase.from('colaboradores').select('*').order('colaborador');
       if (colaboradoresError) throw colaboradoresError;
-      const totalColaboradores = colaboradores?.filter(c => c.status === 'Ativo').length || 0;
-      const afastados = colaboradores?.filter(c => c.status === 'Afastado').length || 0;
+      const totalColaboradores = colaboradores?.filter(c => c.status?.toLowerCase() === 'ativo').length || 0;
+      const afastados = colaboradores?.filter(c => c.status?.toLowerCase() === 'afastado').length || 0;
 
       // Calcular indicadores
       const porSetor: Record<string, number> = {};
@@ -95,7 +95,9 @@ const Index = () => {
         }
 
         // Por status
-        porStatus[colaborador.status] = (porStatus[colaborador.status] || 0) + 1;
+        if (colaborador.status) {
+          porStatus[colaborador.status] = (porStatus[colaborador.status] || 0) + 1;
+        }
 
         // Por cargo
         if (colaborador.cargo) {
