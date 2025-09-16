@@ -175,15 +175,29 @@ export default function ChamadaSabado() {
     const month = today.getMonth()
     const saturdays = []
     
-    for (let day = 1; day <= 31; day++) {
-      const date = new Date(year, month, day)
-      if (date.getMonth() !== month) break
-      if (date.getDay() === 6) {
-        saturdays.push(date.toISOString().split('T')[0])
+    // Buscar próximos sábados incluindo mês atual e próximo mês
+    for (let monthOffset = 0; monthOffset <= 1; monthOffset++) {
+      const targetMonth = month + monthOffset
+      const targetYear = targetMonth > 11 ? year + 1 : year
+      const normalizedMonth = targetMonth > 11 ? 0 : targetMonth
+      
+      const daysInMonth = new Date(targetYear, normalizedMonth + 1, 0).getDate()
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(targetYear, normalizedMonth, day)
+        if (date.getDay() === 6) {
+          saturdays.push(date.toISOString().split('T')[0])
+        }
       }
     }
     
-    return saturdays
+    // Filtrar apenas sábados futuros ou do dia atual
+    return saturdays.filter(saturday => {
+      const saturdayDate = new Date(saturday + 'T00:00:00')
+      const todayDate = new Date()
+      todayDate.setHours(0, 0, 0, 0)
+      return saturdayDate >= todayDate
+    }).slice(0, 8) // Máximo 8 próximos sábados
   }
 
   const getPendingColaboradores = () => {
