@@ -161,14 +161,8 @@ export default function Chamada() {
       // Identificar datas com pendências (apenas datas que têm pelo menos 1 chamada registrada)
       const datesWithPending: string[] = []
       
-      // Verificar apenas as datas que têm registros de chamada (excluir domingos)
+      // Verificar apenas as datas que têm registros de chamada
       Object.keys(chamadasByDate).forEach(dateStr => {
-        const dateObj = new Date(dateStr + 'T00:00:00')
-        const dayOfWeek = dateObj.getDay()
-        
-        // Pular domingos (0 = domingo)
-        if (dayOfWeek === 0) return
-        
         const chamadasNaData = chamadasByDate[dateStr]
         
         // Verificar se há colaboradores ativos sem chamada nesta data
@@ -415,37 +409,15 @@ export default function Chamada() {
               Pendências da Chamada
             </CardTitle>
             <CardDescription className="text-orange-600">
-              {pendingColaboradores.length} colaborador(es) ainda não tiveram presença registrada. Verifique com as lideranças responsáveis.
+              {pendingColaboradores.length} colaborador(es) ainda não tiveram presença registrada
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {/* Agrupar por liderança */}
-              {Object.entries(
-                pendingColaboradores.reduce((acc, col) => {
-                  const lideranca = col.lideranca || 'Sem Liderança'
-                  if (!acc[lideranca]) acc[lideranca] = []
-                  acc[lideranca].push(col)
-                  return acc
-                }, {} as { [key: string]: typeof pendingColaboradores })
-              ).map(([lideranca, colaboradores]) => (
-                <div key={lideranca} className="border-l-4 border-orange-300 pl-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300">
-                      Liderança: {lideranca}
-                    </Badge>
-                    <span className="text-sm text-orange-600">
-                      ({colaboradores.length} colaborador{colaboradores.length > 1 ? 'es' : ''})
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    {colaboradores.map(col => (
-                      <div key={col.id} className="flex items-center justify-between p-2 bg-white rounded border">
-                        <span className="font-medium">{col.colaborador}</span>
-                        <span className="text-xs text-muted-foreground">Mat: {col.matricula}</span>
-                      </div>
-                    ))}
-                  </div>
+            <div className="space-y-2">
+              {pendingColaboradores.map(col => (
+                <div key={col.id} className="flex items-center justify-between p-2 bg-white rounded border">
+                  <span className="font-medium">{col.colaborador}</span>
+                  <span className="text-sm text-muted-foreground">Liderança: {col.lideranca}</span>
                 </div>
               ))}
             </div>

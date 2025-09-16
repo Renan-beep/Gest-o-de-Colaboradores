@@ -49,6 +49,13 @@ import { DateRangeFilter } from "@/components/stats/DateRangeFilter"
 import { StatCard } from "@/components/stats/StatCard"
 import HistoricoPendencias from "@/components/dashboard/HistoricoPendencias"
 
+interface LiderancaPendencia {
+  lideranca: string
+  colaboradores: number
+  diasPendentes: number
+  ultimaData: string
+}
+
 interface MetricasSemana {
   semana: string
   totalColaboradores: number
@@ -86,6 +93,7 @@ export default function MetricasChamada() {
   const [metricas, setMetricas] = useState<MetricasSemana[]>([])
   const [metricasMensais, setMetricasMensais] = useState<MetricasMes[]>([])
   const [metricasDiarias, setMetricasDiarias] = useState<MetricasDia[]>([])
+  const [liderancasPendencias, setLiderancasPendencias] = useState<LiderancaPendencia[]>([])
   const [loading, setLoading] = useState(true)
   const [viewType, setViewType] = useState<"semanal" | "mensal" | "diario">("mensal")
   const [startDate, setStartDate] = useState<Date>(subDays(new Date(), 30))
@@ -93,6 +101,7 @@ export default function MetricasChamada() {
 
   useEffect(() => {
     fetchMetricas()
+    fetchLiderancasPendencias()
   }, [startDate, endDate, viewType])
 
   const fetchMetricas = async () => {
@@ -283,6 +292,81 @@ export default function MetricasChamada() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchLiderancasPendencias = async () => {
+    try {
+      if (!startDate || !endDate) return
+
+      // Buscar colaboradores ativos com suas lideranças
+      const { data: colaboradores, error: colaboradoresError } = await supabase
+        .from('colaboradores')
+        .select('id, colaborador, lideranca')
+        .eq('status', 'Ativo')
+
+      if (colaboradoresError) throw colaboradoresError
+
+      // Buscar chamadas no período
+      const { data: chamadas, error: chamadasError } = await supabase
+        .from('chamadas')
+        .select('colaborador_id, data, status')
+        .gte('data', startDate.toISOString().split('T')[0])
+        .lte('data', endDate.toISOString().split('T')[0])
+
+      if (chamadasError) throw chamadasError
+
+      // Mapear colaboradores por ID
+      const colaboradoresMap = new Map(
+        colaboradores?.map(col => [col.id, col]) || []
+      )
+
+      // Agrupar colaboradores por liderança
+      const liderancaGroups = colaboradores?.reduce((acc, col) => {
+        const lideranca = col.lideranca || 'Sem Liderança'
+        if (!acc[lideranca]) acc[lideranca] = []
+        acc[lideranca].push(col)
+        return acc
+      }, {} as { [key: string]: typeof colaboradores }) || {}
+
+      // Criar conjunto de colaboradores que fizeram chamada
+      const colaboradoresComChamada = new Set(
+        chamadas?.map(c => c.colaborador_id) || []
+      )
+
+      // Calcular pendências por liderança
+      const pendencias: LiderancaPendencia[] = Object.entries(liderancaGroups).map(([lideranca, cols]) => {
+        const colaboradoresSemChamada = cols.filter(col => !colaboradoresComChamada.has(col.id))
+        
+        // Calcular dias únicos com pendências (últimos 7 dias úteis)
+        const today = new Date()
+        const diasUteis = []
+        for (let i = 0; i < 7; i++) {
+          const dia = new Date(today)
+          dia.setDate(today.getDate() - i)
+          const dayOfWeek = dia.getDay()
+          // Pular finais de semana (sábado = 6, domingo = 0)
+          if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            diasUteis.push(dia.toISOString().split('T')[0])
+          }
+        }
+
+        const diasComPendencia = diasUteis.filter(dia => {
+          return cols.some(col => !chamadas?.some(ch => ch.colaborador_id === col.id && ch.data === dia))
+        })
+
+        return {
+          lideranca,
+          colaboradores: colaboradoresSemChamada.length,
+          diasPendentes: diasComPendencia.length,
+          ultimaData: diasUteis[0] || ''
+        }
+      }).filter(p => p.colaboradores > 0 || p.diasPendentes > 0)
+      .sort((a, b) => b.colaboradores - a.colaboradores)
+
+      setLiderancasPendencias(pendencias)
+    } catch (error: any) {
+      console.error('Erro ao buscar pendências de liderança:', error)
     }
   }
 
@@ -756,6 +840,64 @@ export default function MetricasChamada() {
               </div>
             )
           })()}
+        </CardContent>
+      </Card>
+
+      {/* Lideranças com Pendências */}
+      <Card className="shadow-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            Lideranças com Pendências de Chamada
+          </CardTitle>
+          <CardDescription>
+            Lideranças que possuem colaboradores sem chamada registrada
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="h-[200px] flex items-center justify-center">
+              <div className="text-muted-foreground">Carregando pendências...</div>
+            </div>
+          ) : liderancasPendencias.length > 0 ? (
+            <div className="space-y-4">
+              {liderancasPendencias.map((lideranca, index) => (
+                <div key={lideranca.lideranca} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",
+                      index < 3 ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"
+                    )}>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <div className="font-medium">{lideranca.lideranca}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {lideranca.colaboradores} colaborador{lideranca.colaboradores > 1 ? 'es' : ''} sem chamada
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant={lideranca.diasPendentes > 3 ? "destructive" : "secondary"}>
+                      {lideranca.diasPendentes} dia{lideranca.diasPendentes > 1 ? 's' : ''} pendente{lideranca.diasPendentes > 1 ? 's' : ''}
+                    </Badge>
+                    {lideranca.ultimaData && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Última data: {new Date(lideranca.ultimaData).toLocaleDateString('pt-BR')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-[100px] flex items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
+                <div>Nenhuma pendência de chamada encontrada!</div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

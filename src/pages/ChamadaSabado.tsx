@@ -3,6 +3,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { 
   CalendarCheck, 
@@ -11,7 +15,8 @@ import {
   Filter,
   AlertTriangle,
   CheckCircle,
-  X
+  X,
+  CalendarIcon
 } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 
@@ -26,7 +31,7 @@ interface Colaborador {
 
 export default function ChamadaSabado() {
   const { toast } = useToast()
-  const [selectedSaturday, setSelectedSaturday] = useState("")
+  const [selectedSaturday, setSelectedSaturday] = useState<Date | undefined>(undefined)
   const [previsoes, setPrevisoes] = useState<{ [key: string]: boolean }>({})
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([])
   const [loading, setLoading] = useState(true)
@@ -61,10 +66,13 @@ export default function ChamadaSabado() {
 
       setColaboradores(data || [])
       
-      // Definir automaticamente o primeiro sábado do mês
-      const saturdayDates = getSaturdayDates()
-      if (saturdayDates.length > 0 && !selectedSaturday) {
-        setSelectedSaturday(saturdayDates[0])
+      // Definir automaticamente o próximo sábado
+      if (!selectedSaturday) {
+        const today = new Date()
+        const nextSaturday = new Date(today)
+        const daysUntilSaturday = 6 - today.getDay()
+        nextSaturday.setDate(today.getDate() + (daysUntilSaturday === 0 ? 7 : daysUntilSaturday))
+        setSelectedSaturday(nextSaturday)
       }
     } catch (error) {
       toast({
@@ -78,11 +86,14 @@ export default function ChamadaSabado() {
   }
 
   const fetchPrevisoesDaSemana = async () => {
+    if (!selectedSaturday) return
+    
     try {
+      const selectedDate = selectedSaturday.toISOString().split('T')[0]
       const { data, error } = await supabase
         .from('chamadas')
         .select('colaborador_id, status')
-        .eq('data', selectedSaturday)
+        .eq('data', selectedDate)
 
       if (error) {
         toast({
@@ -128,12 +139,23 @@ export default function ChamadaSabado() {
     setSaving(true)
 
     try {
+      if (!selectedSaturday) {
+        toast({
+          title: "Erro",
+          description: "Selecione um sábado primeiro",
+          variant: "destructive"
+        })
+        return
+      }
+
+      const selectedDate = selectedSaturday.toISOString().split('T')[0]
+      
       // Preparar dados para inserção/atualização
       const previsoesToSave = Object.entries(previsoes)
         .filter(([_, vira]) => vira) // Apenas os que virão no sábado
         .map(([colaboradorId]) => ({
           colaborador_id: colaboradorId,
-          data: selectedSaturday,
+          data: selectedDate,
           status: "vira_sabado"
         }))
 
@@ -141,7 +163,7 @@ export default function ChamadaSabado() {
       const { error: deleteError } = await supabase
         .from('chamadas')
         .delete()
-        .eq('data', selectedSaturday)
+        .eq('data', selectedDate)
 
       if (deleteError) throw deleteError
 
@@ -172,32 +194,25 @@ export default function ChamadaSabado() {
   const getSaturdayDates = () => {
     const today = new Date()
     const year = today.getFullYear()
-    const month = today.getMonth()
     const saturdays = []
     
-    // Buscar próximos sábados incluindo mês atual e próximo mês
-    for (let monthOffset = 0; monthOffset <= 1; monthOffset++) {
-      const targetMonth = month + monthOffset
-      const targetYear = targetMonth > 11 ? year + 1 : year
-      const normalizedMonth = targetMonth > 11 ? 0 : targetMonth
-      
-      const daysInMonth = new Date(targetYear, normalizedMonth + 1, 0).getDate()
+    // Buscar todos os sábados do ano
+    for (let month = 0; month < 12; month++) {
+      const daysInMonth = new Date(year, month + 1, 0).getDate()
       
       for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(targetYear, normalizedMonth, day)
+        const date = new Date(year, month, day)
         if (date.getDay() === 6) {
           saturdays.push(date.toISOString().split('T')[0])
         }
       }
     }
     
-    // Filtrar apenas sábados futuros ou do dia atual
-    return saturdays.filter(saturday => {
-      const saturdayDate = new Date(saturday + 'T00:00:00')
-      const todayDate = new Date()
-      todayDate.setHours(0, 0, 0, 0)
-      return saturdayDate >= todayDate
-    }).slice(0, 8) // Máximo 8 próximos sábados
+    return saturdays
+  }
+
+  const isSaturday = (date: Date) => {
+    return date.getDay() === 6
   }
 
   const getPendingColaboradores = () => {
@@ -231,7 +246,6 @@ export default function ChamadaSabado() {
   const pendingColaboradores = getPendingColaboradores()
   const filteredColaboradores = getFilteredColaboradores()
   const liderancas = [...new Set(colaboradores.map(c => c.lideranca).filter(l => l && l.trim() !== ''))]
-  const saturdayDates = getSaturdayDates()
   const summary = getPrevisaoSummary()
 
   if (loading) {
@@ -270,26 +284,34 @@ export default function ChamadaSabado() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Selecione o Sábado</label>
-              <Select value={selectedSaturday} onValueChange={setSelectedSaturday}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Escolha um sábado" />
-                </SelectTrigger>
-                <SelectContent>
-                  {saturdayDates.map(date => {
-                    const dateObj = new Date(date)
-                    const formattedDate = dateObj.toLocaleDateString('pt-BR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric'
-                    })
-                    return (
-                      <SelectItem key={date} value={date}>
-                        Sábado - {formattedDate}
-                      </SelectItem>
-                    )
-                  })}
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !selectedSaturday && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedSaturday ? (
+                      format(selectedSaturday, "dd/MM/yyyy")
+                    ) : (
+                      <span>Escolha um sábado</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedSaturday}
+                    onSelect={setSelectedSaturday}
+                    disabled={(date) => !isSaturday(date)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             
             <div className="space-y-2">
@@ -347,7 +369,7 @@ export default function ChamadaSabado() {
         <CardHeader>
           <CardTitle>Indicadores de Previsão</CardTitle>
           <CardDescription>
-            Resumo da previsão para o sábado {selectedSaturday ? new Date(selectedSaturday).toLocaleDateString('pt-BR') : ''}
+            Resumo da previsão para o sábado {selectedSaturday ? selectedSaturday.toLocaleDateString('pt-BR') : ''}
           </CardDescription>
         </CardHeader>
         <CardContent>
