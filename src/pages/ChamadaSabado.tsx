@@ -203,7 +203,7 @@ export default function ChamadaSabado() {
       for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(year, month, day)
         if (date.getDay() === 6) {
-          saturdays.push(date.toISOString().split('T')[0])
+          saturdays.push(date)
         }
       }
     }
@@ -213,6 +213,10 @@ export default function ChamadaSabado() {
 
   const isSaturday = (date: Date) => {
     return date.getDay() === 6
+  }
+
+  const disableNonSaturdays = (date: Date) => {
+    return date.getDay() !== 6
   }
 
   const getPendingColaboradores = () => {
@@ -306,7 +310,7 @@ export default function ChamadaSabado() {
                     mode="single"
                     selected={selectedSaturday}
                     onSelect={setSelectedSaturday}
-                    disabled={(date) => !isSaturday(date)}
+                    disabled={disableNonSaturdays}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
                   />
