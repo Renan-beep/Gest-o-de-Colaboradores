@@ -527,7 +527,7 @@ const SolicitacaoMovimentacao = () => {
                 Nova Solicitação
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl max-h-[95vh] overflow-y-auto mx-4 sm:mx-auto sm:max-w-2xl w-full">
               <DialogHeader>
                 <DialogTitle>Nova Solicitação de Alteração</DialogTitle>
                 <DialogDescription>
@@ -572,7 +572,7 @@ const SolicitacaoMovimentacao = () => {
                         <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
+                    <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[400px] p-0" align="start">
                       <Command>
                         <CommandInput placeholder="Digite o nome ou matrícula..." />
                         <CommandList>
@@ -613,7 +613,7 @@ const SolicitacaoMovimentacao = () => {
                   <>
                     <div className="p-4 bg-muted/30 rounded-lg">
                       <h3 className="font-medium mb-3">Dados Atuais do Colaborador</h3>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div><strong>Cargo:</strong> {selectedColaborador.cargo || 'Não definido'}</div>
                         <div><strong>Setor:</strong> {selectedColaborador.setor || 'Não definido'}</div>
                         <div><strong>Subsetor:</strong> {selectedColaborador.subsetor || 'Não definido'}</div>
@@ -625,7 +625,7 @@ const SolicitacaoMovimentacao = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="cargo">Novo Cargo</Label>
                         <Select
@@ -783,11 +783,11 @@ const SolicitacaoMovimentacao = () => {
                   </>
                 )}
 
-                <div className="flex justify-end space-x-2">
+                <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button type="submit">
+                  <Button type="submit" className="w-full sm:w-auto">
                     Criar Solicitações
                   </Button>
                 </div>
