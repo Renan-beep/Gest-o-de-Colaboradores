@@ -19,13 +19,8 @@ import {
   Heart,
   Home,
   Clock,
-  BarChart3,
-  TrendingDown,
   Activity,
-  CalendarIcon,
-  Target,
-  Zap,
-  BarChart4
+  Target
 } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { 
@@ -586,44 +581,13 @@ export default function MetricasChamada() {
         />
       </div>
 
-      {/* Filtros e Configurações */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <DateRangeFilter
-            startDate={startDate}
-            endDate={endDate}
-            onDateChange={handleDateChange}
-          />
-        </div>
-        
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart4 className="w-5 h-5" />
-              Visualização
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Select value={viewType} onValueChange={(value: "semanal" | "mensal" | "diario") => setViewType(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="diario">Análise Diária</SelectItem>
-                <SelectItem value="semanal">Análise Semanal</SelectItem>
-                <SelectItem value="mensal">Análise Mensal</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <div className="mt-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-4 h-4" />
-                <strong>Dica:</strong>
-              </div>
-              <p>Use análise mensal para tendências de longo prazo e semanal para acompanhamento detalhado.</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Filtro de Período Personalizado */}
+      <div className="max-w-2xl">
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onDateChange={handleDateChange}
+        />
       </div>
 
       {/* Métricas Avançadas */}
