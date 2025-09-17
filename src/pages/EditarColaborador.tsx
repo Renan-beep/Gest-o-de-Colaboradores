@@ -90,11 +90,11 @@ export default function EditarColaborador() {
           setor: data.setor || "",
           subsetor: data.subsetor || "",
           lideranca: data.lideranca || "",
-          turno: data.turno || "",
+          turno: data.turno ? data.turno.replace(/[()]/g, '') : "",
           sabado_trabalho: data.sabado_trabalho || "Não",
           sabado_horario: data.sabado_horario || "",
-          horario_almoco: data.horario_almoco || "",
-          horario_cafe: data.horario_cafe || "",
+          horario_almoco: data.horario_almoco ? data.horario_almoco.replace(/[()]/g, '') : "",
+          horario_cafe: data.horario_cafe ? data.horario_cafe.replace(/[()]/g, '') : "",
           admissao: data.admissao || ""
         })
         setLastUpdated(data.updated_at || data.created_at || "")
