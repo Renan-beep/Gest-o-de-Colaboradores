@@ -447,7 +447,7 @@ export default function EditarColaborador() {
               <div className="space-y-2">
                 <Label htmlFor="turno">Turno</Label>
                 <Select 
-                  value={formData.turno} 
+                  value={formData.turno || ""} 
                   onValueChange={(value) => handleChange('turno', value)}
                   disabled={!isGerencia}
                 >
@@ -512,7 +512,7 @@ export default function EditarColaborador() {
               <div className="space-y-2">
                 <Label htmlFor="horario_almoco">Horário de Almoço</Label>
                 <Select 
-                  value={formData.horario_almoco} 
+                  value={formData.horario_almoco || ""} 
                   onValueChange={(value) => handleChange('horario_almoco', value)}
                   disabled={!isGerencia}
                 >
@@ -533,7 +533,7 @@ export default function EditarColaborador() {
               <div className="space-y-2">
                 <Label htmlFor="horario_cafe">Horário do Café</Label>
                 <Select 
-                  value={formData.horario_cafe} 
+                  value={formData.horario_cafe || ""} 
                   onValueChange={(value) => handleChange('horario_cafe', value)}
                   disabled={!isGerencia}
                 >
