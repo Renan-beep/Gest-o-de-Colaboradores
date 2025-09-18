@@ -27,62 +27,83 @@ export default function TurnoverIndicator() {
 
   const fetchTurnoverData = async () => {
     try {
-      // Buscar todos os colaboradores para calcular admissões
-      const { data: colaboradores, error: colaboradoresError } = await supabase
+      setLoading(true)
+      
+      // Buscar colaboradores ativos no início do ano selecionado
+      const { data: colaboradoresAtivos, error: ativosError } = await supabase
+        .from('colaboradores')
+        .select('id, admissao')
+        .eq('status', 'ativo')
+        .not('admissao', 'is', null)
+
+      if (ativosError) throw ativosError
+
+      // Buscar admissões do ano selecionado
+      const inicioAno = `${anoSelecionado}-01-01`
+      const fimAno = `${anoSelecionado}-12-31`
+      
+      const { data: admissoesAno, error: admissoesError } = await supabase
+        .from('colaboradores')
+        .select('id, admissao')
+        .gte('admissao', inicioAno)
+        .lte('admissao', fimAno)
+        .not('admissao', 'is', null)
+
+      if (admissoesError) throw admissoesError
+
+      // Buscar demissões do ano selecionado
+      const { data: demissoesAno, error: demissoesError } = await supabase
+        .from('demissoes')
+        .select('*')
+        .gte('data_demissao', inicioAno)
+        .lte('data_demissao', fimAno)
+
+      if (demissoesError) throw demissoesError
+
+      // Obter todos os anos disponíveis (a partir de 2024)
+      const { data: todasAdmissoes, error: todasAdmissoesError } = await supabase
         .from('colaboradores')
         .select('admissao')
         .not('admissao', 'is', null)
 
-      if (colaboradoresError) throw colaboradoresError
+      if (todasAdmissoesError) throw todasAdmissoesError
 
-      // Buscar demissões reais
-      const { data: demissoesData, error: demissoesError } = await supabase
+      const { data: todasDemissoes, error: todasDemissoesError } = await supabase
         .from('demissoes')
         .select('data_demissao')
 
-      if (demissoesError) throw demissoesError
+      if (todasDemissoesError) throw todasDemissoesError
 
-      // Agrupar admissões por ano
-      const admissoesPorAno: { [key: number]: number } = {}
+      // Calcular anos disponíveis (a partir de 2024)
+      const anosAdmissoes = todasAdmissoes?.map(c => new Date(c.admissao).getFullYear()).filter(ano => !isNaN(ano) && ano >= 2024) || []
+      const anosDemissoes = todasDemissoes?.map(d => new Date(d.data_demissao).getFullYear()).filter(ano => !isNaN(ano) && ano >= 2024) || []
       
-      colaboradores?.forEach(colaborador => {
-        if (colaborador.admissao) {
-          const ano = new Date(colaborador.admissao).getFullYear()
-          if (!isNaN(ano)) {
-            admissoesPorAno[ano] = (admissoesPorAno[ano] || 0) + 1
-          }
-        }
-      })
-
-      // Agrupar demissões por ano
-      const demissoesPorAno: { [key: number]: number } = {}
-      
-      demissoesData?.forEach(demissao => {
-        const ano = new Date(demissao.data_demissao).getFullYear()
-        if (!isNaN(ano)) {
-          demissoesPorAno[ano] = (demissoesPorAno[ano] || 0) + 1
-        }
-      })
-
-      // Obter anos disponíveis (apenas 2024 em diante)
-      const anosUnicos = Array.from(new Set([
-        ...Object.keys(admissoesPorAno).map(Number),
-        ...Object.keys(demissoesPorAno).map(Number)
-      ])).filter(ano => ano >= 2024).sort((a, b) => b - a)
-
+      const anosUnicos = Array.from(new Set([...anosAdmissoes, ...anosDemissoes, 2024])).sort((a, b) => b - a)
       setAnosDisponiveis(anosUnicos)
 
-      // Se não há anos ou o ano selecionado não está na lista, usar o mais recente ou atual
+      // Se não há anos ou o ano selecionado não está na lista, usar o mais recente
       if (anosUnicos.length > 0 && !anosUnicos.includes(anoSelecionado)) {
         setAnoSelecionado(anosUnicos[0])
         return
       }
 
-      // Calcular dados para o ano selecionado
-      const admissoes = admissoesPorAno[anoSelecionado] || 0
-      const demissoes = demissoesPorAno[anoSelecionado] || 0
-      const totalColaboradores = colaboradores?.length || 1
-      const turnover = totalColaboradores > 0 ? ((demissoes / totalColaboradores) * 100) : 0
+      // Calcular colaboradores ativos no início do ano
+      // (colaboradores admitidos antes do ano atual e que ainda estão ativos)
+      const colaboradoresInicioAno = colaboradoresAtivos?.filter(c => {
+        const anoAdmissao = new Date(c.admissao).getFullYear()
+        return anoAdmissao <= anoSelecionado
+      }) || []
+
+      const admissoes = admissoesAno?.length || 0
+      const demissoes = demissoesAno?.length || 0
+      
+      // Calcular o número médio de colaboradores durante o ano
+      // Base inicial + (admissões / 2) - (demissões / 2)
+      const colaboradoresBaseInicio = colaboradoresInicioAno.length - admissoes // Remove admissões do ano atual
+      const mediaColaboradores = colaboradoresBaseInicio + (admissoes / 2) - (demissoes / 2)
+      
+      // Turnover = (Demissões / Média de colaboradores) * 100
+      const turnover = mediaColaboradores > 0 ? ((demissoes / mediaColaboradores) * 100) : 0
       const saldo = admissoes - demissoes
 
       setTurnoverData({
@@ -153,7 +174,7 @@ export default function TurnoverIndicator() {
           Indicador de Turnover
         </CardTitle>
         <CardDescription>
-          Análise de admissões versus demissões do ano selecionado
+          Taxa de rotatividade de pessoal calculada com base na média de colaboradores do ano
         </CardDescription>
         <div className="pt-4">
           <Select value={anoSelecionado.toString()} onValueChange={(value) => setAnoSelecionado(Number(value))}>
@@ -219,9 +240,10 @@ export default function TurnoverIndicator() {
                 />
               </div>
 
-              <div className="text-center">
+              <div className="text-center text-sm text-muted-foreground">
+                <div>Taxa calculada: Demissões ÷ Média de colaboradores × 100</div>
                 <span className={`text-lg font-bold ${getTurnoverColor(turnoverData.turnover)}`}>
-                  Taxa de Turnover: {turnoverData.turnover}%
+                  {turnoverData.turnover}% ao ano
                 </span>
               </div>
             </div>
