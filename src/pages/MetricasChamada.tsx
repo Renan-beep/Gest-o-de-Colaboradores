@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react"
-import { format, subDays, subMonths, subYears } from "date-fns"
+import { format } from "date-fns"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Calendar as CalendarComponent } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
+import { cn } from "@/lib/utils"
 import { 
   TrendingUp, 
   Calendar, 
@@ -40,7 +38,7 @@ import {
   AreaChart
 } from "recharts"
 import { AdvancedMetricsCard } from "@/components/stats/AdvancedMetricsCard"
-import { DateRangeFilter } from "@/components/stats/DateRangeFilter"
+import { MonthDayFilter } from "@/components/stats/MonthDayFilter"
 import { StatCard } from "@/components/stats/StatCard"
 import HistoricoPendencias from "@/components/dashboard/HistoricoPendencias"
 
@@ -91,24 +89,41 @@ export default function MetricasChamada() {
   const [liderancasPendencias, setLiderancasPendencias] = useState<LiderancaPendencia[]>([])
   const [loading, setLoading] = useState(true)
   const [viewType, setViewType] = useState<"semanal" | "mensal" | "diario">("mensal")
-  const [startDate, setStartDate] = useState<Date>(subDays(new Date(), 30))
-  const [endDate, setEndDate] = useState<Date>(new Date())
+  const [selectedMonth, setSelectedMonth] = useState<string>()
+  const [selectedDays, setSelectedDays] = useState<string[]>([])
 
   useEffect(() => {
-    fetchMetricas()
-    fetchLiderancasPendencias()
-  }, [startDate, endDate, viewType])
+    if (selectedMonth || selectedDays.length > 0) {
+      fetchMetricas()
+      fetchLiderancasPendencias()
+    }
+  }, [selectedMonth, selectedDays, viewType])
 
   const fetchMetricas = async () => {
     setLoading(true)
     try {
-      if (!startDate || !endDate) return;
+      // Determinar as datas para filtrar baseado na seleção
+      let dateFilter: any = supabase.from('chamadas').select('data, status')
       
-      const { data: chamadas, error } = await supabase
-        .from('chamadas')
-        .select('data, status')
-        .gte('data', startDate.toISOString().split('T')[0])
-        .lte('data', endDate.toISOString().split('T')[0])
+      if (selectedDays.length > 0) {
+        // Filtrar por dias específicos
+        dateFilter = dateFilter.in('data', selectedDays)
+      } else if (selectedMonth) {
+        // Filtrar por mês inteiro
+        const [year, month] = selectedMonth.split('-').map(Number)
+        const startOfMonth = new Date(year, month, 1).toISOString().split('T')[0]
+        const endOfMonth = new Date(year, month + 1, 0).toISOString().split('T')[0]
+        dateFilter = dateFilter.gte('data', startOfMonth).lte('data', endOfMonth)
+      } else {
+        // Se nenhum filtro aplicado, não buscar nada
+        setMetricas([])
+        setMetricasMensais([])
+        setMetricasDiarias([])
+        setLoading(false)
+        return
+      }
+
+      const { data: chamadas, error } = await dateFilter
 
       if (error) throw error
 
@@ -292,7 +307,7 @@ export default function MetricasChamada() {
 
   const fetchLiderancasPendencias = async () => {
     try {
-      if (!startDate || !endDate) return
+      if (!selectedMonth && selectedDays.length === 0) return
 
       // Buscar colaboradores ativos com suas lideranças
       const { data: colaboradores, error: colaboradoresError } = await supabase
@@ -303,11 +318,20 @@ export default function MetricasChamada() {
       if (colaboradoresError) throw colaboradoresError
 
       // Buscar chamadas no período
-      const { data: chamadas, error: chamadasError } = await supabase
+      let chamadasQuery = supabase
         .from('chamadas')
         .select('colaborador_id, data, status')
-        .gte('data', startDate.toISOString().split('T')[0])
-        .lte('data', endDate.toISOString().split('T')[0])
+      
+      if (selectedDays.length > 0) {
+        chamadasQuery = chamadasQuery.in('data', selectedDays)
+      } else if (selectedMonth) {
+        const [year, month] = selectedMonth.split('-').map(Number)
+        const startOfMonth = new Date(year, month, 1).toISOString().split('T')[0]
+        const endOfMonth = new Date(year, month + 1, 0).toISOString().split('T')[0]
+        chamadasQuery = chamadasQuery.gte('data', startOfMonth).lte('data', endOfMonth)
+      }
+
+      const { data: chamadas, error: chamadasError } = await chamadasQuery
 
       if (chamadasError) throw chamadasError
 
@@ -510,9 +534,9 @@ export default function MetricasChamada() {
   const pieChartData = getPieChartData() 
   const advancedMetrics = getAdvancedMetrics()
 
-  const handleDateChange = (start?: Date, end?: Date) => {
-    if (start) setStartDate(start);
-    if (end) setEndDate(end);
+  const handleFilterChange = (month?: string, days?: string[]) => {
+    setSelectedMonth(month);
+    setSelectedDays(days || []);
   };
 
   return (
@@ -581,12 +605,12 @@ export default function MetricasChamada() {
         />
       </div>
 
-      {/* Filtro de Período Personalizado */}
+      {/* Filtro por Mês e Dia */}
       <div className="max-w-2xl">
-        <DateRangeFilter
-          startDate={startDate}
-          endDate={endDate}
-          onDateChange={handleDateChange}
+        <MonthDayFilter
+          selectedMonth={selectedMonth}
+          selectedDays={selectedDays}
+          onSelectionChange={handleFilterChange}
         />
       </div>
 
