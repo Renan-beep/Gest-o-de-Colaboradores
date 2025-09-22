@@ -17,7 +17,8 @@ import {
   X,
   Filter,
   AlertTriangle,
-  ChevronRight
+  ChevronRight,
+  RotateCcw
 } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 
@@ -340,12 +341,23 @@ export default function Chamada() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <UserCheck className="w-8 h-8 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Chamada Diária</h1>
-          <p className="text-muted-foreground">Registre a presença dos colaboradores</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <UserCheck className="w-8 h-8 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold">Chamada Diária</h1>
+            <p className="text-muted-foreground">Registre a presença dos colaboradores</p>
+          </div>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchColaboradores}
+          disabled={loading}
+        >
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Atualizar Lista
+        </Button>
       </div>
 
       {/* Datas com Pendências */}
