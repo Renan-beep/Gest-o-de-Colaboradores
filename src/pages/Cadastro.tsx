@@ -50,7 +50,7 @@ export default function Cadastro() {
           {
             matricula: formData.matricula,
             colaborador: formData.colaborador,
-            status: formData.status || 'ativo',
+            status: formData.status || 'Ativo',
             cargo: formData.cargo,
             setor: formData.setor,
             subsetor: formData.subsetor,
@@ -160,8 +160,8 @@ export default function Cadastro() {
                     <SelectValue placeholder="Selecione o status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="afastado">Afastado</SelectItem>
+                    <SelectItem value="Ativo">Ativo</SelectItem>
+                    <SelectItem value="Afastado">Afastado</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

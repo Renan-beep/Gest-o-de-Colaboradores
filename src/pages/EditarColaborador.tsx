@@ -44,7 +44,7 @@ export default function EditarColaborador() {
   const [formData, setFormData] = useState<ColaboradorForm>({
     matricula: "",
     colaborador: "",
-    status: "ativo",
+    status: "Ativo",
     cargo: "",
     setor: "",
     subsetor: "",
@@ -85,7 +85,7 @@ export default function EditarColaborador() {
         setFormData({
           matricula: data.matricula || "",
           colaborador: data.colaborador || "",
-          status: (data.status || "ativo").toLowerCase(),
+          status: data.status || "Ativo",
           cargo: data.cargo || "",
           setor: data.setor || "",
           subsetor: data.subsetor || "",
@@ -289,7 +289,7 @@ export default function EditarColaborador() {
             <User className="w-5 h-5" />
             Dados do Colaborador
             {formData.status && (
-              <Badge variant={formData.status.toLowerCase() === "ativo" ? "default" : "destructive"}>
+              <Badge variant={formData.status === "Ativo" ? "default" : "destructive"}>
                 {formData.status}
               </Badge>
             )}
@@ -336,8 +336,8 @@ export default function EditarColaborador() {
                     <SelectValue placeholder="Selecione o status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="afastado">Afastado</SelectItem>
+                    <SelectItem value="Ativo">Ativo</SelectItem>
+                    <SelectItem value="Afastado">Afastado</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
