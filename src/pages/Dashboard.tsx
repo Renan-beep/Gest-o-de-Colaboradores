@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
 import HistoricoDemissoes from "@/components/dashboard/HistoricoDemissoes"
+import TempoEmpresaTable from "@/components/dashboard/TempoEmpresaTable"
 
 interface Colaborador {
   id: string
@@ -117,6 +118,9 @@ export default function Dashboard() {
 
       {/* Histórico de Demissões */}
       <HistoricoDemissoes />
+
+      {/* Tempo de Empresa */}
+      <TempoEmpresaTable />
 
       {/* Filtros e Busca */}
       <Card className="shadow-card">
