@@ -52,6 +52,27 @@ export default function Chamada() {
 
   useEffect(() => {
     fetchColaboradores()
+
+    // Configurar listener para atualizações em tempo real na tabela colaboradores
+    const colaboradoresChannel = supabase
+      .channel('colaboradores-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Escuta INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'colaboradores'
+        },
+        () => {
+          // Recarregar colaboradores quando houver qualquer mudança
+          fetchColaboradores()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(colaboradoresChannel)
+    }
   }, [])
 
   useEffect(() => {
