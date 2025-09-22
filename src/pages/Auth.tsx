@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { updateRenanToManager } from '@/utils/updateUserRole';
+import { Eye, EyeOff } from 'lucide-react';
 export default function Auth() {
   const {
     user,
@@ -26,6 +27,8 @@ export default function Auth() {
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [userType, setUserType] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Função para alterar o Renan para gerente
   const handleUpdateRenanRole = async () => {
@@ -196,7 +199,23 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
-                  <Input id="password" name="password" type="password" placeholder="Sua senha" required className="glass-effect border-border/50 focus:border-primary transition-all duration-300" />
+                  <div className="relative">
+                    <Input 
+                      id="password" 
+                      name="password" 
+                      type={showPassword ? "text" : "password"} 
+                      placeholder="Sua senha" 
+                      required 
+                      className="glass-effect border-border/50 focus:border-primary transition-all duration-300 pr-10" 
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 
                 {error && <Alert variant="destructive" className="glass-effect border-error/50">
@@ -249,11 +268,43 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
-                  <Input id="password" name="password" type="password" placeholder="Mínimo 6 caracteres" required className="glass-effect border-border/50 focus:border-primary transition-all duration-300" />
+                  <div className="relative">
+                    <Input 
+                      id="password" 
+                      name="password" 
+                      type={showPassword ? "text" : "password"} 
+                      placeholder="Mínimo 6 caracteres" 
+                      required 
+                      className="glass-effect border-border/50 focus:border-primary transition-all duration-300 pr-10" 
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirmar Senha</Label>
-                  <Input id="confirmPassword" name="confirmPassword" type="password" placeholder="Confirme sua senha" required className="glass-effect border-border/50 focus:border-primary transition-all duration-300" />
+                  <div className="relative">
+                    <Input 
+                      id="confirmPassword" 
+                      name="confirmPassword" 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      placeholder="Confirme sua senha" 
+                      required 
+                      className="glass-effect border-border/50 focus:border-primary transition-all duration-300 pr-10" 
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="userType" className="text-sm font-medium">Tipo de Usuário</Label>
