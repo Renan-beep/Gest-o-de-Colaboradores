@@ -63,12 +63,15 @@ export default function Chamada() {
           schema: 'public',
           table: 'colaboradores'
         },
-        () => {
+        (payload) => {
+          console.log('Colaborador atualizado:', payload)
           // Recarregar colaboradores quando houver qualquer mudança
           fetchColaboradores()
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('Status do canal de colaboradores:', status)
+      })
 
     return () => {
       supabase.removeChannel(colaboradoresChannel)
@@ -103,6 +106,8 @@ export default function Chamada() {
         return
       }
 
+      console.log('Colaboradores carregados:', data?.length, 'colaboradores')
+      console.log('Lideranças disponíveis:', [...new Set(data?.map(c => c.lideranca).filter(l => l && l.trim() !== ''))])
       setColaboradores(data || [])
     } catch (error) {
       toast({
