@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      alocacoes: {
+        Row: {
+          equipe_id: string
+          matricula_colaborador: string
+        }
+        Insert: {
+          equipe_id: string
+          matricula_colaborador: string
+        }
+        Update: {
+          equipe_id?: string
+          matricula_colaborador?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_colaborador"
+            columns: ["matricula_colaborador"]
+            isOneToOne: true
+            referencedRelation: "colaboradores"
+            referencedColumns: ["matricula"]
+          },
+          {
+            foreignKeyName: "fk_equipe"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chamadas: {
         Row: {
           colaborador_id: string
@@ -139,6 +169,30 @@ export type Database = {
         }
         Relationships: []
       }
+      equipes: {
+        Row: {
+          ativa: boolean
+          grupo: string
+          id: string
+          nome: string
+          premiacoes: number
+        }
+        Insert: {
+          ativa?: boolean
+          grupo: string
+          id?: string
+          nome: string
+          premiacoes?: number
+        }
+        Update: {
+          ativa?: boolean
+          grupo?: string
+          id?: string
+          nome?: string
+          premiacoes?: number
+        }
+        Relationships: []
+      }
       historico_chamadas_pendentes: {
         Row: {
           created_at: string
@@ -168,6 +222,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          company_logo_url: string | null
           created_at: string
           email: string
           full_name: string | null
@@ -177,6 +233,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avatar_url?: string | null
+          company_logo_url?: string | null
           created_at?: string
           email: string
           full_name?: string | null
@@ -186,6 +244,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avatar_url?: string | null
+          company_logo_url?: string | null
           created_at?: string
           email?: string
           full_name?: string | null

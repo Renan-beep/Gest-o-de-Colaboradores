@@ -27,6 +27,11 @@ const gerenciaItems = [{
   icon: Settings,
   description: "Configurações do sistema"
 }, {
+  title: "Conta",
+  url: "/configuracoes-conta",
+  icon: User,
+  description: "Perfil e logo da empresa"
+}, {
   title: "Solicitações",
   url: "/solicitacao-movimentacao",
   icon: FileText,
@@ -63,6 +68,11 @@ const encarregadoItems = [{
   url: "/indicadores",
   icon: Settings,
   description: "Configurações do sistema"
+}, {
+  title: "Conta",
+  url: "/configuracoes-conta",
+  icon: User,
+  description: "Perfil e logo da empresa"
 }, {
   title: "Solicitações",
   url: "/solicitacao-movimentacao",
