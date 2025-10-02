@@ -126,7 +126,7 @@ export default {
 				},
 				'pulse-glow': {
 					'0%, 100%': { boxShadow: 'var(--shadow-glow)' },
-					'50%': { boxShadow: '0 0 20px hsl(250 85% 65% / 0.3)' }
+					'50%': { boxShadow: '0 0 20px hsl(210 85% 60% / 0.3)' }
 				},
 				'fade-in': {
 					'0%': { opacity: '0', transform: 'translateY(10px)' },
