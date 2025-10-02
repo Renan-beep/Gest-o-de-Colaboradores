@@ -1,7 +1,8 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, UserCheck, BarChart3, Plus, Home, Building2, CalendarCheck, LogOut, User, FileText, Settings, TrendingUp, UserPlus } from "lucide-react";
+import { Users, UserCheck, BarChart3, Plus, Home, Building2, CalendarCheck, LogOut, User, FileText, Settings, TrendingUp, UserPlus, UserCog } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,8 +30,8 @@ const gerenciaItems = [{
 }, {
   title: "Conta",
   url: "/configuracoes-conta",
-  icon: User,
-  description: "Perfil e logo da empresa"
+  icon: UserCog,
+  description: "Perfil e preferências"
 }, {
   title: "Solicitações",
   url: "/solicitacao-movimentacao",
@@ -71,8 +72,8 @@ const encarregadoItems = [{
 }, {
   title: "Conta",
   url: "/configuracoes-conta",
-  icon: User,
-  description: "Perfil e logo da empresa"
+  icon: UserCog,
+  description: "Perfil e preferências"
 }, {
   title: "Solicitações",
   url: "/solicitacao-movimentacao",
@@ -105,6 +106,7 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
   const isCollapsed = state === "collapsed";
   const [pendingCount, setPendingCount] = useState(0);
+  const [profile, setProfile] = useState<any>(null);
 
   // Buscar solicitações pendentes
   useEffect(() => {
@@ -141,6 +143,25 @@ export function AppSidebar() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Buscar perfil do usuário
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data) {
+        setProfile(data);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 
   // Determine navigation items based on user role
   const navigationItems = isGerencia ? gerenciaItems : encarregadoItems;
@@ -242,9 +263,12 @@ export function AppSidebar() {
         <SidebarFooter>
           <div className="p-4 border-t border-border">
             {!isCollapsed && user && <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4" />
-                </div>
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={profile?.avatar_url} alt="Avatar" />
+                  <AvatarFallback>
+                    <User className="w-4 h-4" />
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate">{user.email}</div>
                   <div className="text-xs text-muted-foreground">
@@ -253,9 +277,12 @@ export function AppSidebar() {
                 </div>
               </div>}
             {isCollapsed && user && <div className="flex justify-center">
-                <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4" />
-                </div>
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={profile?.avatar_url} alt="Avatar" />
+                  <AvatarFallback>
+                    <User className="w-4 h-4" />
+                  </AvatarFallback>
+                </Avatar>
               </div>}
           </div>
         </SidebarFooter>
