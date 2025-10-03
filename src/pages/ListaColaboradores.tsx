@@ -57,7 +57,8 @@ export default function ListaColaboradores() {
     subsetor: "todos",
     lideranca: "todos",
     turno: "todos",
-    sabadoTrabalho: "todos"
+    sabadoTrabalho: "todos",
+    tempoEmpresa: "todos"
   });
 
   // Listas para filtros
@@ -145,6 +146,16 @@ export default function ListaColaboradores() {
     if (filtros.sabadoTrabalho !== "todos") {
       filtered = filtered.filter(c => c.sabado_trabalho === filtros.sabadoTrabalho);
     }
+    if (filtros.tempoEmpresa !== "todos") {
+      filtered = filtered.filter(c => {
+        const tempo = calcularTempoEmpresa(c.admissao);
+        if (filtros.tempoEmpresa === "novo") return tempo.totalMeses < 6;
+        if (filtros.tempoEmpresa === "adaptacao") return tempo.totalMeses >= 6 && tempo.totalMeses < 12;
+        if (filtros.tempoEmpresa === "experiente") return tempo.anos >= 1 && tempo.anos < 5;
+        if (filtros.tempoEmpresa === "veterano") return tempo.anos >= 5;
+        return true;
+      });
+    }
     setFilteredColaboradores(filtered);
   };
   const limparFiltros = () => {
@@ -156,7 +167,8 @@ export default function ListaColaboradores() {
       subsetor: "todos",
       lideranca: "todos",
       turno: "todos",
-      sabadoTrabalho: "todos"
+      sabadoTrabalho: "todos",
+      tempoEmpresa: "todos"
     });
   };
   const getStatusBadge = (status: string) => {
@@ -388,6 +400,26 @@ export default function ListaColaboradores() {
                 <SelectContent>
                   <SelectItem value="todos">Todos</SelectItem>
                   {opcoesFiltros.turnos.map(turno => <SelectItem key={turno} value={turno}>{turno}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Tempo de Empresa */}
+            <div className="space-y-2">
+              <Label>Tempo de Empresa</Label>
+              <Select value={filtros.tempoEmpresa} onValueChange={value => setFiltros(prev => ({
+              ...prev,
+              tempoEmpresa: value
+            }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="novo">Novo (menos de 6 meses)</SelectItem>
+                  <SelectItem value="adaptacao">Adaptação (6-12 meses)</SelectItem>
+                  <SelectItem value="experiente">Experiente (1-5 anos)</SelectItem>
+                  <SelectItem value="veterano">Veterano (5+ anos)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
