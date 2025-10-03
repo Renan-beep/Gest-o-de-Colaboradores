@@ -14,6 +14,7 @@ import Chamada from "./pages/Chamada";
 import ChamadaSabado from "./pages/ChamadaSabado";
 import Indicadores from "./pages/Indicadores";
 import ConfiguracoesConta from "./pages/ConfiguracoesConta";
+import AssistenteIA from "./pages/AssistenteIA";
 import ListaColaboradores from "./pages/ListaColaboradores";
 import EditarColaborador from "./pages/EditarColaborador";
 import MetricasChamada from "./pages/MetricasChamada";
@@ -113,6 +114,13 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <SolicitacaoMovimentacao />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/assistente-ia" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <AssistenteIA />
                   </AppLayout>
                 </ProtectedRoute>
               } />
