@@ -7,10 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Filter, Search, Download, RefreshCw, Edit, UserCheck, UserX } from "lucide-react";
+import { Users, Filter, Search, Download, RefreshCw, Edit, UserCheck, UserX, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { differenceInMonths, differenceInYears, parseISO } from "date-fns";
 interface Colaborador {
   id: string;
   matricula: string;
@@ -28,6 +29,12 @@ interface Colaborador {
   admissao: string;
   created_at: string;
   updated_at: string;
+}
+
+interface TempoEmpresa {
+  anos: number;
+  meses: number;
+  totalMeses: number;
 }
 export default function ListaColaboradores() {
   const {
@@ -170,6 +177,57 @@ export default function ListaColaboradores() {
   const formatarData = (data: string) => {
     if (!data) return "-";
     return new Date(data).toLocaleDateString('pt-BR');
+  };
+
+  const calcularTempoEmpresa = (dataAdmissao: string): TempoEmpresa => {
+    if (!dataAdmissao) {
+      return { anos: 0, meses: 0, totalMeses: 0 };
+    }
+
+    try {
+      const admissao = parseISO(dataAdmissao);
+      const hoje = new Date();
+      
+      const totalMeses = differenceInMonths(hoje, admissao);
+      const anos = differenceInYears(hoje, admissao);
+      const meses = totalMeses - (anos * 12);
+
+      return {
+        anos,
+        meses,
+        totalMeses
+      };
+    } catch (error) {
+      return { anos: 0, meses: 0, totalMeses: 0 };
+    }
+  };
+
+  const formatarTempoEmpresa = (tempo: TempoEmpresa): string => {
+    if (tempo.anos === 0 && tempo.meses === 0) {
+      return "Menos de 1 mês";
+    }
+    
+    if (tempo.anos === 0) {
+      return `${tempo.meses} ${tempo.meses === 1 ? 'mês' : 'meses'}`;
+    }
+    
+    if (tempo.meses === 0) {
+      return `${tempo.anos} ${tempo.anos === 1 ? 'ano' : 'anos'}`;
+    }
+    
+    return `${tempo.anos} ${tempo.anos === 1 ? 'ano' : 'anos'} e ${tempo.meses} ${tempo.meses === 1 ? 'mês' : 'meses'}`;
+  };
+
+  const getTempoEmpresaBadge = (tempo: TempoEmpresa) => {
+    if (tempo.totalMeses < 6) {
+      return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Novo</Badge>;
+    } else if (tempo.totalMeses < 12) {
+      return <Badge variant="secondary" className="bg-green-100 text-green-800">Adaptação</Badge>;
+    } else if (tempo.anos < 5) {
+      return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Experiente</Badge>;
+    } else {
+      return <Badge variant="secondary" className="bg-purple-100 text-purple-800">Veterano</Badge>;
+    }
   };
   if (loading) {
     return <div className="space-y-6">
@@ -380,36 +438,55 @@ export default function ListaColaboradores() {
                   <TableHead>Horário Almoço</TableHead>
                   <TableHead>Horário Café</TableHead>
                   <TableHead>Admissão</TableHead>
+                  <TableHead>Tempo de Empresa</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredColaboradores.map(colaborador => <TableRow key={colaborador.id}>
-                    <TableCell className="font-medium">{colaborador.matricula}</TableCell>
-                    <TableCell>{colaborador.colaborador}</TableCell>
-                    <TableCell>{getStatusBadge(colaborador.status)}</TableCell>
-                    <TableCell>{colaborador.cargo || "-"}</TableCell>
-                    <TableCell>{colaborador.setor || "-"}</TableCell>
-                    <TableCell>{colaborador.subsetor || "-"}</TableCell>
-                    <TableCell>{colaborador.lideranca || "-"}</TableCell>
-                    <TableCell>{colaborador.turno || "-"}</TableCell>
-                    <TableCell>{getSabadoBadge(colaborador.sabado_trabalho)}</TableCell>
-                    <TableCell>{colaborador.sabado_horario || "-"}</TableCell>
-                    <TableCell>{colaborador.horario_almoco || "-"}</TableCell>
-                    <TableCell>{colaborador.horario_cafe || "-"}</TableCell>
-                    <TableCell>{formatarData(colaborador.admissao)}</TableCell>
-                    <TableCell>
-                       <div className="flex gap-2">
-                         {isGerencia ? <Button variant="outline" size="sm" onClick={() => navigate(`/editar-colaborador/${colaborador.id}`)} className="hover:bg-primary hover:text-primary-foreground transition-colors" title="Editar colaborador">
-                             <Edit className="w-4 h-4 mr-1" />
-                             Editar
-                           </Button> : <Button variant="outline" size="sm" onClick={() => navigate(`/editar-colaborador/${colaborador.id}`)} className="hover:bg-muted transition-colors" title="Visualizar detalhes do colaborador">
-                             <Edit className="w-4 h-4 mr-1" />
-                             Ver Detalhes
-                           </Button>}
-                       </div>
-                    </TableCell>
-                  </TableRow>)}
+                {filteredColaboradores.map(colaborador => {
+                  const tempoEmpresa = calcularTempoEmpresa(colaborador.admissao);
+                  return (
+                    <TableRow key={colaborador.id}>
+                      <TableCell className="font-medium">{colaborador.matricula}</TableCell>
+                      <TableCell>{colaborador.colaborador}</TableCell>
+                      <TableCell>{getStatusBadge(colaborador.status)}</TableCell>
+                      <TableCell>{colaborador.cargo || "-"}</TableCell>
+                      <TableCell>{colaborador.setor || "-"}</TableCell>
+                      <TableCell>{colaborador.subsetor || "-"}</TableCell>
+                      <TableCell>{colaborador.lideranca || "-"}</TableCell>
+                      <TableCell>{colaborador.turno || "-"}</TableCell>
+                      <TableCell>{getSabadoBadge(colaborador.sabado_trabalho)}</TableCell>
+                      <TableCell>{colaborador.sabado_horario || "-"}</TableCell>
+                      <TableCell>{colaborador.horario_almoco || "-"}</TableCell>
+                      <TableCell>{colaborador.horario_cafe || "-"}</TableCell>
+                      <TableCell>{formatarData(colaborador.admissao)}</TableCell>
+                      <TableCell>
+                        {colaborador.admissao ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-3 h-3 text-muted-foreground" />
+                              <span className="font-medium text-sm">{formatarTempoEmpresa(tempoEmpresa)}</span>
+                            </div>
+                            <div>{getTempoEmpresaBadge(tempoEmpresa)}</div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          {isGerencia ? <Button variant="outline" size="sm" onClick={() => navigate(`/editar-colaborador/${colaborador.id}`)} className="hover:bg-primary hover:text-primary-foreground transition-colors" title="Editar colaborador">
+                              <Edit className="w-4 h-4 mr-1" />
+                              Editar
+                            </Button> : <Button variant="outline" size="sm" onClick={() => navigate(`/editar-colaborador/${colaborador.id}`)} className="hover:bg-muted transition-colors" title="Visualizar detalhes do colaborador">
+                              <Edit className="w-4 h-4 mr-1" />
+                              Ver Detalhes
+                            </Button>}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
