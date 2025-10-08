@@ -89,7 +89,7 @@ export default function Chamada() {
     if (colaboradores.length > 0) {
       fetchDatesWithPendencies()
     }
-  }, [colaboradores])
+  }, [colaboradores, chamadas, selectedDate])
 
   const fetchColaboradores = async () => {
     try {
@@ -158,13 +158,13 @@ export default function Chamada() {
       const activeColaboradores = colaboradores.filter(col => col.status === 'Ativo')
       if (activeColaboradores.length === 0) return
 
-      // Buscar datas dos últimos 30 dias
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-      const startDate = thirtyDaysAgo.toISOString().split('T')[0]
+      // Buscar datas dos últimos 60 dias (aumentado para pegar mais histórico)
+      const sixtyDaysAgo = new Date()
+      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
+      const startDate = sixtyDaysAgo.toISOString().split('T')[0]
       const today = new Date().toISOString().split('T')[0]
 
-      // Buscar todas as chamadas dos últimos 30 dias
+      // Buscar todas as chamadas dos últimos 60 dias
       const { data: allChamadas, error } = await supabase
         .from('chamadas')
         .select('data, colaborador_id')
@@ -185,27 +185,25 @@ export default function Chamada() {
         chamadasByDate[chamada.data].add(chamada.colaborador_id)
       })
 
-      // Identificar datas com pendências (apenas datas que têm pelo menos 1 chamada registrada)
+      // Identificar todas as datas que têm pelo menos 1 chamada registrada mas não estão completas
       const datesWithPending: string[] = []
       
-      // Verificar apenas as datas que têm registros de chamada
+      // Verificar todas as datas que têm registros de chamada
       Object.keys(chamadasByDate).forEach(dateStr => {
         const chamadasNaData = chamadasByDate[dateStr]
+        const totalChamadas = chamadasNaData.size
+        const totalAtivos = activeColaboradores.length
         
-        // Verificar se há colaboradores ativos sem chamada nesta data
-        // (só considera se a data tem pelo menos 1 registro, indicando que a chamada foi iniciada)
-        const hasPendency = activeColaboradores.some(col => !chamadasNaData.has(col.id))
-        
-        if (hasPendency && dateStr !== selectedDate) {
+        // Se o número de chamadas for menor que o total de colaboradores ativos,
+        // significa que há pendências nesta data
+        if (totalChamadas < totalAtivos) {
           datesWithPending.push(dateStr)
         }
       })
 
-      // Ordenar por data decrescente (mais recente primeiro) e pegar apenas as 5 mais recentes
+      // Ordenar por data decrescente (mais recente primeiro)
       setDatesWithPendencies(
-        datesWithPending
-          .sort((a, b) => b.localeCompare(a))
-          .slice(0, 5)
+        datesWithPending.sort((a, b) => b.localeCompare(a))
       )
     } catch (error) {
       console.error('Erro ao buscar datas com pendências:', error)
