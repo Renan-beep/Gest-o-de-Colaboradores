@@ -502,10 +502,13 @@ export default function Chamada() {
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={selectedDate ? new Date(selectedDate) : undefined}
+                    selected={selectedDate ? new Date(selectedDate + 'T12:00:00') : undefined}
                     onSelect={(date) => {
                       if (date) {
-                        setSelectedDate(format(date, "yyyy-MM-dd"))
+                        const year = date.getFullYear()
+                        const month = String(date.getMonth() + 1).padStart(2, '0')
+                        const day = String(date.getDate()).padStart(2, '0')
+                        setSelectedDate(`${year}-${month}-${day}`)
                       }
                     }}
                     disabled={(date) => {
@@ -516,7 +519,13 @@ export default function Chamada() {
                       if (date > today) return true
                       
                       // Desabilitar datas anteriores à primeira chamada
-                      if (primeiraDataChamada && date < primeiraDataChamada) return true
+                      if (primeiraDataChamada) {
+                        const dataChamada = new Date(primeiraDataChamada)
+                        dataChamada.setHours(0, 0, 0, 0)
+                        const dataCheck = new Date(date)
+                        dataCheck.setHours(0, 0, 0, 0)
+                        if (dataCheck < dataChamada) return true
+                      }
                       
                       return false
                     }}
