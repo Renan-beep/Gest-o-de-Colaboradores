@@ -158,23 +158,48 @@ export default function Chamada() {
       const activeColaboradores = colaboradores.filter(col => col.status === 'Ativo')
       if (activeColaboradores.length === 0) return
 
-      // Buscar datas dos últimos 60 dias (aumentado para pegar mais histórico)
+      // Buscar datas dos últimos 60 dias
       const sixtyDaysAgo = new Date()
       sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
       const startDate = sixtyDaysAgo.toISOString().split('T')[0]
       const today = new Date().toISOString().split('T')[0]
 
       // Buscar todas as chamadas dos últimos 60 dias
-      const { data: allChamadas, error } = await supabase
+      const { data: allChamadas, error: chamadasError } = await supabase
         .from('chamadas')
         .select('data, colaborador_id')
         .gte('data', startDate)
         .lte('data', today)
 
-      if (error) {
-        console.error('Erro ao buscar chamadas:', error)
+      if (chamadasError) {
+        console.error('Erro ao buscar chamadas:', chamadasError)
         return
       }
+
+      // Buscar movimentações aprovadas que afetam liderança
+      const { data: movimentacoes, error: movError } = await supabase
+        .from('solicitacoes_movimentacao')
+        .select('colaborador_id, data_inicio, lideranca_origem, lideranca_destino')
+        .eq('status', 'aprovada')
+        .not('lideranca_destino', 'is', null)
+        .gte('data_inicio', startDate)
+
+      if (movError) {
+        console.error('Erro ao buscar movimentações:', movError)
+      }
+
+      // Criar mapa de movimentações por colaborador
+      const movimentacoesPorColaborador: { [key: string]: Array<{data_inicio: string, lideranca_origem: string | null, lideranca_destino: string | null}> } = {}
+      movimentacoes?.forEach(mov => {
+        if (!movimentacoesPorColaborador[mov.colaborador_id]) {
+          movimentacoesPorColaborador[mov.colaborador_id] = []
+        }
+        movimentacoesPorColaborador[mov.colaborador_id].push({
+          data_inicio: mov.data_inicio,
+          lideranca_origem: mov.lideranca_origem,
+          lideranca_destino: mov.lideranca_destino
+        })
+      })
 
       // Agrupar chamadas por data
       const chamadasByDate: { [key: string]: Set<string> } = {}
@@ -185,25 +210,55 @@ export default function Chamada() {
         chamadasByDate[chamada.data].add(chamada.colaborador_id)
       })
 
-      // Identificar todas as datas que têm pelo menos 1 chamada registrada mas não estão completas
+      // Função para verificar qual era a liderança do colaborador em uma data específica
+      const getLiderancaNaData = (colaboradorId: string, liderancaAtual: string, dataVerificar: string): string => {
+        const movs = movimentacoesPorColaborador[colaboradorId]
+        if (!movs || movs.length === 0) return liderancaAtual
+
+        // Ordenar movimentações por data decrescente
+        const movsOrdenadas = movs.sort((a, b) => b.data_inicio.localeCompare(a.data_inicio))
+
+        // Encontrar a última movimentação antes ou igual à data verificada
+        for (const mov of movsOrdenadas) {
+          if (mov.data_inicio <= dataVerificar) {
+            // Se a data de início da movimentação é antes ou igual, o colaborador já tinha a liderança destino
+            return mov.lideranca_destino || liderancaAtual
+          }
+        }
+
+        // Se não encontrou nenhuma movimentação antes desta data, pegar a liderança origem da mais antiga
+        const movMaisAntiga = movsOrdenadas[movsOrdenadas.length - 1]
+        return movMaisAntiga.lideranca_origem || liderancaAtual
+      }
+
+      // Identificar datas com pendências considerando o histórico de liderança
       const datesWithPending: string[] = []
       
-      // Verificar todas as datas que têm registros de chamada
       Object.keys(chamadasByDate).forEach(dateStr => {
         const chamadasNaData = chamadasByDate[dateStr]
-        const totalChamadas = chamadasNaData.size
-        const totalAtivos = activeColaboradores.length
         
-        // Se o número de chamadas for menor que o total de colaboradores ativos,
-        // significa que há pendências nesta data
-        if (totalChamadas < totalAtivos) {
+        // Contar quantos colaboradores ativos deveriam ter chamada nesta data
+        // considerando a liderança que tinham NAQUELA data
+        const colaboradoresEsperadosNaData = activeColaboradores.filter(col => {
+          const liderancaNaData = getLiderancaNaData(col.id, col.lideranca, dateStr)
+          // Verificar se o colaborador estava nesta liderança naquela data
+          return liderancaNaData === col.lideranca || !movimentacoesPorColaborador[col.id]
+        })
+
+        const totalChamadas = chamadasNaData.size
+        const totalEsperado = colaboradoresEsperadosNaData.length
+
+        // Se o número de chamadas for menor que o esperado, há pendências
+        if (totalChamadas < totalEsperado && totalChamadas > 0) {
           datesWithPending.push(dateStr)
         }
       })
 
-      // Ordenar por data decrescente (mais recente primeiro)
+      // Ordenar por data decrescente e remover a data atual se estiver na lista
       setDatesWithPendencies(
-        datesWithPending.sort((a, b) => b.localeCompare(a))
+        datesWithPending
+          .filter(date => date !== selectedDate)
+          .sort((a, b) => b.localeCompare(a))
       )
     } catch (error) {
       console.error('Erro ao buscar datas com pendências:', error)

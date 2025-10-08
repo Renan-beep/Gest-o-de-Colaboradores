@@ -267,6 +267,8 @@ export type Database = {
           data_inicio: string | null
           id: string
           justificativa: string
+          lideranca_destino: string | null
+          lideranca_origem: string | null
           observacoes_gerencia: string | null
           setor_destino: string | null
           setor_origem: string | null
@@ -287,6 +289,8 @@ export type Database = {
           data_inicio?: string | null
           id?: string
           justificativa: string
+          lideranca_destino?: string | null
+          lideranca_origem?: string | null
           observacoes_gerencia?: string | null
           setor_destino?: string | null
           setor_origem?: string | null
@@ -307,6 +311,8 @@ export type Database = {
           data_inicio?: string | null
           id?: string
           justificativa?: string
+          lideranca_destino?: string | null
+          lideranca_origem?: string | null
           observacoes_gerencia?: string | null
           setor_destino?: string | null
           setor_origem?: string | null
