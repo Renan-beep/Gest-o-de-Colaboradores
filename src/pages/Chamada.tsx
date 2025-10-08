@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { 
   UserCheck, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   Save,
   Clock,
   Coffee,
@@ -20,6 +20,11 @@ import {
   ChevronRight,
   RotateCcw
 } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
+import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
 
 interface Colaborador {
@@ -50,9 +55,11 @@ export default function Chamada() {
   const [filterLideranca, setFilterLideranca] = useState("todos")
   const [datesWithPendencies, setDatesWithPendencies] = useState<string[]>([])
   const [loadingPendencies, setLoadingPendencies] = useState(false)
+  const [primeiraDataChamada, setPrimeiraDataChamada] = useState<Date | null>(null)
 
   useEffect(() => {
     fetchColaboradores()
+    fetchPrimeiraDataChamada()
 
     // Configurar listener para atualizações em tempo real na tabela colaboradores
     const colaboradoresChannel = supabase
@@ -90,6 +97,28 @@ export default function Chamada() {
       fetchDatesWithPendencies()
     }
   }, [colaboradores, chamadas, selectedDate])
+
+  const fetchPrimeiraDataChamada = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('chamadas')
+        .select('data')
+        .order('data', { ascending: true })
+        .limit(1)
+        .single()
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Erro ao buscar primeira chamada:', error)
+        return
+      }
+
+      if (data?.data) {
+        setPrimeiraDataChamada(new Date(data.data))
+      }
+    } catch (error) {
+      console.error('Erro ao buscar primeira data de chamada:', error)
+    }
+  }
 
   const fetchColaboradores = async () => {
     try {
@@ -435,7 +464,7 @@ export default function Chamada() {
                   onClick={() => setSelectedDate(date)}
                   className="flex items-center gap-2 bg-white border-yellow-300 text-yellow-800 hover:bg-yellow-100"
                 >
-                  <Calendar className="w-4 h-4" />
+                  <CalendarIcon className="w-4 h-4" />
                   {new Date(date).toLocaleDateString('pt-BR')}
                   <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -449,21 +478,53 @@ export default function Chamada() {
       <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
+            <CalendarIcon className="w-5 h-5" />
             Data da Chamada e Filtros
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="date">Selecione a Data</Label>
-              <Input
-                id="date"
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full"
-              />
+              <Label>Selecione a Data</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !selectedDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedDate ? format(new Date(selectedDate), "PPP", { locale: ptBR }) : <span>Selecione a data</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate ? new Date(selectedDate) : undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        setSelectedDate(format(date, "yyyy-MM-dd"))
+                      }
+                    }}
+                    disabled={(date) => {
+                      const today = new Date()
+                      today.setHours(23, 59, 59, 999)
+                      
+                      // Desabilitar datas futuras
+                      if (date > today) return true
+                      
+                      // Desabilitar datas anteriores à primeira chamada
+                      if (primeiraDataChamada && date < primeiraDataChamada) return true
+                      
+                      return false
+                    }}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             
             <div className="space-y-2">
