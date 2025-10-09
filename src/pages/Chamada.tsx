@@ -529,13 +529,13 @@ export default function Chamada() {
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={selectedDate ? new Date(selectedDate + 'T00:00:00') : undefined}
+                    selected={selectedDate ? new Date(selectedDate + 'T12:00:00') : undefined}
                     onSelect={(date) => {
                       if (date) {
                         // Usar UTC para evitar problemas de timezone
-                        const year = date.getFullYear()
-                        const month = String(date.getMonth() + 1).padStart(2, '0')
-                        const day = String(date.getDate()).padStart(2, '0')
+                        const year = date.getUTCFullYear()
+                        const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+                        const day = String(date.getUTCDate()).padStart(2, '0')
                         setSelectedDate(`${year}-${month}-${day}`)
                       }
                     }}
