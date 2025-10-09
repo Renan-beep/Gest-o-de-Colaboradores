@@ -532,11 +532,19 @@ export default function Chamada() {
                     selected={selectedDate ? new Date(selectedDate) : undefined}
                     onSelect={(date) => {
                       if (date) {
-                        // Extrair a data no timezone local (sem conversão UTC)
+                        console.log('Data clicada (objeto Date):', date)
+                        console.log('Timezone offset:', date.getTimezoneOffset())
+                        
+                        // Forçar a data para string YYYY-MM-DD sem conversão de timezone
                         const year = date.getFullYear()
                         const month = String(date.getMonth() + 1).padStart(2, '0')
                         const day = String(date.getDate()).padStart(2, '0')
-                        setSelectedDate(`${year}-${month}-${day}`)
+                        const dataFormatada = `${year}-${month}-${day}`
+                        
+                        console.log('Data formatada que será setada:', dataFormatada)
+                        console.log('selectedDate anterior:', selectedDate)
+                        
+                        setSelectedDate(dataFormatada)
                       }
                     }}
                     disabled={(date) => {
