@@ -35,6 +35,7 @@ interface Colaborador {
   lideranca: string
   sabado_trabalho: string
   status: string
+  admissao: string | null
 }
 
 const statusOptions = [
@@ -124,7 +125,7 @@ export default function Chamada() {
     try {
       const { data, error } = await supabase
         .from('colaboradores')
-        .select('id, matricula, colaborador, setor, lideranca, sabado_trabalho, status')
+        .select('id, matricula, colaborador, setor, lideranca, sabado_trabalho, status, admissao')
         .order('colaborador')
 
       if (error) {
@@ -183,22 +184,26 @@ export default function Chamada() {
   const fetchDatesWithPendencies = async () => {
     setLoadingPendencies(true)
     try {
+      // Pegar o mês da data selecionada
+      const [year, month] = selectedDate.split('-')
+      const firstDay = new Date(parseInt(year), parseInt(month) - 1, 1)
+      const lastDay = new Date(parseInt(year), parseInt(month), 0)
+      
+      const startDate = firstDay.toISOString().split('T')[0]
+      const endDate = lastDay.toISOString().split('T')[0]
+
+      console.log(`Buscando pendências do mês ${month}/${year} (${startDate} a ${endDate})`)
+
       // Buscar colaboradores ativos
       const activeColaboradores = colaboradores.filter(col => col.status === 'Ativo')
       if (activeColaboradores.length === 0) return
 
-      // Buscar datas dos últimos 60 dias
-      const sixtyDaysAgo = new Date()
-      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
-      const startDate = sixtyDaysAgo.toISOString().split('T')[0]
-      const today = new Date().toISOString().split('T')[0]
-
-      // Buscar todas as chamadas dos últimos 60 dias
+      // Buscar todas as chamadas do mês selecionado
       const { data: allChamadas, error: chamadasError } = await supabase
         .from('chamadas')
         .select('data, colaborador_id')
         .gte('data', startDate)
-        .lte('data', today)
+        .lte('data', endDate)
 
       if (chamadasError) {
         console.error('Erro ao buscar chamadas:', chamadasError)
@@ -211,7 +216,6 @@ export default function Chamada() {
         .select('colaborador_id, data_inicio, lideranca_origem, lideranca_destino')
         .eq('status', 'aprovada')
         .not('lideranca_destino', 'is', null)
-        .gte('data_inicio', startDate)
 
       if (movError) {
         console.error('Erro ao buscar movimentações:', movError)
@@ -250,45 +254,68 @@ export default function Chamada() {
         // Encontrar a última movimentação antes ou igual à data verificada
         for (const mov of movsOrdenadas) {
           if (mov.data_inicio <= dataVerificar) {
-            // Se a data de início da movimentação é antes ou igual, o colaborador já tinha a liderança destino
             return mov.lideranca_destino || liderancaAtual
           }
         }
 
-        // Se não encontrou nenhuma movimentação antes desta data, pegar a liderança origem da mais antiga
         const movMaisAntiga = movsOrdenadas[movsOrdenadas.length - 1]
         return movMaisAntiga.lideranca_origem || liderancaAtual
       }
 
-      // Identificar datas com pendências considerando o histórico de liderança
+      // Identificar datas com pendências no mês
       const datesWithPending: string[] = []
-      
-      Object.keys(chamadasByDate).forEach(dateStr => {
-        const chamadasNaData = chamadasByDate[dateStr]
+      const currentDate = new Date(firstDay)
+
+      while (currentDate <= lastDay) {
+        const dateStr = currentDate.toISOString().split('T')[0]
+        const dayOfWeek = currentDate.getDay()
         
-        // Contar quantos colaboradores ativos deveriam ter chamada nesta data
-        // considerando a liderança que tinham NAQUELA data
+        // Pular domingos
+        if (dayOfWeek === 0) {
+          currentDate.setDate(currentDate.getDate() + 1)
+          continue
+        }
+
+        // Filtrar colaboradores esperados para esta data
         const colaboradoresEsperadosNaData = activeColaboradores.filter(col => {
+          // Verificar se o colaborador já estava admitido nesta data
+          const admissaoDate = col.admissao ? new Date(col.admissao) : null
+          if (admissaoDate && admissaoDate > currentDate) {
+            return false
+          }
+
           const liderancaNaData = getLiderancaNaData(col.id, col.lideranca, dateStr)
-          // Verificar se o colaborador estava nesta liderança naquela data
-          return liderancaNaData === col.lideranca || !movimentacoesPorColaborador[col.id]
+          
+          // Se não há liderança filtrada, incluir todos
+          if (!filterLideranca || filterLideranca === 'todos') return true
+          
+          // Se há filtro de liderança, verificar se o colaborador pertencia a ela
+          return liderancaNaData === filterLideranca
         })
 
-        const totalChamadas = chamadasNaData.size
+        const chamadasNaData = chamadasByDate[dateStr] || new Set()
         const totalEsperado = colaboradoresEsperadosNaData.length
+        const totalChamadas = chamadasNaData.size
 
-        // Se o número de chamadas for menor que o esperado, há pendências
-        if (totalChamadas < totalEsperado && totalChamadas > 0) {
+        console.log(`${dateStr}: ${totalChamadas}/${totalEsperado} chamadas`)
+
+        // CRÍTICO: Se falta pelo menos 1 colaborador, é pendência
+        if (totalEsperado > 0 && totalChamadas < totalEsperado) {
           datesWithPending.push(dateStr)
+          console.log(`⚠️ Pendência em ${dateStr}: faltam ${totalEsperado - totalChamadas} de ${totalEsperado} colaboradores`)
         }
-      })
 
-      // Ordenar por data decrescente e remover a data atual se estiver na lista
+        currentDate.setDate(currentDate.getDate() + 1)
+      }
+
+      // Remover a data atual da lista e ordenar por data decrescente
       setDatesWithPendencies(
         datesWithPending
           .filter(date => date !== selectedDate)
           .sort((a, b) => b.localeCompare(a))
       )
+      
+      console.log(`Total de datas com pendência no mês: ${datesWithPending.length}`)
     } catch (error) {
       console.error('Erro ao buscar datas com pendências:', error)
     } finally {
