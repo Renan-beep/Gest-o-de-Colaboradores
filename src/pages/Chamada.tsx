@@ -492,7 +492,7 @@ export default function Chamada() {
                   className="flex items-center gap-2 bg-white border-yellow-300 text-yellow-800 hover:bg-yellow-100"
                 >
                   <CalendarIcon className="w-4 h-4" />
-                  {new Date(date).toLocaleDateString('pt-BR')}
+                  {new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')}
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               ))}
@@ -523,28 +523,19 @@ export default function Chamada() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? format(new Date(selectedDate), "PPP", { locale: ptBR }) : <span>Selecione a data</span>}
+                    {selectedDate ? format(new Date(selectedDate + 'T12:00:00'), "PPP", { locale: ptBR }) : <span>Selecione a data</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={selectedDate ? new Date(selectedDate) : undefined}
+                    selected={selectedDate ? new Date(selectedDate + 'T12:00:00') : undefined}
                     onSelect={(date) => {
                       if (date) {
-                        console.log('Data clicada (objeto Date):', date)
-                        console.log('Timezone offset:', date.getTimezoneOffset())
-                        
-                        // Forçar a data para string YYYY-MM-DD sem conversão de timezone
                         const year = date.getFullYear()
                         const month = String(date.getMonth() + 1).padStart(2, '0')
                         const day = String(date.getDate()).padStart(2, '0')
-                        const dataFormatada = `${year}-${month}-${day}`
-                        
-                        console.log('Data formatada que será setada:', dataFormatada)
-                        console.log('selectedDate anterior:', selectedDate)
-                        
-                        setSelectedDate(dataFormatada)
+                        setSelectedDate(`${year}-${month}-${day}`)
                       }
                     }}
                     disabled={(date) => {
@@ -626,7 +617,7 @@ export default function Chamada() {
         <CardHeader>
           <CardTitle>Indicadores do Dia</CardTitle>
           <CardDescription>
-            Resumo quantitativo da chamada do dia {new Date(selectedDate).toLocaleDateString('pt-BR')}
+            Resumo quantitativo da chamada do dia {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR')}
           </CardDescription>
         </CardHeader>
         <CardContent>
