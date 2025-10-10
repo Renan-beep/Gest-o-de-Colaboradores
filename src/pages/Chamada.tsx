@@ -489,7 +489,11 @@ export default function Chamada() {
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedDate(date)}
-                  className="flex items-center gap-2 bg-white border-yellow-300 text-yellow-800 hover:bg-yellow-100"
+                  className={`flex items-center gap-2 ${
+                    selectedDate === date 
+                      ? 'bg-yellow-500 border-yellow-600 text-white hover:bg-yellow-600' 
+                      : 'bg-white border-yellow-300 text-yellow-800 hover:bg-yellow-100'
+                  }`}
                 >
                   <CalendarIcon className="w-4 h-4" />
                   {new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')}
