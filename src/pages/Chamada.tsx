@@ -59,10 +59,13 @@ export default function Chamada() {
   const [primeiraDataChamada, setPrimeiraDataChamada] = useState<Date | null>(null)
   const [domingoEspecificoAtivo, setDomingoEspecificoAtivo] = useState(false)
   const [domingoEspecificoData, setDomingoEspecificoData] = useState<string | null>(null)
+  const [movimentacoes, setMovimentacoes] = useState<Array<{colaborador_id: string, data_inicio: string, lideranca_origem: string | null, lideranca_destino: string | null}>>([])
+
 
   useEffect(() => {
     fetchColaboradores()
     fetchPrimeiraDataChamada()
+    fetchMovimentacoes()
 
     // Configurar listener para atualizações em tempo real na tabela colaboradores
     const colaboradoresChannel = supabase
@@ -120,6 +123,25 @@ export default function Chamada() {
       }
     } catch (error) {
       console.error('Erro ao buscar primeira data de chamada:', error)
+    }
+  }
+
+  const fetchMovimentacoes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('solicitacoes_movimentacao')
+        .select('colaborador_id, data_inicio, lideranca_origem, lideranca_destino')
+        .eq('status', 'aprovada')
+        .not('lideranca_destino', 'is', null)
+
+      if (error) {
+        console.error('Erro ao buscar movimentações:', error)
+        return
+      }
+
+      setMovimentacoes(data || [])
+    } catch (error) {
+      console.error('Erro ao buscar movimentações:', error)
     }
   }
 
@@ -420,9 +442,39 @@ export default function Chamada() {
     // Filtrar apenas colaboradores ativos
     filtered = filtered.filter(col => col.status === 'Ativo')
 
-    // Filtrar por liderança
+    // Filtrar por data de admissão - colaborador só aparece a partir da data de admissão
+    filtered = filtered.filter(col => {
+      if (!col.admissao) return true // Se não tem data de admissão, considerar ativo
+      const admissaoDate = new Date(col.admissao)
+      const selectedDateObj = new Date(selectedDate)
+      return admissaoDate <= selectedDateObj
+    })
+
+    // Filtrar por liderança considerando movimentações
     if (filterLideranca !== "todos") {
-      filtered = filtered.filter(col => col.lideranca === filterLideranca)
+      filtered = filtered.filter(col => {
+        // Se não há movimentações, usar a liderança atual
+        const colMovimentacoes = movimentacoes.filter(m => m.colaborador_id === col.id)
+        
+        if (colMovimentacoes.length === 0) {
+          return col.lideranca === filterLideranca
+        }
+
+        // Ordenar movimentações por data
+        const movsOrdenadas = [...colMovimentacoes].sort((a, b) => b.data_inicio.localeCompare(a.data_inicio))
+
+        // Encontrar a liderança válida para a data selecionada
+        for (const mov of movsOrdenadas) {
+          if (mov.data_inicio <= selectedDate) {
+            // Colaborador só aparece na nova liderança a partir da data de movimentação
+            return mov.lideranca_destino === filterLideranca
+          }
+        }
+
+        // Se nenhuma movimentação é anterior à data selecionada, usar liderança de origem da mais antiga
+        const movMaisAntiga = movsOrdenadas[movsOrdenadas.length - 1]
+        return movMaisAntiga.lideranca_origem === filterLideranca
+      })
     }
 
     return filtered
