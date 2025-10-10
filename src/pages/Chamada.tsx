@@ -57,6 +57,8 @@ export default function Chamada() {
   const [datesWithPendencies, setDatesWithPendencies] = useState<string[]>([])
   const [loadingPendencies, setLoadingPendencies] = useState(false)
   const [primeiraDataChamada, setPrimeiraDataChamada] = useState<Date | null>(null)
+  const [domingoEspecificoAtivo, setDomingoEspecificoAtivo] = useState(false)
+  const [domingoEspecificoData, setDomingoEspecificoData] = useState<string | null>(null)
 
   useEffect(() => {
     fetchColaboradores()
@@ -456,15 +458,78 @@ export default function Chamada() {
             <p className="text-muted-foreground">Registre a presença dos colaboradores</p>
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={fetchColaboradores}
-          disabled={loading}
-        >
-          <RotateCcw className="w-4 h-4 mr-2" />
-          Atualizar Lista
-        </Button>
+        <div className="flex items-center gap-3">
+          {/* Controle de Domingo Específico */}
+          <Card className="shadow-sm">
+            <CardContent className="p-3">
+              <div className="flex flex-col gap-2">
+                <Label className="text-sm font-medium">Domingo Especial</Label>
+                <div className="flex items-center gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "justify-start text-left font-normal",
+                          !domingoEspecificoData && "text-muted-foreground"
+                        )}
+                        disabled={!domingoEspecificoAtivo}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {domingoEspecificoData 
+                          ? format(new Date(domingoEspecificoData + 'T12:00:00'), "dd/MM/yyyy", { locale: ptBR })
+                          : "Selecionar"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <Calendar
+                        mode="single"
+                        selected={domingoEspecificoData ? new Date(domingoEspecificoData + 'T12:00:00') : undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            const year = date.getFullYear()
+                            const month = String(date.getMonth() + 1).padStart(2, '0')
+                            const day = String(date.getDate()).padStart(2, '0')
+                            setDomingoEspecificoData(`${year}-${month}-${day}`)
+                          }
+                        }}
+                        disabled={(date) => {
+                          // Apenas permitir domingos
+                          return date.getDay() !== 0
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Button
+                    variant={domingoEspecificoAtivo ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      const newValue = !domingoEspecificoAtivo
+                      setDomingoEspecificoAtivo(newValue)
+                      if (!newValue) {
+                        setDomingoEspecificoData(null)
+                      }
+                    }}
+                  >
+                    {domingoEspecificoAtivo ? "Ativo" : "Inativo"}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchColaboradores}
+            disabled={loading}
+          >
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Atualizar Lista
+          </Button>
+        </div>
       </div>
 
       {/* Datas com Pendências */}
@@ -554,6 +619,28 @@ export default function Chamada() {
                         const dataCheck = new Date(date)
                         dataCheck.setHours(0, 0, 0, 0)
                         if (dataCheck < dataChamada) return true
+                      }
+                      
+                      // Bloquear domingos por padrão
+                      const dayOfWeek = date.getDay()
+                      if (dayOfWeek === 0) {
+                        // Se o domingo específico está ativo, verificar se é esta data
+                        if (domingoEspecificoAtivo && domingoEspecificoData) {
+                          const domingoDate = new Date(domingoEspecificoData + 'T12:00:00')
+                          const year = date.getFullYear()
+                          const month = date.getMonth()
+                          const day = date.getDate()
+                          const domingoYear = domingoDate.getFullYear()
+                          const domingoMonth = domingoDate.getMonth()
+                          const domingoDay = domingoDate.getDate()
+                          
+                          // Permitir apenas o domingo específico selecionado
+                          if (year === domingoYear && month === domingoMonth && day === domingoDay) {
+                            return false
+                          }
+                        }
+                        // Bloquear todos os outros domingos
+                        return true
                       }
                       
                       return false
