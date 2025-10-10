@@ -308,11 +308,9 @@ export default function Chamada() {
         currentDate.setDate(currentDate.getDate() + 1)
       }
 
-      // Remover a data atual da lista e ordenar por data decrescente
+      // Ordenar por data decrescente
       setDatesWithPendencies(
-        datesWithPending
-          .filter(date => date !== selectedDate)
-          .sort((a, b) => b.localeCompare(a))
+        datesWithPending.sort((a, b) => b.localeCompare(a))
       )
       
       console.log(`Total de datas com pendência no mês: ${datesWithPending.length}`)
