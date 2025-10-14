@@ -44,18 +44,18 @@ export function GraficoPendenciasLideres({ chamadas, colaboradores }: GraficoPen
   }
 
   return (
-    <Card className="p-3 bg-background/95 backdrop-blur border-border/50">
-      <div className="text-xs font-medium text-muted-foreground mb-2">
+    <Card className="p-4 bg-background/95 backdrop-blur border-border/50">
+      <div className="text-sm font-medium text-muted-foreground mb-3">
         Pendências por Líder
       </div>
-      <ResponsiveContainer width="100%" height={120}>
-        <BarChart data={dadosGrafico} layout="vertical" margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={dadosGrafico} layout="vertical" margin={{ top: 5, right: 10, bottom: 5, left: 70 }}>
           <XAxis type="number" hide />
           <YAxis 
             type="category" 
             dataKey="lideranca" 
-            width={60}
-            tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+            width={65}
+            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
           />
           <Bar dataKey="total" radius={[0, 4, 4, 0]}>
             {dadosGrafico.map((entry, index) => (
