@@ -59,7 +59,7 @@ export default function Chamada() {
   const [primeiraDataChamada, setPrimeiraDataChamada] = useState<Date | null>(null)
   const [domingoEspecificoAtivo, setDomingoEspecificoAtivo] = useState(false)
   const [domingoEspecificoData, setDomingoEspecificoData] = useState<string | null>(null)
-  const [movimentacoes, setMovimentacoes] = useState<Array<{colaborador_id: string, data_inicio: string, lideranca_origem: string | null, lideranca_destino: string | null}>>([])
+  const [movimentacoes, setMovimentacoes] = useState<Array<{colaborador_id: string, data_inicio: string, lideranca_origem: string | null, lideranca_destino: string | null, tipo_movimentacao: string}>>([])
 
 
   useEffect(() => {
@@ -130,9 +130,8 @@ export default function Chamada() {
     try {
       const { data, error } = await supabase
         .from('solicitacoes_movimentacao')
-        .select('colaborador_id, data_inicio, lideranca_origem, lideranca_destino')
+        .select('colaborador_id, data_inicio, lideranca_origem, lideranca_destino, tipo_movimentacao')
         .eq('status', 'aprovada')
-        .not('lideranca_destino', 'is', null)
 
       if (error) {
         console.error('Erro ao buscar movimentações:', error)
@@ -442,19 +441,41 @@ export default function Chamada() {
     // Filtrar apenas colaboradores ativos
     filtered = filtered.filter(col => col.status === 'Ativo')
 
-    // Filtrar por data de admissão - colaborador só aparece a partir da data de admissão
+    // Determinar a data mínima de ativação para cada colaborador
+    // Considera: admissão e todas as movimentações aprovadas
     filtered = filtered.filter(col => {
-      if (!col.admissao) return true // Se não tem data de admissão, considerar ativo
-      const admissaoDate = new Date(col.admissao)
       const selectedDateObj = new Date(selectedDate)
-      return admissaoDate <= selectedDateObj
+      
+      // Data de admissão como base
+      let dataMinima = col.admissao ? new Date(col.admissao) : null
+      
+      // Verificar todas as movimentações do colaborador
+      const colMovimentacoes = movimentacoes.filter(m => m.colaborador_id === col.id)
+      
+      if (colMovimentacoes.length > 0) {
+        // Encontrar a data de movimentação mais recente que seja <= selectedDate
+        const movsAplicaveis = colMovimentacoes
+          .filter(m => m.data_inicio && m.data_inicio <= selectedDate)
+          .sort((a, b) => b.data_inicio.localeCompare(a.data_inicio))
+        
+        if (movsAplicaveis.length > 0) {
+          const dataMov = new Date(movsAplicaveis[0].data_inicio)
+          // A data mínima é a mais recente entre admissão e movimentação
+          if (!dataMinima || dataMov > dataMinima) {
+            dataMinima = dataMov
+          }
+        }
+      }
+      
+      // Colaborador só aparece se a data selecionada for >= data mínima
+      if (!dataMinima) return true
+      return selectedDateObj >= dataMinima
     })
 
     // Filtrar por liderança considerando movimentações
     if (filterLideranca !== "todos") {
       filtered = filtered.filter(col => {
-        // Se não há movimentações, usar a liderança atual
-        const colMovimentacoes = movimentacoes.filter(m => m.colaborador_id === col.id)
+        const colMovimentacoes = movimentacoes.filter(m => m.colaborador_id === col.id && m.lideranca_destino)
         
         if (colMovimentacoes.length === 0) {
           return col.lideranca === filterLideranca
@@ -466,14 +487,13 @@ export default function Chamada() {
         // Encontrar a liderança válida para a data selecionada
         for (const mov of movsOrdenadas) {
           if (mov.data_inicio <= selectedDate) {
-            // Colaborador só aparece na nova liderança a partir da data de movimentação
             return mov.lideranca_destino === filterLideranca
           }
         }
 
         // Se nenhuma movimentação é anterior à data selecionada, usar liderança de origem da mais antiga
         const movMaisAntiga = movsOrdenadas[movsOrdenadas.length - 1]
-        return movMaisAntiga.lideranca_origem === filterLideranca
+        return movMaisAntiga.lideranca_origem === filterLideranca || col.lideranca === filterLideranca
       })
     }
 
