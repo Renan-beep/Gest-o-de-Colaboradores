@@ -18,14 +18,16 @@ import {
   Filter,
   AlertTriangle,
   ChevronRight,
-  RotateCcw
+  RotateCcw,
+  Settings
 } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
+import { GraficoPendenciasLideres } from "@/components/dashboard/GraficoPendenciasLideres"
 
 interface Colaborador {
   id: string
@@ -442,7 +444,7 @@ export default function Chamada() {
     filtered = filtered.filter(col => col.status === 'Ativo')
 
     // Determinar a data mínima de ativação para cada colaborador
-    // Considera: admissão e todas as movimentações aprovadas
+    // Considera: admissão, movimentações e mudanças de status (especialmente Afastado -> Ativo)
     filtered = filtered.filter(col => {
       const selectedDateObj = new Date(selectedDate)
       
@@ -453,14 +455,17 @@ export default function Chamada() {
       const colMovimentacoes = movimentacoes.filter(m => m.colaborador_id === col.id)
       
       if (colMovimentacoes.length > 0) {
-        // Encontrar a data de movimentação mais recente que seja <= selectedDate
+        // Encontrar movimentações relevantes que sejam <= selectedDate
         const movsAplicaveis = colMovimentacoes
           .filter(m => m.data_inicio && m.data_inicio <= selectedDate)
           .sort((a, b) => b.data_inicio.localeCompare(a.data_inicio))
         
         if (movsAplicaveis.length > 0) {
-          const dataMov = new Date(movsAplicaveis[0].data_inicio)
-          // A data mínima é a mais recente entre admissão e movimentação
+          const movMaisRecente = movsAplicaveis[0]
+          const dataMov = new Date(movMaisRecente.data_inicio)
+          
+          // Se foi uma movimentação de mudança de status (ex: Afastado -> Ativo)
+          // ou qualquer outra movimentação, usar essa data como mínima
           if (!dataMinima || dataMov > dataMinima) {
             dataMinima = dataMov
           }
@@ -604,41 +609,52 @@ export default function Chamada() {
         </div>
       </div>
 
-      {/* Datas com Pendências */}
-      {datesWithPendencies.length > 0 && (
-        <Card className="shadow-card border-yellow-200 bg-yellow-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-700">
-              <AlertTriangle className="w-5 h-5" />
-              Datas com Pendências
-            </CardTitle>
-            <CardDescription className="text-yellow-600">
-              Clique em uma data para ir diretamente para ela e resolver as pendências
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {datesWithPendencies.map(date => (
-                <Button
-                  key={date}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedDate(date)}
-                  className={`flex items-center gap-2 ${
-                    selectedDate === date 
-                      ? 'bg-yellow-500 border-yellow-600 text-white hover:bg-yellow-600' 
-                      : 'bg-white border-yellow-300 text-yellow-800 hover:bg-yellow-100'
-                  }`}
-                >
-                  <CalendarIcon className="w-4 h-4" />
-                  {new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')}
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Gráfico de Pendências e Datas com Pendências */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Gráfico de Pendências por Líder */}
+        <div className="lg:col-span-1">
+          <GraficoPendenciasLideres 
+            chamadas={chamadas}
+            colaboradores={colaboradores}
+          />
+        </div>
+
+        {/* Datas com Pendências */}
+        {datesWithPendencies.length > 0 && (
+          <Card className="shadow-card border-yellow-200 bg-yellow-50 lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-yellow-700">
+                <AlertTriangle className="w-5 h-5" />
+                Datas com Pendências
+              </CardTitle>
+              <CardDescription className="text-yellow-600">
+                Clique em uma data para ir diretamente para ela e resolver as pendências
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {datesWithPendencies.map(date => (
+                  <Button
+                    key={date}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedDate(date)}
+                    className={`flex items-center gap-2 ${
+                      selectedDate === date 
+                        ? 'bg-yellow-500 border-yellow-600 text-white hover:bg-yellow-600' 
+                        : 'bg-white border-yellow-300 text-yellow-800 hover:bg-yellow-100'
+                    }`}
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    {new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')}
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Seleção de Data e Filtros */}
       <Card className="shadow-card">
