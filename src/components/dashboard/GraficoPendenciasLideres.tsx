@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Card } from '@/components/ui/card'
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } from 'recharts'
 
 interface GraficoPendenciasLideresProps {
   chamadas: { [key: string]: string }
@@ -44,26 +44,33 @@ export function GraficoPendenciasLideres({ chamadas, colaboradores }: GraficoPen
   }
 
   return (
-    <Card className="p-4 bg-background/95 backdrop-blur border-border/50">
+    <Card className="p-4 bg-background/95 backdrop-blur border-border/50 h-full flex flex-col">
       <div className="text-sm font-medium text-muted-foreground mb-3">
         Pendências por Líder
       </div>
-      <ResponsiveContainer width="100%" height={180}>
-        <BarChart data={dadosGrafico} layout="vertical" margin={{ top: 5, right: 10, bottom: 5, left: 70 }}>
-          <XAxis type="number" hide />
-          <YAxis 
-            type="category" 
-            dataKey="lideranca" 
-            width={65}
-            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-          />
-          <Bar dataKey="total" radius={[0, 4, 4, 0]}>
-            {dadosGrafico.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={getColor(index, entry.total)} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      <div className="flex-1 min-h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={dadosGrafico} layout="vertical" margin={{ top: 5, right: 40, bottom: 5, left: 70 }}>
+            <XAxis type="number" hide />
+            <YAxis 
+              type="category" 
+              dataKey="lideranca" 
+              width={65}
+              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+            />
+            <Bar dataKey="total" radius={[0, 4, 4, 0]}>
+              <LabelList 
+                dataKey="total" 
+                position="right" 
+                style={{ fontSize: '12px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }}
+              />
+              {dadosGrafico.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={getColor(index, entry.total)} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </Card>
   )
 }
