@@ -272,12 +272,12 @@ export default function Chamada() {
           continue
         }
 
-        // Pegar colaboradores que ESTAVAM ativos NESTA data específica
+        // Pegar colaboradores que deveriam ter chamada nesta data
         const colaboradoresEsperados = colaboradores.filter(col => {
           // Deve ter sido admitido ATÉ esta data
           if (col.admissao && col.admissao > dateStr) return false
           
-          // NÃO deve ter sido demitido ANTES desta data (demissão no próprio dia ainda conta)
+          // Se foi demitido ANTES desta data, não deve ter chamada
           const demissao = demissoes?.find(d => d.colaborador_id === col.id)
           if (demissao && demissao.data_demissao < dateStr) return false
           
@@ -290,20 +290,17 @@ export default function Chamada() {
         })
 
         const chamadasNaData = chamadasPorData[dateStr] || new Set()
-        
-        // Contar quantos dos colaboradores esperados têm chamada
-        const colaboradoresComChamada = colaboradoresEsperados.filter(col => 
+        const totalEsperado = colaboradoresEsperados.length
+        const totalComRegistro = colaboradoresEsperados.filter(col => 
           chamadasNaData.has(col.id)
         ).length
-
-        const totalEsperado = colaboradoresEsperados.length
         
-        console.log(`${dateStr}: ${colaboradoresComChamada}/${totalEsperado} chamadas`)
+        console.log(`${dateStr}: ${totalComRegistro}/${totalEsperado} registrados`)
 
-        // Se falta QUALQUER colaborador, é pendência
-        if (totalEsperado > 0 && colaboradoresComChamada < totalEsperado) {
+        // Se falta QUALQUER registro (independente do status), é pendência
+        if (totalEsperado > 0 && totalComRegistro < totalEsperado) {
           datesWithPending.push(dateStr)
-          console.log(`⚠️ Pendência em ${dateStr}: ${totalEsperado - colaboradoresComChamada} faltando`)
+          console.log(`⚠️ Pendência em ${dateStr}: ${totalEsperado - totalComRegistro} sem registro`)
         }
 
         currentDate.setDate(currentDate.getDate() + 1)
