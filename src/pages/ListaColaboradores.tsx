@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Filter, Search, Download, RefreshCw, Edit, UserCheck, UserX, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,16 +51,16 @@ export default function ListaColaboradores() {
   const [filteredColaboradores, setFilteredColaboradores] = useState<Colaborador[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Filtros
+  // Filtros com seleção múltipla
   const [filtros, setFiltros] = useState({
     busca: "",
-    status: "todos",
-    cargo: "todos",
-    setor: "todos",
-    subsetor: "todos",
-    lideranca: "todos",
-    turno: "todos",
-    sabadoTrabalho: "todos",
+    status: [] as string[],
+    cargo: [] as string[],
+    setor: [] as string[],
+    subsetor: [] as string[],
+    lideranca: [] as string[],
+    turno: [] as string[],
+    sabadoTrabalho: [] as string[],
     tempoEmpresa: "todos"
   });
 
@@ -122,30 +124,36 @@ export default function ListaColaboradores() {
     // Filtro de busca geral
     if (filtros.busca) {
       const busca = filtros.busca.toLowerCase();
-      filtered = filtered.filter(c => c.colaborador.toLowerCase().includes(busca) || c.matricula.toLowerCase().includes(busca) || c.cargo?.toLowerCase().includes(busca) || c.setor?.toLowerCase().includes(busca) || c.lideranca?.toLowerCase().includes(busca));
+      filtered = filtered.filter(c => 
+        c.colaborador.toLowerCase().includes(busca) || 
+        c.matricula.toLowerCase().includes(busca) || 
+        c.cargo?.toLowerCase().includes(busca) || 
+        c.setor?.toLowerCase().includes(busca) || 
+        c.lideranca?.toLowerCase().includes(busca)
+      );
     }
 
-    // Filtros específicos
-    if (filtros.status !== "todos") {
-      filtered = filtered.filter(c => c.status?.toLowerCase() === filtros.status.toLowerCase());
+    // Filtros de seleção múltipla
+    if (filtros.status.length > 0) {
+      filtered = filtered.filter(c => filtros.status.includes(c.status));
     }
-    if (filtros.cargo !== "todos") {
-      filtered = filtered.filter(c => c.cargo === filtros.cargo);
+    if (filtros.cargo.length > 0) {
+      filtered = filtered.filter(c => filtros.cargo.includes(c.cargo));
     }
-    if (filtros.setor !== "todos") {
-      filtered = filtered.filter(c => c.setor === filtros.setor);
+    if (filtros.setor.length > 0) {
+      filtered = filtered.filter(c => filtros.setor.includes(c.setor));
     }
-    if (filtros.subsetor !== "todos") {
-      filtered = filtered.filter(c => c.subsetor === filtros.subsetor);
+    if (filtros.subsetor.length > 0) {
+      filtered = filtered.filter(c => filtros.subsetor.includes(c.subsetor));
     }
-    if (filtros.lideranca !== "todos") {
-      filtered = filtered.filter(c => c.lideranca === filtros.lideranca);
+    if (filtros.lideranca.length > 0) {
+      filtered = filtered.filter(c => filtros.lideranca.includes(c.lideranca));
     }
-    if (filtros.turno !== "todos") {
-      filtered = filtered.filter(c => c.turno === filtros.turno);
+    if (filtros.turno.length > 0) {
+      filtered = filtered.filter(c => filtros.turno.includes(c.turno));
     }
-    if (filtros.sabadoTrabalho !== "todos") {
-      filtered = filtered.filter(c => c.sabado_trabalho === filtros.sabadoTrabalho);
+    if (filtros.sabadoTrabalho.length > 0) {
+      filtered = filtered.filter(c => filtros.sabadoTrabalho.includes(c.sabado_trabalho));
     }
     if (filtros.tempoEmpresa !== "todos") {
       filtered = filtered.filter(c => {
@@ -159,16 +167,17 @@ export default function ListaColaboradores() {
     }
     setFilteredColaboradores(filtered);
   };
+
   const limparFiltros = () => {
     setFiltros({
       busca: "",
-      status: "todos",
-      cargo: "todos",
-      setor: "todos",
-      subsetor: "todos",
-      lideranca: "todos",
-      turno: "todos",
-      sabadoTrabalho: "todos",
+      status: [],
+      cargo: [],
+      setor: [],
+      subsetor: [],
+      lideranca: [],
+      turno: [],
+      sabadoTrabalho: [],
       tempoEmpresa: "todos"
     });
   };
@@ -329,122 +338,78 @@ export default function ListaColaboradores() {
             {/* Status */}
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select value={filtros.status} onValueChange={value => setFiltros(prev => ({
-              ...prev,
-              status: value
-            }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="Ativo">Ativo</SelectItem>
-                  <SelectItem value="Afastado">Afastado</SelectItem>
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={["Ativo", "Afastado"]}
+                selected={filtros.status}
+                onChange={(values) => setFiltros(prev => ({ ...prev, status: values }))}
+                placeholder="Todos os status"
+              />
             </div>
 
             {/* Sábado Trabalho */}
             <div className="space-y-2">
               <Label>Trabalha no Sábado</Label>
-              <Select value={filtros.sabadoTrabalho} onValueChange={value => setFiltros(prev => ({
-              ...prev,
-              sabadoTrabalho: value
-            }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="Sim">Sim</SelectItem>
-                  <SelectItem value="Não">Não</SelectItem>
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={["Sim", "Não"]}
+                selected={filtros.sabadoTrabalho}
+                onChange={(values) => setFiltros(prev => ({ ...prev, sabadoTrabalho: values }))}
+                placeholder="Todos"
+              />
             </div>
 
             {/* Cargo */}
             <div className="space-y-2">
               <Label>Cargo</Label>
-              <Select value={filtros.cargo} onValueChange={value => setFiltros(prev => ({
-              ...prev,
-              cargo: value
-            }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {opcoesFiltros.cargos.map(cargo => <SelectItem key={cargo} value={cargo}>{cargo}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={opcoesFiltros.cargos}
+                selected={filtros.cargo}
+                onChange={(values) => setFiltros(prev => ({ ...prev, cargo: values }))}
+                placeholder="Todos os cargos"
+              />
             </div>
 
             {/* Setor */}
             <div className="space-y-2">
               <Label>Setor</Label>
-              <Select value={filtros.setor} onValueChange={value => setFiltros(prev => ({
-              ...prev,
-              setor: value
-            }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {opcoesFiltros.setores.map(setor => <SelectItem key={setor} value={setor}>{setor}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={opcoesFiltros.setores}
+                selected={filtros.setor}
+                onChange={(values) => setFiltros(prev => ({ ...prev, setor: values }))}
+                placeholder="Todos os setores"
+              />
             </div>
 
             {/* Subsetor */}
             <div className="space-y-2">
               <Label>Subsetor</Label>
-              <Select value={filtros.subsetor} onValueChange={value => setFiltros(prev => ({
-              ...prev,
-              subsetor: value
-            }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {opcoesFiltros.subsetores.map(subsetor => <SelectItem key={subsetor} value={subsetor}>{subsetor}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={opcoesFiltros.subsetores}
+                selected={filtros.subsetor}
+                onChange={(values) => setFiltros(prev => ({ ...prev, subsetor: values }))}
+                placeholder="Todos os subsetores"
+              />
             </div>
 
             {/* Liderança */}
             <div className="space-y-2">
               <Label>Liderança</Label>
-              <Select value={filtros.lideranca} onValueChange={value => setFiltros(prev => ({
-              ...prev,
-              lideranca: value
-            }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {opcoesFiltros.liderancas.map(lideranca => <SelectItem key={lideranca} value={lideranca}>{lideranca}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={opcoesFiltros.liderancas}
+                selected={filtros.lideranca}
+                onChange={(values) => setFiltros(prev => ({ ...prev, lideranca: values }))}
+                placeholder="Todas as lideranças"
+              />
             </div>
 
             {/* Turno */}
             <div className="space-y-2">
               <Label>Turno</Label>
-              <Select value={filtros.turno} onValueChange={value => setFiltros(prev => ({
-              ...prev,
-              turno: value
-            }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {opcoesFiltros.turnos.map(turno => <SelectItem key={turno} value={turno}>{turno}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={opcoesFiltros.turnos}
+                selected={filtros.turno}
+                onChange={(values) => setFiltros(prev => ({ ...prev, turno: values }))}
+                placeholder="Todos os turnos"
+              />
             </div>
 
             {/* Tempo de Empresa */}

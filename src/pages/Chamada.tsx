@@ -104,7 +104,7 @@ export default function Chamada() {
     if (colaboradores.length > 0) {
       fetchDatesWithPendencies()
     }
-  }, [colaboradores, chamadas, selectedDate])
+  }, [colaboradores, chamadas, selectedDate, filterLideranca])
 
   const fetchPrimeiraDataChamada = async () => {
     try {
