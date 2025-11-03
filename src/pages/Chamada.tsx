@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -62,6 +62,8 @@ export default function Chamada() {
   const [domingoEspecificoAtivo, setDomingoEspecificoAtivo] = useState(false)
   const [domingoEspecificoData, setDomingoEspecificoData] = useState<string | null>(null)
   const [movimentacoes, setMovimentacoes] = useState<Array<{colaborador_id: string, data_inicio: string, lideranca_origem: string | null, lideranca_destino: string | null, tipo_movimentacao: string}>>([])
+  const [highlightedColaborador, setHighlightedColaborador] = useState<string | null>(null)
+  const colaboradorRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
 
 
   useEffect(() => {
@@ -505,6 +507,15 @@ export default function Chamada() {
     return filtered
   }
 
+  const scrollToColaborador = (colaboradorId: string) => {
+    const element = colaboradorRefs.current[colaboradorId]
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setHighlightedColaborador(colaboradorId)
+      setTimeout(() => setHighlightedColaborador(null), 3000)
+    }
+  }
+
 
   const statusCounts = getStatusCounts()
   const pendingColaboradores = getPendingColaboradores()
@@ -780,7 +791,11 @@ export default function Chamada() {
           <CardContent>
             <div className="space-y-2">
               {pendingColaboradores.map(col => (
-                <div key={col.id} className="flex items-center justify-between p-2 bg-white rounded border">
+                <div 
+                  key={col.id} 
+                  onClick={() => scrollToColaborador(col.id)}
+                  className="flex items-center justify-between p-2 bg-white rounded border cursor-pointer hover:bg-orange-100 transition-colors"
+                >
                   <span className="font-medium">{col.colaborador}</span>
                   <span className="text-sm text-muted-foreground">Liderança: {col.lideranca}</span>
                 </div>
@@ -840,8 +855,14 @@ export default function Chamada() {
           <div className="space-y-4">
             {filteredColaboradores.map((colaborador) => (
               <div 
-                key={colaborador.id} 
-                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                key={colaborador.id}
+                ref={(el) => colaboradorRefs.current[colaborador.id] = el}
+                className={cn(
+                  "flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg transition-all duration-300",
+                  highlightedColaborador === colaborador.id 
+                    ? "bg-orange-100 border-orange-400 shadow-lg scale-[1.02]" 
+                    : "hover:bg-muted/50"
+                )}
               >
                 <div className="flex-1 mb-4 sm:mb-0">
                   <div className="font-medium">{colaborador.colaborador}</div>
