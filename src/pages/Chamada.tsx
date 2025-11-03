@@ -70,6 +70,7 @@ export default function Chamada() {
     fetchColaboradores()
     fetchPrimeiraDataChamada()
     fetchMovimentacoes()
+    registrarQuantitativosAntigos()
 
     // Configurar listener para atualizações em tempo real na tabela colaboradores
     const colaboradoresChannel = supabase
@@ -95,6 +96,41 @@ export default function Chamada() {
       supabase.removeChannel(colaboradoresChannel)
     }
   }, [])
+
+  // Registrar quantitativos de datas antigas automaticamente
+  const registrarQuantitativosAntigos = async () => {
+    try {
+      const datasParaRegistrar = ['2025-10-10', '2025-10-13']
+      
+      for (const data of datasParaRegistrar) {
+        const { data: colaboradores } = await supabase
+          .from('colaboradores')
+          .select('id, admissao')
+
+        const { data: demissoes } = await supabase
+          .from('demissoes')
+          .select('colaborador_id, data_demissao')
+
+        const colaboradoresEsperados = colaboradores?.filter(col => {
+          if (col.admissao && col.admissao > data) return false
+          const demissao = demissoes?.find(d => d.colaborador_id === col.id)
+          if (demissao && demissao.data_demissao < data) return false
+          return true
+        }) || []
+
+        await supabase
+          .from('historico_quantitativo_diario')
+          .upsert({
+            data: data,
+            total_esperado: colaboradoresEsperados.length
+          }, { onConflict: 'data' })
+      }
+      
+      console.log('✅ Quantitativos 10/10 e 13/10 registrados')
+    } catch (error) {
+      console.error('Erro ao registrar quantitativos:', error)
+    }
+  }
 
   useEffect(() => {
     if (selectedDate) {
