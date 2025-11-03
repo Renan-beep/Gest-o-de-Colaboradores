@@ -25,27 +25,46 @@ export function RegistrarQuantitativo() {
     try {
       const dateStr = format(date, 'yyyy-MM-dd')
       
-      // Buscar quantas chamadas existem nesta data
-      const { count, error: countError } = await supabase
-        .from('chamadas')
-        .select('*', { count: 'exact', head: true })
-        .eq('data', dateStr)
+      // Buscar todos os colaboradores
+      const { data: colaboradores, error: colabError } = await supabase
+        .from('colaboradores')
+        .select('id, admissao')
 
-      if (countError) throw countError
+      if (colabError) throw colabError
 
-      // Registrar o quantitativo baseado nas chamadas existentes
+      // Buscar demissões
+      const { data: demissoes, error: demError } = await supabase
+        .from('demissoes')
+        .select('colaborador_id, data_demissao')
+
+      if (demError) throw demError
+
+      // Calcular quantos deveriam estar na chamada naquele dia
+      const colaboradoresEsperados = colaboradores?.filter(col => {
+        // Deve ter sido admitido até esta data
+        if (col.admissao && col.admissao > dateStr) return false
+        
+        // Não deve ter sido demitido antes desta data
+        const demissao = demissoes?.find(d => d.colaborador_id === col.id)
+        if (demissao && demissao.data_demissao < dateStr) return false
+        
+        return true
+      }) || []
+
+      const totalEsperado = colaboradoresEsperados.length
+
+      // Registrar o quantitativo
       const { error } = await supabase
         .from('historico_quantitativo_diario')
         .upsert({
           data: dateStr,
-          total_esperado: count || 0
+          total_esperado: totalEsperado
         })
 
       if (error) throw error
 
-      toast.success(`Quantitativo registrado: ${count} colaboradores em ${format(date, 'dd/MM/yyyy', { locale: ptBR })}`)
+      toast.success(`Quantitativo registrado: ${totalEsperado} colaboradores esperados em ${format(date, 'dd/MM/yyyy', { locale: ptBR })}`)
       setDate(undefined)
-      setTotalEsperado('')
     } catch (error) {
       console.error('Erro ao registrar quantitativo:', error)
       toast.error('Erro ao registrar quantitativo')
