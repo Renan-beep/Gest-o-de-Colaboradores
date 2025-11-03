@@ -347,14 +347,6 @@ export default function Chamada() {
           continue
         }
 
-        // Só verificar pendências se já existe pelo menos 1 chamada registrada nesta data
-        // Isso evita marcar como pendente datas que nunca tiveram chamada iniciada
-        const chamadasNaData = chamadasByDate[dateStr]
-        if (!chamadasNaData || chamadasNaData.size === 0) {
-          currentDate.setDate(currentDate.getDate() + 1)
-          continue
-        }
-
         // Filtrar colaboradores que deveriam estar presentes nesta data
         const colaboradoresEsperadosNaData = activeColaboradores.filter(col => {
           // Verificar se estava ativo na data
@@ -372,6 +364,7 @@ export default function Chamada() {
           return true
         })
 
+        const chamadasNaData = chamadasByDate[dateStr] || new Set()
         const totalEsperado = colaboradoresEsperadosNaData.length
         const totalChamadas = chamadasNaData.size
 
