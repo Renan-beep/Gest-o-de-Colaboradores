@@ -104,7 +104,12 @@ export default function Chamada() {
 
   useEffect(() => {
     if (colaboradores.length > 0) {
-      fetchDatesWithPendencies()
+      // Usar um pequeno delay para garantir que os estados estão sincronizados
+      const timer = setTimeout(() => {
+        fetchDatesWithPendencies()
+      }, 200)
+      
+      return () => clearTimeout(timer)
     }
   }, [colaboradores, chamadas, selectedDate, filterLideranca])
 
@@ -441,14 +446,19 @@ export default function Chamada() {
   const handleAtualizarLista = async () => {
     setLoading(true)
     try {
-      await Promise.all([
-        fetchColaboradores(),
-        fetchChamadasDoDia(),
-        fetchMovimentacoes()
-      ])
+      // Recarregar todos os dados
+      await fetchColaboradores()
+      await fetchMovimentacoes()
+      await fetchChamadasDoDia()
+      
+      // Aguardar um pouco para garantir que os estados foram atualizados
+      setTimeout(() => {
+        fetchDatesWithPendencies()
+      }, 100)
+      
       toast({
         title: "Atualizado",
-        description: "Lista de colaboradores e chamadas atualizada com sucesso",
+        description: "Dados atualizados com sucesso",
       })
     } catch (error) {
       toast({
