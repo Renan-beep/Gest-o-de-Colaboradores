@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { differenceInMonths, differenceInYears, parseISO } from "date-fns";
+import { exportToExcel } from "@/utils/secureExcel";
 interface Colaborador {
   id: string;
   matricula: string;
@@ -188,7 +189,9 @@ export default function ListaColaboradores() {
   };
   const formatarData = (data: string) => {
     if (!data) return "-";
-    return new Date(data).toLocaleDateString('pt-BR');
+    // Parse ISO date and format in local timezone to avoid timezone issues
+    const [year, month, day] = data.split('T')[0].split('-');
+    return `${day}/${month}/${year}`;
   };
 
   const calcularTempoEmpresa = (dataAdmissao: string): TempoEmpresa => {
@@ -240,6 +243,37 @@ export default function ListaColaboradores() {
     } else {
       return <Badge variant="secondary" className="bg-purple-100 text-purple-800">Veterano</Badge>;
     }
+  };
+
+  const exportarParaExcel = () => {
+    // Preparar dados para exportação (apenas os filtrados)
+    const dadosParaExportar = filteredColaboradores.map(colaborador => {
+      const tempoEmpresa = calcularTempoEmpresa(colaborador.admissao);
+      return {
+        Matricula: colaborador.matricula,
+        Nome: colaborador.colaborador,
+        Status: colaborador.status,
+        Cargo: colaborador.cargo || "",
+        Setor: colaborador.setor || "",
+        Subsetor: colaborador.subsetor || "",
+        Lideranca: colaborador.lideranca || "",
+        Turno: colaborador.turno || "",
+        'Sabado Trabalho': colaborador.sabado_trabalho || "",
+        'Sabado Horario': colaborador.sabado_horario || "",
+        'Horario Almoco': colaborador.horario_almoco || "",
+        'Horario Cafe': colaborador.horario_cafe || "",
+        Admissao: formatarData(colaborador.admissao),
+        'Tempo de Empresa': formatarTempoEmpresa(tempoEmpresa)
+      };
+    });
+
+    const nomeArquivo = `colaboradores_${new Date().toISOString().split('T')[0]}`;
+    exportToExcel(dadosParaExportar, nomeArquivo);
+    
+    toast({
+      title: "Sucesso",
+      description: `${dadosParaExportar.length} colaboradores exportados para Excel`,
+    });
   };
   if (loading) {
     return <div className="space-y-6">
@@ -430,7 +464,10 @@ export default function ListaColaboradores() {
               <RefreshCw className="w-4 h-4 mr-2" />
               Limpar Filtros
             </Button>
-            
+            <Button variant="default" onClick={exportarParaExcel}>
+              <Download className="w-4 h-4 mr-2" />
+              Exportar para Excel
+            </Button>
           </div>
         </CardContent>
       </Card>
