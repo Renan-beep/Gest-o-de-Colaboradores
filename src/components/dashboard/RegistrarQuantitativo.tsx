@@ -15,6 +15,45 @@ export function RegistrarQuantitativo() {
   const [totalEsperado, setTotalEsperado] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
+  const handleRegistrarAutomatico = async () => {
+    if (!date) {
+      toast.error('Selecione uma data')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const dateStr = format(date, 'yyyy-MM-dd')
+      
+      // Buscar quantas chamadas existem nesta data
+      const { count, error: countError } = await supabase
+        .from('chamadas')
+        .select('*', { count: 'exact', head: true })
+        .eq('data', dateStr)
+
+      if (countError) throw countError
+
+      // Registrar o quantitativo baseado nas chamadas existentes
+      const { error } = await supabase
+        .from('historico_quantitativo_diario')
+        .upsert({
+          data: dateStr,
+          total_esperado: count || 0
+        })
+
+      if (error) throw error
+
+      toast.success(`Quantitativo registrado: ${count} colaboradores em ${format(date, 'dd/MM/yyyy', { locale: ptBR })}`)
+      setDate(undefined)
+      setTotalEsperado('')
+    } catch (error) {
+      console.error('Erro ao registrar quantitativo:', error)
+      toast.error('Erro ao registrar quantitativo')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleRegistrar = async () => {
     if (!date || !totalEsperado) {
       toast.error('Selecione uma data e informe o total esperado')
@@ -83,9 +122,14 @@ export function RegistrarQuantitativo() {
         />
       </div>
 
-      <Button onClick={handleRegistrar} disabled={isLoading}>
-        {isLoading ? 'Registrando...' : 'Registrar'}
-      </Button>
+      <div className="flex gap-2">
+        <Button onClick={handleRegistrarAutomatico} disabled={isLoading} className="flex-1">
+          {isLoading ? 'Registrando...' : 'Auto (Usar Registros)'}
+        </Button>
+        <Button onClick={handleRegistrar} disabled={isLoading} variant="outline" className="flex-1">
+          {isLoading ? 'Registrando...' : 'Manual'}
+        </Button>
+      </div>
     </div>
   )
 }
