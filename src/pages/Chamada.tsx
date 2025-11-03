@@ -295,7 +295,18 @@ export default function Chamada() {
           chamadasNaData.has(col.id)
         ).length
         
-        console.log(`${dateStr}: ${totalComRegistro}/${totalEsperado} registrados`)
+        // Debug detalhado para datas específicas
+        if (dateStr === '2024-10-10' || dateStr === '2024-10-13') {
+          console.log(`🔍 DEBUG ${dateStr}:`)
+          console.log(`  Total esperado: ${totalEsperado}`)
+          console.log(`  Total com registro: ${totalComRegistro}`)
+          console.log(`  Colaboradores esperados:`, colaboradoresEsperados.map(c => c.colaborador))
+          console.log(`  IDs com chamada:`, Array.from(chamadasNaData))
+          const semRegistro = colaboradoresEsperados.filter(col => !chamadasNaData.has(col.id))
+          console.log(`  SEM REGISTRO (${semRegistro.length}):`, semRegistro.map(c => c.colaborador))
+        } else {
+          console.log(`${dateStr}: ${totalComRegistro}/${totalEsperado} registrados`)
+        }
 
         // Se falta QUALQUER registro (independente do status), é pendência
         if (totalEsperado > 0 && totalComRegistro < totalEsperado) {
