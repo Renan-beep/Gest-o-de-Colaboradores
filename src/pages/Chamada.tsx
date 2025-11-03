@@ -395,6 +395,9 @@ export default function Chamada() {
         title: "Sucesso",
         description: `Chamada salva para ${totalChamadas} colaborador(es)`,
       })
+
+      // Recarregar as chamadas do dia para atualizar o estado e as pendências
+      await fetchChamadasDoDia()
     } catch (error: any) {
       toast({
         title: "Erro",
@@ -403,6 +406,29 @@ export default function Chamada() {
       })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleAtualizarLista = async () => {
+    setLoading(true)
+    try {
+      await Promise.all([
+        fetchColaboradores(),
+        fetchChamadasDoDia(),
+        fetchMovimentacoes()
+      ])
+      toast({
+        title: "Atualizado",
+        description: "Lista de colaboradores e chamadas atualizada com sucesso",
+      })
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar dados",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -611,7 +637,7 @@ export default function Chamada() {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchColaboradores}
+            onClick={handleAtualizarLista}
             disabled={loading}
           >
             <RotateCcw className="w-4 h-4 mr-2" />
