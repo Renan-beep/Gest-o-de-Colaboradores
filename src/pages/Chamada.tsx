@@ -250,6 +250,14 @@ export default function Chamada() {
         return
       }
 
+      console.log(`📊 Total de chamadas encontradas no período: ${allChamadas?.length || 0}`)
+      
+      // Debug: mostrar algumas chamadas das datas problemáticas
+      const chamadas1010 = allChamadas?.filter(c => c.data === '2024-10-10') || []
+      const chamadas1013 = allChamadas?.filter(c => c.data === '2024-10-13') || []
+      console.log(`📊 Chamadas em 10/10: ${chamadas1010.length}`)
+      console.log(`📊 Chamadas em 13/10: ${chamadas1013.length}`)
+
       // Agrupar chamadas por data
       const chamadasPorData: { [key: string]: Set<string> } = {}
       allChamadas?.forEach(chamada => {
