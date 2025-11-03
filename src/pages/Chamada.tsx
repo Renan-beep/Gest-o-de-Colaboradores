@@ -312,10 +312,23 @@ export default function Chamada() {
         }
 
         const movs = movimentacoesPorColaborador[col.id]
-        if (!movs || movs.length === 0) return true
+        if (!movs || movs.length === 0) {
+          // Se não tem movimentações, só precisa ter admissão válida
+          return !col.admissao || col.admissao <= dateStr
+        }
 
-        // Ordenar movimentações por data
-        const movsOrdenadas = movs.sort((a, b) => a.data_inicio.localeCompare(b.data_inicio))
+        // Ordenar movimentações por data (com proteção para nulls)
+        const movsOrdenadas = movs
+          .filter(m => m.data_inicio) // Filtrar apenas com data_inicio válida
+          .sort((a, b) => {
+            if (!a.data_inicio) return 1
+            if (!b.data_inicio) return -1
+            return a.data_inicio.localeCompare(b.data_inicio)
+          })
+
+        if (movsOrdenadas.length === 0) {
+          return !col.admissao || col.admissao <= dateStr
+        }
 
         // Verificar se existe alguma movimentação que se aplica a esta data
         for (const mov of movsOrdenadas) {
@@ -330,7 +343,7 @@ export default function Chamada() {
         }
 
         // Se não há movimentações aplicáveis mas colaborador tem admissão válida
-        return col.admissao <= dateStr
+        return !col.admissao || col.admissao <= dateStr
       }
 
       // Identificar datas com pendências no mês
