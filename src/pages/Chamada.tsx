@@ -223,7 +223,10 @@ export default function Chamada() {
 
       // Buscar colaboradores ativos
       const activeColaboradores = colaboradores.filter(col => col.status === 'Ativo')
-      if (activeColaboradores.length === 0) return
+      if (activeColaboradores.length === 0) {
+        setDatesWithPendencies([])
+        return
+      }
 
       // Buscar todas as chamadas do mês selecionado
       const { data: allChamadas, error: chamadasError } = await supabase
@@ -297,7 +300,7 @@ export default function Chamada() {
         const dateStr = currentDate.toISOString().split('T')[0]
         const dayOfWeek = currentDate.getDay()
         
-        // Pular domingos
+        // Pular domingos (a menos que seja domingo específico)
         if (dayOfWeek === 0) {
           currentDate.setDate(currentDate.getDate() + 1)
           continue
@@ -311,6 +314,23 @@ export default function Chamada() {
             return false
           }
 
+          // Verificar movimentações - só incluir se estava ativo nesta data
+          const colMovs = movimentacoesPorColaborador[col.id] || []
+          
+          // Se tem movimentações, verificar se já havia iniciado
+          if (colMovs.length > 0) {
+            const movsAplicaveis = colMovs.filter(m => m.data_inicio <= dateStr)
+            
+            // Se não há movimentações aplicáveis para esta data, não incluir
+            if (movsAplicaveis.length === 0) {
+              // Verificar se a primeira movimentação é futura
+              const primeiraMovData = colMovs.sort((a, b) => a.data_inicio.localeCompare(b.data_inicio))[0].data_inicio
+              if (primeiraMovData > dateStr) {
+                return false
+              }
+            }
+          }
+
           const liderancaNaData = getLiderancaNaData(col.id, col.lideranca, dateStr)
           
           // Se não há liderança filtrada, incluir todos
@@ -321,15 +341,24 @@ export default function Chamada() {
         })
 
         const chamadasNaData = chamadasByDate[dateStr] || new Set()
+        
+        // Filtrar apenas chamadas de colaboradores que eram esperados nesta data
+        const chamadasValidas = Array.from(chamadasNaData).filter(colabId => {
+          return colaboradoresEsperadosNaData.some(col => col.id === colabId)
+        })
+        
         const totalEsperado = colaboradoresEsperadosNaData.length
-        const totalChamadas = chamadasNaData.size
+        const totalChamadas = chamadasValidas.length
 
         console.log(`${dateStr}: ${totalChamadas}/${totalEsperado} chamadas`)
 
         // CRÍTICO: Se falta pelo menos 1 colaborador, é pendência
         if (totalEsperado > 0 && totalChamadas < totalEsperado) {
           datesWithPending.push(dateStr)
-          console.log(`⚠️ Pendência em ${dateStr}: faltam ${totalEsperado - totalChamadas} de ${totalEsperado} colaboradores`)
+          
+          // Identificar quem está faltando para debug
+          const faltantes = colaboradoresEsperadosNaData.filter(col => !chamadasNaData.has(col.id))
+          console.log(`⚠️ Pendência em ${dateStr}: faltam ${faltantes.length} de ${totalEsperado} colaboradores`, faltantes.map(f => f.colaborador))
         }
 
         currentDate.setDate(currentDate.getDate() + 1)
