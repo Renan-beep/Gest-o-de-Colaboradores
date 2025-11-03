@@ -114,20 +114,24 @@ export const readExcelFile = async (file: File): Promise<any[]> => {
 // Safe Excel export
 export const exportToExcel = (data: any[], filename: string = 'colaboradores'): void => {
   try {
+    console.log('Iniciando exportação com', data.length, 'itens');
+    
     // Sanitize data before export
     const sanitizedData = data.map(item => ({
-      Matrícula: sanitizeText(item.matricula),
-      Colaborador: sanitizeText(item.colaborador),
-      Status: sanitizeText(item.status),
-      Cargo: sanitizeText(item.cargo),
-      Setor: sanitizeText(item.setor),
-      Subsetor: sanitizeText(item.subsetor),
-      Liderança: sanitizeText(item.lideranca),
-      Turno: sanitizeText(item.turno),
-      'Horário Café': sanitizeText(item.horario_cafe),
+      'Matrícula': sanitizeText(item.matricula),
+      'Colaborador': sanitizeText(item.colaborador),
+      'Status': sanitizeText(item.status),
+      'Cargo': sanitizeText(item.cargo),
+      'Setor': sanitizeText(item.setor),
+      'Subsetor': sanitizeText(item.subsetor),
+      'Liderança': sanitizeText(item.lideranca),
+      'Turno': sanitizeText(item.turno),
       'Sábado Trabalho': sanitizeText(item.sabado_trabalho),
+      'Sábado Horário': sanitizeText(item.sabado_horario),
       'Horário Almoço': sanitizeText(item.horario_almoco),
-      Admissão: item.admissao || '',
+      'Horário Café': sanitizeText(item.horario_cafe),
+      'Admissão': item.admissao || '',
+      'Tempo de Empresa': item.tempo_empresa || '',
     }));
     
     const ws = XLSX.utils.json_to_sheet(sanitizedData);
@@ -136,7 +140,9 @@ export const exportToExcel = (data: any[], filename: string = 'colaboradores'): 
     
     const sanitizedFilename = sanitizeText(filename);
     XLSX.writeFile(wb, `${sanitizedFilename}.xlsx`);
+    console.log('Exportação concluída:', `${sanitizedFilename}.xlsx`);
   } catch (error) {
+    console.error('Erro na exportação:', error);
     throw new Error(`Erro ao exportar arquivo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
   }
 };

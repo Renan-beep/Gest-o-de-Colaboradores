@@ -246,34 +246,43 @@ export default function ListaColaboradores() {
   };
 
   const exportarParaExcel = () => {
-    // Preparar dados para exportação (apenas os filtrados)
-    const dadosParaExportar = filteredColaboradores.map(colaborador => {
-      const tempoEmpresa = calcularTempoEmpresa(colaborador.admissao);
-      return {
-        Matricula: colaborador.matricula,
-        Nome: colaborador.colaborador,
-        Status: colaborador.status,
-        Cargo: colaborador.cargo || "",
-        Setor: colaborador.setor || "",
-        Subsetor: colaborador.subsetor || "",
-        Lideranca: colaborador.lideranca || "",
-        Turno: colaborador.turno || "",
-        'Sabado Trabalho': colaborador.sabado_trabalho || "",
-        'Sabado Horario': colaborador.sabado_horario || "",
-        'Horario Almoco': colaborador.horario_almoco || "",
-        'Horario Cafe': colaborador.horario_cafe || "",
-        Admissao: formatarData(colaborador.admissao),
-        'Tempo de Empresa': formatarTempoEmpresa(tempoEmpresa)
-      };
-    });
+    try {
+      // Preparar dados para exportação (apenas os filtrados)
+      const dadosParaExportar = filteredColaboradores.map(colaborador => {
+        const tempoEmpresa = calcularTempoEmpresa(colaborador.admissao);
+        return {
+          matricula: colaborador.matricula,
+          colaborador: colaborador.colaborador,
+          status: colaborador.status,
+          cargo: colaborador.cargo || "",
+          setor: colaborador.setor || "",
+          subsetor: colaborador.subsetor || "",
+          lideranca: colaborador.lideranca || "",
+          turno: colaborador.turno || "",
+          sabado_trabalho: colaborador.sabado_trabalho || "",
+          sabado_horario: colaborador.sabado_horario || "",
+          horario_almoco: colaborador.horario_almoco || "",
+          horario_cafe: colaborador.horario_cafe || "",
+          admissao: formatarData(colaborador.admissao),
+          tempo_empresa: formatarTempoEmpresa(tempoEmpresa)
+        };
+      });
 
-    const nomeArquivo = `colaboradores_${new Date().toISOString().split('T')[0]}`;
-    exportToExcel(dadosParaExportar, nomeArquivo);
-    
-    toast({
-      title: "Sucesso",
-      description: `${dadosParaExportar.length} colaboradores exportados para Excel`,
-    });
+      const nomeArquivo = `colaboradores_${new Date().toISOString().split('T')[0]}`;
+      exportToExcel(dadosParaExportar, nomeArquivo);
+      
+      toast({
+        title: "Sucesso",
+        description: `${dadosParaExportar.length} colaboradores exportados para Excel`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao exportar arquivo. Tente novamente.",
+        variant: "destructive"
+      });
+      console.error("Erro na exportação:", error);
+    }
   };
   if (loading) {
     return <div className="space-y-6">
