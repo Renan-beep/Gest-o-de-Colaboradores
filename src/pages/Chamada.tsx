@@ -852,6 +852,24 @@ export default function Chamada() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Botões de ação no topo */}
+          <div className="flex gap-4 pb-6 border-b mb-6">
+            <Button 
+              onClick={handleSaveChamada} 
+              className="flex-1 sm:flex-none"
+              disabled={saving}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {saving ? "Salvando..." : "Salvar Chamada"}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setChamadas({})}
+            >
+              Limpar Seleções
+            </Button>
+          </div>
+
           <div className="space-y-4">
             {filteredColaboradores.map((colaborador) => (
               <div 
@@ -897,23 +915,6 @@ export default function Chamada() {
                 </div>
               </div>
             ))}
-          </div>
-          
-          <div className="flex gap-4 pt-6 border-t">
-            <Button 
-              onClick={handleSaveChamada} 
-              className="flex-1 sm:flex-none"
-              disabled={saving}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {saving ? "Salvando..." : "Salvar Chamada"}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setChamadas({})}
-            >
-              Limpar Seleções
-            </Button>
           </div>
         </CardContent>
       </Card>
