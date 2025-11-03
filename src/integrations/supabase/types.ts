@@ -220,6 +220,33 @@ export type Database = {
         }
         Relationships: []
       }
+      historico_quantitativo_diario: {
+        Row: {
+          created_at: string
+          data: string
+          id: string
+          por_lideranca: Json | null
+          total_esperado: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data: string
+          id?: string
+          por_lideranca?: Json | null
+          total_esperado?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          id?: string
+          por_lideranca?: Json | null
+          total_esperado?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -352,42 +379,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_old_chamadas: {
-        Args: { days_to_keep?: number }
-        Returns: number
-      }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_encarregado: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_gerencia: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_management: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_valid_email: {
-        Args: { email: string }
-        Returns: boolean
-      }
-      processar_fechamento_mensal: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      verificar_limpeza_mensal: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      cleanup_old_chamadas: { Args: { days_to_keep?: number }; Returns: number }
+      get_current_user_role: { Args: never; Returns: string }
+      is_admin: { Args: never; Returns: boolean }
+      is_encarregado: { Args: never; Returns: boolean }
+      is_gerencia: { Args: never; Returns: boolean }
+      is_management: { Args: never; Returns: boolean }
+      is_valid_email: { Args: { email: string }; Returns: boolean }
+      processar_fechamento_mensal: { Args: never; Returns: number }
+      registrar_quantitativo_diario: { Args: never; Returns: undefined }
+      verificar_limpeza_mensal: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
