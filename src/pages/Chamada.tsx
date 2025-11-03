@@ -288,22 +288,12 @@ export default function Chamada() {
 
         const totalEsperado = colaboradoresEsperados.length
         
-        // Só considerar pendência se havia colaboradores esperados e falta alguém
-        // E se a data já passou (não é hoje ou futuro)
+        console.log(`${dateStr}: ${colaboradoresComChamada}/${totalEsperado} chamadas`)
+
+        // Se falta QUALQUER colaborador, é pendência
         if (totalEsperado > 0 && colaboradoresComChamada < totalEsperado) {
-          // Só adiciona se pelo menos 1 chamada foi iniciada OU se já passou mais de 1 dia
-          const dataObj = new Date(dateStr)
-          const ontem = new Date()
-          ontem.setDate(ontem.getDate() - 1)
-          ontem.setHours(0, 0, 0, 0)
-          
-          // Se já passou mais de 1 dia E não tem nenhuma chamada, provavelmente foi feriado
-          if (dataObj < ontem && colaboradoresComChamada === 0) {
-            console.log(`⏭️ Pulando ${dateStr}: 0 chamadas (provável feriado)`)
-          } else {
-            datesWithPending.push(dateStr)
-            console.log(`⚠️ Pendência em ${dateStr}: ${totalEsperado - colaboradoresComChamada} faltando (${colaboradoresComChamada}/${totalEsperado})`)
-          }
+          datesWithPending.push(dateStr)
+          console.log(`⚠️ Pendência em ${dateStr}: ${totalEsperado - colaboradoresComChamada} faltando`)
         }
 
         currentDate.setDate(currentDate.getDate() + 1)
