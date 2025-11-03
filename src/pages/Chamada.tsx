@@ -229,6 +229,15 @@ export default function Chamada() {
 
       console.log(`Verificando pendências: ${startDate} a ${endDate}`)
 
+      // Buscar demissões para saber quem estava ativo em cada data
+      const { data: demissoes, error: demissoesError } = await supabase
+        .from('demissoes')
+        .select('colaborador_id, data_demissao')
+
+      if (demissoesError) {
+        console.error('Erro ao buscar demissões:', demissoesError)
+      }
+
       // Buscar chamadas do mês
       const { data: allChamadas, error: chamadasError } = await supabase
         .from('chamadas')
@@ -263,13 +272,14 @@ export default function Chamada() {
           continue
         }
 
-        // Pegar colaboradores que eram ativos e admitidos até esta data
+        // Pegar colaboradores que ESTAVAM ativos NESTA data específica
         const colaboradoresEsperados = colaboradores.filter(col => {
-          // Deve estar ativo
-          if (col.status !== 'Ativo') return false
-          
-          // Deve ter sido admitido até esta data
+          // Deve ter sido admitido ATÉ esta data
           if (col.admissao && col.admissao > dateStr) return false
+          
+          // NÃO deve ter sido demitido ANTES desta data
+          const demissao = demissoes?.find(d => d.colaborador_id === col.id)
+          if (demissao && demissao.data_demissao <= dateStr) return false
           
           // Aplicar filtro de liderança se houver
           if (filterLideranca && filterLideranca !== 'todos') {
