@@ -216,12 +216,10 @@ export default function Chamada() {
   const fetchDatesWithPendencies = async () => {
     setLoadingPendencies(true)
     try {
-      // Pegar o mês da data selecionada
       const [year, month] = selectedDate.split('-')
       const firstDay = new Date(parseInt(year), parseInt(month) - 1, 1)
       const lastDay = new Date(parseInt(year), parseInt(month), 0)
       
-      // Não verificar datas futuras
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       const lastDayToCheck = lastDay < today ? lastDay : today
@@ -229,16 +227,9 @@ export default function Chamada() {
       const startDate = firstDay.toISOString().split('T')[0]
       const endDate = lastDayToCheck.toISOString().split('T')[0]
 
-      console.log(`Buscando pendências do mês ${month}/${year} (${startDate} a ${endDate})`)
+      console.log(`Verificando pendências: ${startDate} a ${endDate}`)
 
-      // Buscar colaboradores ativos
-      const activeColaboradores = colaboradores.filter(col => col.status === 'Ativo')
-      if (activeColaboradores.length === 0) {
-        setDatesWithPendencies([])
-        return
-      }
-
-      // Buscar todas as chamadas do mês selecionado
+      // Buscar chamadas do mês
       const { data: allChamadas, error: chamadasError } = await supabase
         .from('chamadas')
         .select('data, colaborador_id')
@@ -250,103 +241,15 @@ export default function Chamada() {
         return
       }
 
-      // Buscar movimentações aprovadas
-      const { data: movimentacoes, error: movError } = await supabase
-        .from('solicitacoes_movimentacao')
-        .select('colaborador_id, data_inicio, data_fim, lideranca_origem, lideranca_destino, tipo_movimentacao')
-        .eq('status', 'aprovada')
-
-      if (movError) {
-        console.error('Erro ao buscar movimentações:', movError)
-      }
-
-      // Criar mapa de movimentações por colaborador
-      const movimentacoesPorColaborador: { [key: string]: Array<{data_inicio: string, data_fim: string | null, lideranca_origem: string | null, lideranca_destino: string | null, tipo_movimentacao: string}> } = {}
-      movimentacoes?.forEach(mov => {
-        if (!movimentacoesPorColaborador[mov.colaborador_id]) {
-          movimentacoesPorColaborador[mov.colaborador_id] = []
-        }
-        movimentacoesPorColaborador[mov.colaborador_id].push({
-          data_inicio: mov.data_inicio,
-          data_fim: mov.data_fim,
-          lideranca_origem: mov.lideranca_origem,
-          lideranca_destino: mov.lideranca_destino,
-          tipo_movimentacao: mov.tipo_movimentacao
-        })
-      })
-
       // Agrupar chamadas por data
-      const chamadasByDate: { [key: string]: Set<string> } = {}
+      const chamadasPorData: { [key: string]: Set<string> } = {}
       allChamadas?.forEach(chamada => {
-        if (!chamadasByDate[chamada.data]) {
-          chamadasByDate[chamada.data] = new Set()
+        if (!chamadasPorData[chamada.data]) {
+          chamadasPorData[chamada.data] = new Set()
         }
-        chamadasByDate[chamada.data].add(chamada.colaborador_id)
+        chamadasPorData[chamada.data].add(chamada.colaborador_id)
       })
 
-      // Função para verificar qual era a liderança do colaborador em uma data específica
-      const getLiderancaNaData = (colaboradorId: string, liderancaAtual: string, dataVerificar: string): string => {
-        const movs = movimentacoesPorColaborador[colaboradorId]
-        if (!movs || movs.length === 0) return liderancaAtual
-
-        // Ordenar movimentações por data decrescente
-        const movsOrdenadas = movs
-          .filter(m => m.lideranca_destino) // Apenas movimentações que afetam liderança
-          .sort((a, b) => b.data_inicio.localeCompare(a.data_inicio))
-
-        // Encontrar a última movimentação antes ou igual à data verificada
-        for (const mov of movsOrdenadas) {
-          if (mov.data_inicio <= dataVerificar) {
-            return mov.lideranca_destino || liderancaAtual
-          }
-        }
-
-        return liderancaAtual
-      }
-
-      // Função para verificar se colaborador estava ativo em uma data
-      const colaboradorAtivoNaData = (col: any, dateStr: string): boolean => {
-        // Verificar data de admissão
-        if (col.admissao && col.admissao > dateStr) {
-          return false
-        }
-
-        const movs = movimentacoesPorColaborador[col.id]
-        if (!movs || movs.length === 0) {
-          // Se não tem movimentações, só precisa ter admissão válida
-          return !col.admissao || col.admissao <= dateStr
-        }
-
-        // Ordenar movimentações por data (com proteção para nulls)
-        const movsOrdenadas = movs
-          .filter(m => m.data_inicio) // Filtrar apenas com data_inicio válida
-          .sort((a, b) => {
-            if (!a.data_inicio) return 1
-            if (!b.data_inicio) return -1
-            return a.data_inicio.localeCompare(b.data_inicio)
-          })
-
-        if (movsOrdenadas.length === 0) {
-          return !col.admissao || col.admissao <= dateStr
-        }
-
-        // Verificar se existe alguma movimentação que se aplica a esta data
-        for (const mov of movsOrdenadas) {
-          // Se a movimentação ainda não começou, ignorar
-          if (mov.data_inicio > dateStr) continue
-          
-          // Se tem data_fim e já passou, ignorar
-          if (mov.data_fim && mov.data_fim < dateStr) continue
-          
-          // Movimentação válida para esta data
-          return true
-        }
-
-        // Se não há movimentações aplicáveis mas colaborador tem admissão válida
-        return !col.admissao || col.admissao <= dateStr
-      }
-
-      // Identificar datas com pendências no mês
       const datesWithPending: string[] = []
       const currentDate = new Date(firstDay)
 
@@ -354,54 +257,53 @@ export default function Chamada() {
         const dateStr = currentDate.toISOString().split('T')[0]
         const dayOfWeek = currentDate.getDay()
         
-        // Pular domingos (a menos que seja domingo específico ativo)
+        // Pular domingos
         if (dayOfWeek === 0) {
           currentDate.setDate(currentDate.getDate() + 1)
           continue
         }
 
-        // Filtrar colaboradores que deveriam estar presentes nesta data
-        const colaboradoresEsperadosNaData = activeColaboradores.filter(col => {
-          // Verificar se estava ativo na data
-          if (!colaboradorAtivoNaData(col, dateStr)) {
-            return false
-          }
-
-          const liderancaNaData = getLiderancaNaData(col.id, col.lideranca, dateStr)
+        // Pegar colaboradores que eram ativos e admitidos até esta data
+        const colaboradoresEsperados = colaboradores.filter(col => {
+          // Deve estar ativo
+          if (col.status !== 'Ativo') return false
+          
+          // Deve ter sido admitido até esta data
+          if (col.admissao && col.admissao > dateStr) return false
           
           // Aplicar filtro de liderança se houver
           if (filterLideranca && filterLideranca !== 'todos') {
-            return liderancaNaData === filterLideranca
+            return col.lideranca === filterLideranca
           }
           
           return true
         })
 
-        const chamadasNaData = chamadasByDate[dateStr] || new Set()
-        const totalEsperado = colaboradoresEsperadosNaData.length
-        const totalChamadas = chamadasNaData.size
+        const chamadasNaData = chamadasPorData[dateStr] || new Set()
+        
+        // Contar quantos dos colaboradores esperados têm chamada
+        const colaboradoresComChamada = colaboradoresEsperados.filter(col => 
+          chamadasNaData.has(col.id)
+        ).length
 
-        console.log(`${dateStr}: ${totalChamadas}/${totalEsperado} chamadas`)
+        const totalEsperado = colaboradoresEsperados.length
+        
+        console.log(`${dateStr}: ${colaboradoresComChamada}/${totalEsperado} chamadas`)
 
-        // Se falta pelo menos 1 colaborador, é pendência
-        if (totalEsperado > totalChamadas) {
+        // Se falta alguém, é pendência
+        if (totalEsperado > 0 && colaboradoresComChamada < totalEsperado) {
           datesWithPending.push(dateStr)
-          
-          const faltantes = colaboradoresEsperadosNaData.filter(col => !chamadasNaData.has(col.id))
-          console.log(`⚠️ Pendência em ${dateStr}: faltam ${faltantes.length} de ${totalEsperado} colaboradores`, faltantes.map(f => f.colaborador))
+          console.log(`⚠️ Pendência em ${dateStr}: ${totalEsperado - colaboradoresComChamada} faltando`)
         }
 
         currentDate.setDate(currentDate.getDate() + 1)
       }
 
-      // Ordenar por data decrescente
-      setDatesWithPendencies(
-        datesWithPending.sort((a, b) => b.localeCompare(a))
-      )
+      setDatesWithPendencies(datesWithPending.sort((a, b) => b.localeCompare(a)))
+      console.log(`Total de datas com pendência: ${datesWithPending.length}`)
       
-      console.log(`Total de datas com pendência no mês: ${datesWithPending.length}`)
     } catch (error) {
-      console.error('Erro ao buscar datas com pendências:', error)
+      console.error('Erro ao buscar pendências:', error)
     } finally {
       setLoadingPendencies(false)
     }
