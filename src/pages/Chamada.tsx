@@ -614,8 +614,9 @@ export default function Chamada() {
         {/* Gráfico de Pendências por Líder */}
         <div className="lg:col-span-1">
           <GraficoPendenciasLideres 
-            chamadas={chamadas}
+            selectedDate={selectedDate}
             colaboradores={colaboradores}
+            movimentacoes={movimentacoes}
           />
         </div>
 

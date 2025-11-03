@@ -3,32 +3,81 @@ import { Card } from '@/components/ui/card'
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } from 'recharts'
 
 interface GraficoPendenciasLideresProps {
-  chamadas: { [key: string]: string }
+  selectedDate: string
   colaboradores: Array<{
     id: string
     lideranca: string | null
+    status: string
+    admissao: string | null
+  }>
+  movimentacoes: Array<{
+    colaborador_id: string
+    data_inicio: string
+    lideranca_origem: string | null
+    lideranca_destino: string | null
   }>
 }
 
-export function GraficoPendenciasLideres({ chamadas, colaboradores }: GraficoPendenciasLideresProps) {
+export function GraficoPendenciasLideres({ selectedDate, colaboradores, movimentacoes }: GraficoPendenciasLideresProps) {
   const dadosGrafico = useMemo(() => {
-    // Contar pendências por líder (colaboradores sem chamada registrada)
-    const pendenciasPorLider: Record<string, number> = {}
+    const [year, month] = selectedDate.split('-')
+    const firstDay = new Date(parseInt(year), parseInt(month) - 1, 1)
+    const lastDay = new Date(parseInt(year), parseInt(month), 0)
 
-    colaboradores.forEach(colaborador => {
-      if (!chamadas[colaborador.id] && colaborador.lideranca) {
-        pendenciasPorLider[colaborador.lideranca] = (pendenciasPorLider[colaborador.lideranca] || 0) + 1
+    // Função para obter liderança do colaborador em uma data específica
+    const getLiderancaNaData = (colaboradorId: string, liderancaAtual: string, dataVerificar: string): string => {
+      const movs = movimentacoes.filter(m => m.colaborador_id === colaboradorId && m.lideranca_destino)
+      if (movs.length === 0) return liderancaAtual
+
+      const movsOrdenadas = movs.sort((a, b) => b.data_inicio.localeCompare(a.data_inicio))
+      
+      for (const mov of movsOrdenadas) {
+        if (mov.data_inicio <= dataVerificar) {
+          return mov.lideranca_destino || liderancaAtual
+        }
       }
-    })
+
+      const movMaisAntiga = movsOrdenadas[movsOrdenadas.length - 1]
+      return movMaisAntiga.lideranca_origem || liderancaAtual
+    }
+
+    // Contar dias pendentes por líder ao longo do mês
+    const pendenciasPorLider: Record<string, number> = {}
+    const currentDate = new Date(firstDay)
+
+    while (currentDate <= lastDay) {
+      const dateStr = currentDate.toISOString().split('T')[0]
+      const dayOfWeek = currentDate.getDay()
+      
+      // Pular domingos
+      if (dayOfWeek !== 0) {
+        // Para cada dia útil do mês, verificar colaboradores ativos
+        colaboradores.forEach(colaborador => {
+          if (colaborador.status !== 'Ativo') return
+
+          // Verificar se o colaborador já estava admitido nesta data
+          const admissaoDate = colaborador.admissao ? new Date(colaborador.admissao) : null
+          if (admissaoDate && admissaoDate > currentDate) return
+
+          const liderancaNaData = getLiderancaNaData(colaborador.id, colaborador.lideranca || '', dateStr)
+          if (liderancaNaData) {
+            // Incrementar contador de dias-colaborador por líder
+            pendenciasPorLider[liderancaNaData] = (pendenciasPorLider[liderancaNaData] || 0) + 1
+          }
+        })
+      }
+
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
 
     // Converter para array e ordenar do maior para o menor
     const dados = Object.entries(pendenciasPorLider)
       .map(([lideranca, total]) => ({ lideranca, total }))
       .sort((a, b) => b.total - a.total)
-      .slice(0, 5) // Top 5 líderes
+      .slice(0, 5)
 
     return dados
-  }, [chamadas, colaboradores])
+  }, [selectedDate, colaboradores, movimentacoes])
 
   if (dadosGrafico.length === 0) {
     return null
