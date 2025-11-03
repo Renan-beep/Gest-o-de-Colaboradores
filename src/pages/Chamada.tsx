@@ -282,7 +282,7 @@ export default function Chamada() {
 
         // Pegar colaboradores que deveriam ter chamada nesta data
         const colaboradoresEsperados = colaboradores.filter(col => {
-          // Deve ter sido admitido ATÉ esta data
+          // Deve ter sido admitido ATÉ esta data (inclusive)
           if (col.admissao && col.admissao > dateStr) return false
           
           // Se foi demitido ANTES desta data, não deve ter chamada
@@ -298,28 +298,24 @@ export default function Chamada() {
         })
 
         const chamadasNaData = chamadasPorData[dateStr] || new Set()
-        const totalEsperado = colaboradoresEsperados.length
-        const totalComRegistro = colaboradoresEsperados.filter(col => 
-          chamadasNaData.has(col.id)
-        ).length
+        
+        // Verificar quem NÃO tem registro
+        const semRegistro = colaboradoresEsperados.filter(col => !chamadasNaData.has(col.id))
         
         // Debug detalhado para datas específicas
-        if (dateStr === '2024-10-10' || dateStr === '2024-10-13') {
+        if (dateStr === '2025-10-10' || dateStr === '2025-10-13') {
           console.log(`🔍 DEBUG ${dateStr}:`)
-          console.log(`  Total esperado: ${totalEsperado}`)
-          console.log(`  Total com registro: ${totalComRegistro}`)
-          console.log(`  Colaboradores esperados:`, colaboradoresEsperados.map(c => c.colaborador))
-          console.log(`  IDs com chamada:`, Array.from(chamadasNaData))
-          const semRegistro = colaboradoresEsperados.filter(col => !chamadasNaData.has(col.id))
-          console.log(`  SEM REGISTRO (${semRegistro.length}):`, semRegistro.map(c => c.colaborador))
-        } else {
-          console.log(`${dateStr}: ${totalComRegistro}/${totalEsperado} registrados`)
+          console.log(`  Total esperado: ${colaboradoresEsperados.length}`)
+          console.log(`  Total com registro: ${chamadasNaData.size}`)
+          console.log(`  SEM REGISTRO (${semRegistro.length}):`, semRegistro.map(c => `${c.colaborador} (adm: ${c.admissao})`))
         }
+        
+        console.log(`${dateStr}: ${chamadasNaData.size}/${colaboradoresEsperados.length} registrados`)
 
-        // Se falta QUALQUER registro (independente do status), é pendência
-        if (totalEsperado > 0 && totalComRegistro < totalEsperado) {
+        // Se falta QUALQUER registro, é pendência
+        if (semRegistro.length > 0) {
           datesWithPending.push(dateStr)
-          console.log(`⚠️ Pendência em ${dateStr}: ${totalEsperado - totalComRegistro} sem registro`)
+          console.log(`⚠️ Pendência em ${dateStr}: ${semRegistro.length} sem registro`)
         }
 
         currentDate.setDate(currentDate.getDate() + 1)
