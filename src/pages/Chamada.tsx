@@ -277,9 +277,9 @@ export default function Chamada() {
           // Deve ter sido admitido ATÉ esta data
           if (col.admissao && col.admissao > dateStr) return false
           
-          // NÃO deve ter sido demitido ANTES desta data
+          // NÃO deve ter sido demitido ANTES desta data (demissão no próprio dia ainda conta)
           const demissao = demissoes?.find(d => d.colaborador_id === col.id)
-          if (demissao && demissao.data_demissao <= dateStr) return false
+          if (demissao && demissao.data_demissao < dateStr) return false
           
           // Aplicar filtro de liderança se houver
           if (filterLideranca && filterLideranca !== 'todos') {
