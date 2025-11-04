@@ -97,39 +97,9 @@ export default function Chamada() {
     }
   }, [])
 
-  // Registrar quantitativos de datas antigas automaticamente
+  // Não é mais necessário - lógica foi movida para fetchDatesWithPendencies
   const registrarQuantitativosAntigos = async () => {
-    try {
-      const datasParaRegistrar = ['2025-10-10', '2025-10-13']
-      
-      for (const data of datasParaRegistrar) {
-        const { data: colaboradores } = await supabase
-          .from('colaboradores')
-          .select('id, admissao')
-
-        const { data: demissoes } = await supabase
-          .from('demissoes')
-          .select('colaborador_id, data_demissao')
-
-        const colaboradoresEsperados = colaboradores?.filter(col => {
-          if (col.admissao && col.admissao > data) return false
-          const demissao = demissoes?.find(d => d.colaborador_id === col.id)
-          if (demissao && demissao.data_demissao < data) return false
-          return true
-        }) || []
-
-        await supabase
-          .from('historico_quantitativo_diario')
-          .upsert({
-            data: data,
-            total_esperado: colaboradoresEsperados.length
-          }, { onConflict: 'data' })
-      }
-      
-      console.log('✅ Quantitativos 10/10 e 13/10 registrados')
-    } catch (error) {
-      console.error('Erro ao registrar quantitativos:', error)
-    }
+    // Removido - agora calculamos dinamicamente considerando admissão, demissão e movimentações
   }
 
   useEffect(() => {
@@ -265,23 +235,7 @@ export default function Chamada() {
 
       console.log(`Verificando pendências: ${startDate} a ${endDate}`)
 
-      // Buscar histórico de quantitativos
-      const { data: historico, error: historicoError } = await supabase
-        .from('historico_quantitativo_diario')
-        .select('data, total_esperado')
-        .gte('data', startDate)
-        .lte('data', endDate)
-
-      if (historicoError) {
-        console.error('Erro ao buscar histórico:', historicoError)
-      }
-
-      const historicoMap = new Map<string, number>()
-      historico?.forEach(h => {
-        historicoMap.set(h.data, h.total_esperado)
-      })
-
-      // Buscar demissões para saber quem estava ativo em cada data
+      // Buscar demissões
       const { data: demissoes, error: demissoesError } = await supabase
         .from('demissoes')
         .select('colaborador_id, data_demissao')
@@ -312,15 +266,6 @@ export default function Chamada() {
         }
         chamadasPorData[chamada.data].add(chamada.colaborador_id)
       })
-      
-      // Debug: mostrar algumas datas específicas
-      console.log('🔍 Debug chamadas por data:')
-      console.log('2025-10-10:', chamadasPorData['2025-10-10']?.size || 0, 'registros')
-      console.log('2025-10-13:', chamadasPorData['2025-10-13']?.size || 0, 'registros')
-      
-      // Debug: mostrar todas as datas únicas encontradas
-      const datasEncontradas = Object.keys(chamadasPorData).sort()
-      console.log('📅 Datas com registros encontradas:', datasEncontradas)
 
       const datesWithPending: string[] = []
       const currentDate = new Date(firstDay)
@@ -345,30 +290,66 @@ export default function Chamada() {
           continue
         }
 
-        // Contar quantos registros de chamada existem nesta data (independente do status)
+        // Calcular quantos colaboradores DEVERIAM ter registro nesta data
+        // Considerando admissão, demissão e movimentações
+        const colaboradoresEsperadosNaData = colaboradores.filter(col => {
+          // Apenas colaboradores ativos hoje
+          if (col.status !== 'Ativo') return false
+
+          // Data mínima = maior entre admissão e movimentação mais recente
+          let dataMinima: Date | null = null
+          
+          // Data de admissão
+          if (col.admissao) {
+            dataMinima = new Date(col.admissao)
+          }
+          
+          // Verificar movimentações (mudança de líder, afastamento->ativo, etc)
+          const colMovimentacoes = movimentacoes.filter(m => m.colaborador_id === col.id)
+          if (colMovimentacoes.length > 0) {
+            // Encontrar a movimentação mais recente ANTES ou igual à data analisada
+            const movsAplicaveis = colMovimentacoes
+              .filter(m => m.data_inicio && m.data_inicio <= dateStr)
+              .sort((a, b) => b.data_inicio.localeCompare(a.data_inicio))
+            
+            if (movsAplicaveis.length > 0) {
+              const movMaisRecente = movsAplicaveis[0]
+              const dataMov = new Date(movMaisRecente.data_inicio)
+              
+              // Se a movimentação é mais recente que a admissão, usar ela como data mínima
+              if (!dataMinima || dataMov > dataMinima) {
+                dataMinima = dataMov
+              }
+            }
+          }
+          
+          // Se existe data mínima, colaborador só deveria aparecer a partir dela
+          if (dataMinima) {
+            const dataAtual = new Date(dateStr)
+            if (dataAtual < dataMinima) {
+              return false // Não deveria ter chamada antes da data mínima
+            }
+          }
+          
+          // Verificar se estava demitido nesta data
+          const demissao = demissoes?.find(d => d.colaborador_id === col.id)
+          if (demissao && demissao.data_demissao <= dateStr) {
+            return false // Não deveria ter chamada após demissão
+          }
+          
+          return true
+        })
+
+        const totalEsperado = colaboradoresEsperadosNaData.length
         const registrosNaData = chamadasPorData[dateStr] || new Set()
         const totalComRegistro = registrosNaData.size
         
-        // Se existe histórico, usar o total do histórico, senão não marcar como pendente
-        const totalHistorico = historicoMap.get(dateStr)
-        
-        if (totalHistorico !== undefined) {
-          // Se tem histórico e faltam registros
-          if (totalComRegistro < totalHistorico) {
-            console.log(`⚠️ ${dateStr}: ${totalComRegistro}/${totalHistorico} registros - PENDENTE`)
-            datesWithPending.push(dateStr)
-          } else {
-            console.log(`✅ ${dateStr}: ${totalComRegistro}/${totalHistorico} registros - COMPLETO`)
-          }
+        // Marcar como pendente apenas se faltam registros
+        if (totalComRegistro < totalEsperado) {
+          console.log(`⚠️ ${dateStr}: ${totalComRegistro}/${totalEsperado} registros - PENDENTE`)
+          datesWithPending.push(dateStr)
         } else {
-          // Se não tem histórico, só marcar como pendente se for uma data passada SEM NENHUM registro
-          const isDataPassada = currentDate < new Date()
-          if (isDataPassada && totalComRegistro === 0) {
-            console.log(`⚠️ ${dateStr}: SEM REGISTROS - PENDENTE`)
-            datesWithPending.push(dateStr)
-          } else if (isDataPassada) {
-            console.log(`✅ ${dateStr}: ${totalComRegistro} registros - COMPLETO (sem histórico)`)
-          }
+          console.log(`✅ ${dateStr}: ${totalComRegistro}/${totalEsperado} registros - COMPLETO`)
         }
 
         currentDate.setDate(currentDate.getDate() + 1)
