@@ -233,7 +233,7 @@ export default function Chamada() {
       const startDate = firstDay.toISOString().split('T')[0]
       const endDate = lastDayToCheck.toISOString().split('T')[0]
 
-      console.log(`Verificando pendências: ${startDate} a ${endDate}`)
+      console.log(`🔍 Verificando pendências: ${startDate} a ${endDate}`)
 
       // Buscar demissões
       const { data: demissoes, error: demissoesError } = await supabase
@@ -244,19 +244,23 @@ export default function Chamada() {
         console.error('Erro ao buscar demissões:', demissoesError)
       }
 
-      // Buscar chamadas do mês
+      // Buscar TODAS as chamadas do mês SEM filtros adicionais
       const { data: allChamadas, error: chamadasError } = await supabase
         .from('chamadas')
         .select('data, colaborador_id')
         .gte('data', startDate)
-        .lte('data', endDate)
+        .lte('date', endDate)
 
       if (chamadasError) {
-        console.error('Erro ao buscar chamadas:', chamadasError)
+        console.error('❌ Erro ao buscar chamadas:', chamadasError)
         return
       }
 
       console.log(`📊 Total de chamadas encontradas no período: ${allChamadas?.length || 0}`)
+      
+      // Debug específico para 10/10
+      const chamadas1010 = allChamadas?.filter(c => c.data === '2025-10-10') || []
+      console.log(`🔎 Chamadas em 2025-10-10: ${chamadas1010.length}`)
 
       // Agrupar chamadas por data (Set com IDs dos colaboradores que TÊM registro)
       const chamadasPorData: { [key: string]: Set<string> } = {}
@@ -291,7 +295,6 @@ export default function Chamada() {
         }
 
         // Calcular quantos colaboradores DEVERIAM ter registro nesta data
-        // Considerando admissão, demissão e movimentações
         const colaboradoresEsperadosNaData = colaboradores.filter(col => {
           // Apenas colaboradores ativos hoje
           if (col.status !== 'Ativo') return false
@@ -304,10 +307,9 @@ export default function Chamada() {
             dataMinima = new Date(col.admissao)
           }
           
-          // Verificar movimentações (mudança de líder, afastamento->ativo, etc)
+          // Verificar movimentações
           const colMovimentacoes = movimentacoes.filter(m => m.colaborador_id === col.id)
           if (colMovimentacoes.length > 0) {
-            // Encontrar a movimentação mais recente ANTES ou igual à data analisada
             const movsAplicaveis = colMovimentacoes
               .filter(m => m.data_inicio && m.data_inicio <= dateStr)
               .sort((a, b) => b.data_inicio.localeCompare(a.data_inicio))
@@ -316,7 +318,6 @@ export default function Chamada() {
               const movMaisRecente = movsAplicaveis[0]
               const dataMov = new Date(movMaisRecente.data_inicio)
               
-              // Se a movimentação é mais recente que a admissão, usar ela como data mínima
               if (!dataMinima || dataMov > dataMinima) {
                 dataMinima = dataMov
               }
@@ -327,14 +328,14 @@ export default function Chamada() {
           if (dataMinima) {
             const dataAtual = new Date(dateStr)
             if (dataAtual < dataMinima) {
-              return false // Não deveria ter chamada antes da data mínima
+              return false
             }
           }
           
           // Verificar se estava demitido nesta data
           const demissao = demissoes?.find(d => d.colaborador_id === col.id)
           if (demissao && demissao.data_demissao <= dateStr) {
-            return false // Não deveria ter chamada após demissão
+            return false
           }
           
           return true
@@ -356,7 +357,7 @@ export default function Chamada() {
       }
 
       setDatesWithPendencies(datesWithPending.sort((a, b) => b.localeCompare(a)))
-      console.log(`Total de datas com pendência: ${datesWithPending.length}`)
+      console.log(`📋 Total de datas com pendência: ${datesWithPendencies.length}`)
       
     } catch (error) {
       console.error('Erro ao buscar pendências:', error)
