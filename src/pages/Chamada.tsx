@@ -303,14 +303,8 @@ export default function Chamada() {
       }
 
       console.log(`📊 Total de chamadas encontradas no período: ${allChamadas?.length || 0}`)
-      
-      // Debug: mostrar algumas chamadas das datas problemáticas
-      const chamadas1010 = allChamadas?.filter(c => c.data === '2024-10-10') || []
-      const chamadas1013 = allChamadas?.filter(c => c.data === '2024-10-13') || []
-      console.log(`📊 Chamadas em 10/10: ${chamadas1010.length}`)
-      console.log(`📊 Chamadas em 13/10: ${chamadas1013.length}`)
 
-      // Agrupar chamadas por data
+      // Agrupar chamadas por data (Set com IDs dos colaboradores que TÊM registro)
       const chamadasPorData: { [key: string]: Set<string> } = {}
       allChamadas?.forEach(chamada => {
         if (!chamadasPorData[chamada.data]) {
@@ -353,17 +347,18 @@ export default function Chamada() {
         const totalHistorico = historicoMap.get(dateStr)
         const totalEsperado = totalHistorico !== undefined ? totalHistorico : colaboradoresEsperados.length
         
-        // Contar quantos registros de chamada existem nesta data
-        const chamadasNaData = chamadasPorData[dateStr] || new Set()
-        const totalRegistrado = chamadasNaData.size
+        // Contar quantos colaboradores TÊM REGISTRO (independente do status)
+        const registrosNaData = chamadasPorData[dateStr] || new Set()
+        const totalComRegistro = registrosNaData.size
+        
+        // Só é pendência se faltar ALGUM registro
+        const temPendencia = totalComRegistro < totalEsperado
         
         const origem = totalHistorico !== undefined ? 'HISTÓRICO' : 'CALCULADO'
-        console.log(`${dateStr}: ${totalRegistrado}/${totalEsperado} registrados (${origem})`)
+        console.log(`${dateStr}: ${totalComRegistro}/${totalEsperado} com registro (${origem})${temPendencia ? ' ⚠️ PENDENTE' : ' ✅ COMPLETO'}`)
         
-        // Se falta QUALQUER registro, é pendência
-        if (totalRegistrado < totalEsperado) {
+        if (temPendencia) {
           datesWithPending.push(dateStr)
-          console.log(`⚠️ Pendência em ${dateStr}: ${totalEsperado - totalRegistrado} faltando`)
         }
 
         currentDate.setDate(currentDate.getDate() + 1)
