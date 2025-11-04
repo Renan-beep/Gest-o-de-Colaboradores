@@ -28,6 +28,7 @@ import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
 import { GraficoPendenciasLideres } from "@/components/dashboard/GraficoPendenciasLideres"
+import { PainelPendencias } from "@/components/dashboard/PainelPendencias"
 
 interface Colaborador {
   id: string
@@ -249,7 +250,7 @@ export default function Chamada() {
         .from('chamadas')
         .select('data, colaborador_id')
         .gte('data', startDate)
-        .lte('date', endDate)
+        .lte('data', endDate)
 
       if (chamadasError) {
         console.error('❌ Erro ao buscar chamadas:', chamadasError)
@@ -680,41 +681,13 @@ export default function Chamada() {
           />
         </div>
 
-        {/* Datas com Pendências */}
-        {datesWithPendencies.length > 0 && (
-          <Card className="shadow-card border-yellow-200 bg-yellow-50 lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-yellow-700">
-                <AlertTriangle className="w-5 h-5" />
-                Datas com Pendências
-              </CardTitle>
-              <CardDescription className="text-yellow-600">
-                Clique em uma data para ir diretamente para ela e resolver as pendências
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {datesWithPendencies.map(date => (
-                  <Button
-                    key={date}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedDate(date)}
-                    className={`flex items-center gap-2 ${
-                      selectedDate === date 
-                        ? 'bg-yellow-500 border-yellow-600 text-white hover:bg-yellow-600' 
-                        : 'bg-white border-yellow-300 text-yellow-800 hover:bg-yellow-100'
-                    }`}
-                  >
-                    <CalendarIcon className="w-4 h-4" />
-                    {new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')}
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Painel de Pendências - Novo */}
+        <div className="lg:col-span-2">
+          <PainelPendencias 
+            mesAno={selectedDate.substring(0, 7)}
+            onDateClick={(date) => setSelectedDate(date)}
+          />
+        </div>
       </div>
 
       {/* Seleção de Data e Filtros */}
