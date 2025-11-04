@@ -332,50 +332,38 @@ export default function Chamada() {
           continue
         }
 
-        // Verificar se existe histórico para esta data
+        // Calcular quantos colaboradores eram esperados nesta data
+        const colaboradoresEsperados = colaboradores.filter(col => {
+          // Deve ter sido admitido ATÉ esta data (inclusive)
+          if (col.admissao && col.admissao > dateStr) return false
+          
+          // Se foi demitido ANTES desta data, não deve ter chamada
+          const demissao = demissoes?.find(d => d.colaborador_id === col.id)
+          if (demissao && demissao.data_demissao < dateStr) return false
+          
+          // Aplicar filtro de liderança se houver
+          if (filterLideranca && filterLideranca !== 'todos') {
+            return col.lideranca === filterLideranca
+          }
+          
+          return true
+        })
+
+        // Verificar se existe histórico registrado para esta data
         const totalHistorico = historicoMap.get(dateStr)
+        const totalEsperado = totalHistorico !== undefined ? totalHistorico : colaboradoresEsperados.length
         
-        if (totalHistorico !== undefined) {
-          // Usar o histórico registrado
-          const chamadasNaData = chamadasPorData[dateStr] || new Set()
-          const totalRegistrado = chamadasNaData.size
-          
-          console.log(`${dateStr}: ${totalRegistrado}/${totalHistorico} registrados (HISTÓRICO)`)
-          
-          if (totalRegistrado < totalHistorico) {
-            datesWithPending.push(dateStr)
-            console.log(`⚠️ Pendência em ${dateStr}: ${totalHistorico - totalRegistrado} faltando`)
-          }
-        } else {
-          // Calcular baseado nos colaboradores atuais
-          const colaboradoresEsperados = colaboradores.filter(col => {
-            // Deve ter sido admitido ATÉ esta data (inclusive)
-            if (col.admissao && col.admissao > dateStr) return false
-            
-            // Se foi demitido ANTES desta data, não deve ter chamada
-            const demissao = demissoes?.find(d => d.colaborador_id === col.id)
-            if (demissao && demissao.data_demissao < dateStr) return false
-            
-            // Aplicar filtro de liderança se houver
-            if (filterLideranca && filterLideranca !== 'todos') {
-              return col.lideranca === filterLideranca
-            }
-            
-            return true
-          })
-
-          const chamadasNaData = chamadasPorData[dateStr] || new Set()
-          
-          // Verificar quem NÃO tem registro
-          const semRegistro = colaboradoresEsperados.filter(col => !chamadasNaData.has(col.id))
-          
-          console.log(`${dateStr}: ${chamadasNaData.size}/${colaboradoresEsperados.length} registrados (CALCULADO)`)
-
-          // Se falta QUALQUER registro, é pendência
-          if (semRegistro.length > 0) {
-            datesWithPending.push(dateStr)
-            console.log(`⚠️ Pendência em ${dateStr}: ${semRegistro.length} sem registro`)
-          }
+        // Contar quantos registros de chamada existem nesta data
+        const chamadasNaData = chamadasPorData[dateStr] || new Set()
+        const totalRegistrado = chamadasNaData.size
+        
+        const origem = totalHistorico !== undefined ? 'HISTÓRICO' : 'CALCULADO'
+        console.log(`${dateStr}: ${totalRegistrado}/${totalEsperado} registrados (${origem})`)
+        
+        // Se falta QUALQUER registro, é pendência
+        if (totalRegistrado < totalEsperado) {
+          datesWithPending.push(dateStr)
+          console.log(`⚠️ Pendência em ${dateStr}: ${totalEsperado - totalRegistrado} faltando`)
         }
 
         currentDate.setDate(currentDate.getDate() + 1)
