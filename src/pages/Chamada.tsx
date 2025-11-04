@@ -316,8 +316,18 @@ export default function Chamada() {
       const datesWithPending: string[] = []
       const currentDate = new Date(firstDay)
 
+      // Só verificar chamadas de setembro/2025 em diante
+      const dataInicioSistema = new Date('2025-09-01')
+      
       while (currentDate <= lastDayToCheck) {
         const dateStr = currentDate.toISOString().split('T')[0]
+        
+        // Pular datas antes de setembro/2025
+        if (currentDate < dataInicioSistema) {
+          currentDate.setDate(currentDate.getDate() + 1)
+          continue
+        }
+        
         const dayOfWeek = currentDate.getDay()
         
         // Pular domingos e sábados
@@ -326,39 +336,30 @@ export default function Chamada() {
           continue
         }
 
-        // Calcular quantos colaboradores eram esperados nesta data
-        const colaboradoresEsperados = colaboradores.filter(col => {
-          // Deve ter sido admitido ATÉ esta data (inclusive)
-          if (col.admissao && col.admissao > dateStr) return false
-          
-          // Se foi demitido ANTES desta data, não deve ter chamada
-          const demissao = demissoes?.find(d => d.colaborador_id === col.id)
-          if (demissao && demissao.data_demissao < dateStr) return false
-          
-          // Aplicar filtro de liderança se houver
-          if (filterLideranca && filterLideranca !== 'todos') {
-            return col.lideranca === filterLideranca
-          }
-          
-          return true
-        })
-
-        // Verificar se existe histórico registrado para esta data
-        const totalHistorico = historicoMap.get(dateStr)
-        const totalEsperado = totalHistorico !== undefined ? totalHistorico : colaboradoresEsperados.length
-        
-        // Contar quantos colaboradores TÊM REGISTRO (independente do status)
+        // Contar quantos registros de chamada existem nesta data (independente do status)
         const registrosNaData = chamadasPorData[dateStr] || new Set()
         const totalComRegistro = registrosNaData.size
         
-        // Só é pendência se faltar ALGUM registro
-        const temPendencia = totalComRegistro < totalEsperado
+        // Se existe histórico, usar o total do histórico, senão não marcar como pendente
+        const totalHistorico = historicoMap.get(dateStr)
         
-        const origem = totalHistorico !== undefined ? 'HISTÓRICO' : 'CALCULADO'
-        console.log(`${dateStr}: ${totalComRegistro}/${totalEsperado} com registro (${origem})${temPendencia ? ' ⚠️ PENDENTE' : ' ✅ COMPLETO'}`)
-        
-        if (temPendencia) {
-          datesWithPending.push(dateStr)
+        if (totalHistorico !== undefined) {
+          // Se tem histórico e faltam registros
+          if (totalComRegistro < totalHistorico) {
+            console.log(`⚠️ ${dateStr}: ${totalComRegistro}/${totalHistorico} registros - PENDENTE`)
+            datesWithPending.push(dateStr)
+          } else {
+            console.log(`✅ ${dateStr}: ${totalComRegistro}/${totalHistorico} registros - COMPLETO`)
+          }
+        } else {
+          // Se não tem histórico, só marcar como pendente se for uma data passada SEM NENHUM registro
+          const isDataPassada = currentDate < new Date()
+          if (isDataPassada && totalComRegistro === 0) {
+            console.log(`⚠️ ${dateStr}: SEM REGISTROS - PENDENTE`)
+            datesWithPending.push(dateStr)
+          } else if (isDataPassada) {
+            console.log(`✅ ${dateStr}: ${totalComRegistro} registros - COMPLETO (sem histórico)`)
+          }
         }
 
         currentDate.setDate(currentDate.getDate() + 1)
