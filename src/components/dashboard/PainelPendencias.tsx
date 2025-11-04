@@ -86,6 +86,10 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
       const dataInicioSistema = new Date('2025-09-01')
       const currentDate = new Date(firstDay)
 
+      console.log('🔍 [PainelPendencias] Iniciando cálculo para:', mesAno)
+      console.log('📅 Período:', startDate, 'até', endDate)
+      console.log('👥 Total colaboradores ativos:', colaboradores?.length)
+
       while (currentDate <= lastDayToCheck) {
         const dateStr = currentDate.toISOString().split('T')[0]
         const dayOfWeek = currentDate.getDay()
@@ -101,7 +105,11 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
           // Regra 1: Só aparecer se já foi admitido
           if (col.admissao) {
             const dataAdmissao = new Date(col.admissao)
-            if (currentDate < dataAdmissao) {
+            dataAdmissao.setHours(0, 0, 0, 0)
+            const dataAtual = new Date(currentDate)
+            dataAtual.setHours(0, 0, 0, 0)
+            
+            if (dataAtual < dataAdmissao) {
               return false
             }
           }
@@ -110,28 +118,33 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
           const demissao = demissoes?.find(d => d.colaborador_id === col.id)
           if (demissao) {
             const dataDemissao = new Date(demissao.data_demissao)
-            if (currentDate > dataDemissao) {
+            dataDemissao.setHours(0, 0, 0, 0)
+            const dataAtual = new Date(currentDate)
+            dataAtual.setHours(0, 0, 0, 0)
+            
+            if (dataAtual > dataDemissao) {
               return false
             }
           }
 
-          // Regra 3: Se houve movimentação, usar a data mais recente como corte
+          // Regra 3: Se houve movimentação, só contar a partir da data da movimentação
           const movsDoColaborador = movimentacoes?.filter(m => m.colaborador_id === col.id) || []
           if (movsDoColaborador.length > 0) {
-            // Ordenar por data_inicio (mais recente primeiro)
-            const movsOrdenadas = movsDoColaborador.sort((a, b) => 
-              b.data_inicio.localeCompare(a.data_inicio)
-            )
+            // Pegar movimentações que já aconteceram até a data sendo analisada
+            const movsAplicaveis = movsDoColaborador
+              .filter(m => m.data_inicio <= dateStr)
+              .sort((a, b) => b.data_inicio.localeCompare(a.data_inicio))
             
-            // Encontrar a última movimentação até a data atual
-            for (const mov of movsOrdenadas) {
-              const dataMov = new Date(mov.data_inicio)
-              if (dataMov <= currentDate) {
-                // Se a data atual é anterior à última movimentação aplicável, não contar
-                if (currentDate < dataMov) {
-                  return false
-                }
-                break
+            if (movsAplicaveis.length > 0) {
+              const movMaisRecente = movsAplicaveis[0]
+              const dataMov = new Date(movMaisRecente.data_inicio)
+              dataMov.setHours(0, 0, 0, 0)
+              const dataAtual = new Date(currentDate)
+              dataAtual.setHours(0, 0, 0, 0)
+              
+              // Colaborador só conta a partir da data da movimentação
+              if (dataAtual < dataMov) {
+                return false
               }
             }
           }
@@ -143,8 +156,13 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
         const registrosNaData = chamadasPorData.get(dateStr) || new Set()
         const totalRegistrado = registrosNaData.size
 
-        // Só adicionar se houver pendência
-        if (totalRegistrado < totalEsperado) {
+        // Debug para outubro
+        if (dateStr.startsWith('2025-10')) {
+          console.log(`📊 ${dateStr}: ${totalRegistrado}/${totalEsperado} registros`)
+        }
+
+        // Só adicionar se houver pendência (falta pelo menos 1 registro)
+        if (totalRegistrado < totalEsperado && totalEsperado > 0) {
           pendenciasEncontradas.push({
             data: dateStr,
             esperado: totalEsperado,
@@ -154,6 +172,8 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
 
         currentDate.setDate(currentDate.getDate() + 1)
       }
+
+      console.log(`✅ Total de pendências encontradas: ${pendenciasEncontradas.length}`)
 
       setPendencias(pendenciasEncontradas.sort((a, b) => b.data.localeCompare(a.data)))
     } catch (error) {
