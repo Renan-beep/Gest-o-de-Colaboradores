@@ -312,6 +312,15 @@ export default function Chamada() {
         }
         chamadasPorData[chamada.data].add(chamada.colaborador_id)
       })
+      
+      // Debug: mostrar algumas datas específicas
+      console.log('🔍 Debug chamadas por data:')
+      console.log('2025-10-10:', chamadasPorData['2025-10-10']?.size || 0, 'registros')
+      console.log('2025-10-13:', chamadasPorData['2025-10-13']?.size || 0, 'registros')
+      
+      // Debug: mostrar todas as datas únicas encontradas
+      const datasEncontradas = Object.keys(chamadasPorData).sort()
+      console.log('📅 Datas com registros encontradas:', datasEncontradas)
 
       const datesWithPending: string[] = []
       const currentDate = new Date(firstDay)
