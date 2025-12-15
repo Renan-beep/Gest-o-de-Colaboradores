@@ -191,15 +191,53 @@ export default function EditarColaborador() {
 
     setDismissing(true)
     try {
-      const { error } = await supabase
-        .from('colaboradores')
-        .delete()
-        .eq('id', id)
+      // Mapear motivo para tipo_demissao
+      const tipoMap: Record<string, string> = {
+        "Abandono de emprego": "justa_causa",
+        "Fim antecipado/contrato Empregado": "pedido",
+        "Fim antecipado/contrato Empresa": "sem_justa_causa",
+        "Fim do contrato de trabalho": "fim_contrato",
+        "Iniciativa empregadora/sem justa causa": "sem_justa_causa",
+        "Iniciativa empresa/com justa causa": "justa_causa",
+        "Iniciativa empresa/sem justa causa": "sem_justa_causa",
+        "Transferência para outra filial": "pedido"
+      }
 
-      if (error) {
+      const tipoDemissao = tipoMap[dismissalReason] || "sem_justa_causa"
+
+      // 1. Primeiro, salvar registro na tabela de demissões
+      const { error: demissaoError } = await supabase
+        .from('demissoes')
+        .insert({
+          colaborador_id: id,
+          data_demissao: new Date().toISOString().split('T')[0],
+          tipo_demissao: tipoDemissao,
+          motivo: dismissalReason,
+          observacoes: null
+        })
+
+      if (demissaoError) {
         toast({
           title: "Erro",
-          description: "Erro ao demitir colaborador: " + error.message,
+          description: "Erro ao registrar demissão: " + demissaoError.message,
+          variant: "destructive"
+        })
+        return
+      }
+
+      // 2. Atualizar status do colaborador para "Demitido"
+      const { error: updateError } = await supabase
+        .from('colaboradores')
+        .update({ 
+          status: 'Demitido',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+
+      if (updateError) {
+        toast({
+          title: "Erro",
+          description: "Erro ao atualizar status: " + updateError.message,
           variant: "destructive"
         })
         return
@@ -289,7 +327,10 @@ export default function EditarColaborador() {
             <User className="w-5 h-5" />
             Dados do Colaborador
             {formData.status && (
-              <Badge variant={formData.status === "Ativo" ? "default" : "destructive"}>
+              <Badge variant={
+                formData.status === "Ativo" ? "default" : 
+                formData.status === "Demitido" ? "destructive" : "secondary"
+              }>
                 {formData.status}
               </Badge>
             )}
@@ -330,7 +371,7 @@ export default function EditarColaborador() {
                 <Select 
                   value={formData.status} 
                   onValueChange={(value) => handleChange('status', value)}
-                  disabled={!isGerencia}
+                  disabled={!isGerencia || formData.status === 'Demitido'}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o status" />
@@ -338,6 +379,9 @@ export default function EditarColaborador() {
                   <SelectContent>
                     <SelectItem value="Ativo">Ativo</SelectItem>
                     <SelectItem value="Afastado">Afastado</SelectItem>
+                    {formData.status === 'Demitido' && (
+                      <SelectItem value="Demitido">Demitido</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

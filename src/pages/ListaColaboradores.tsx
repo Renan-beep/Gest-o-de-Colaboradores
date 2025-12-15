@@ -63,6 +63,9 @@ export default function ListaColaboradores() {
     sabadoTrabalho: [] as string[],
     tempoEmpresa: "todos"
   });
+  
+  // Estado para exportação com demitidos
+  const [exportarComDemitidos, setExportarComDemitidos] = useState(false);
 
   // Listas para filtros
   const [opcoesFiltros, setOpcoesFiltros] = useState({
@@ -182,14 +185,23 @@ export default function ListaColaboradores() {
     });
   };
   const getStatusBadge = (status: string) => {
-    const isAtivo = status?.toLowerCase() === "ativo";
-    return isAtivo ? <Badge className="status-present">
+    const statusLower = status?.toLowerCase();
+    if (statusLower === "ativo") {
+      return <Badge className="status-present">
         <UserCheck className="w-3 h-3 mr-1" />
         Ativo
-      </Badge> : <Badge className="status-absent">
+      </Badge>;
+    } else if (statusLower === "demitido") {
+      return <Badge variant="destructive">
         <UserX className="w-3 h-3 mr-1" />
+        Demitido
+      </Badge>;
+    } else {
+      return <Badge className="status-absent">
+        <Clock className="w-3 h-3 mr-1" />
         Afastado
       </Badge>;
+    }
   };
   const getSabadoBadge = (sabadoTrabalho: string) => {
     if (!sabadoTrabalho) return null;
@@ -254,10 +266,9 @@ export default function ListaColaboradores() {
     }
   };
 
-  const exportarParaExcel = () => {
+  const exportarParaExcel = async () => {
     try {
-      // Preparar dados para exportação (apenas os filtrados)
-      const dadosParaExportar = filteredColaboradores.map(colaborador => {
+      let dadosParaExportar = filteredColaboradores.map(colaborador => {
         const tempoEmpresa = calcularTempoEmpresa(colaborador.admissao);
         return {
           matricula: colaborador.matricula,
@@ -273,11 +284,62 @@ export default function ListaColaboradores() {
           horario_almoco: colaborador.horario_almoco || "",
           horario_cafe: colaborador.horario_cafe || "",
           admissao: formatarData(colaborador.admissao),
-          tempo_empresa: formatarTempoEmpresa(tempoEmpresa)
+          tempo_empresa: formatarTempoEmpresa(tempoEmpresa),
+          data_demissao: "",
+          motivo_demissao: ""
         };
       });
 
-      const nomeArquivo = `colaboradores_${new Date().toISOString().split('T')[0]}`;
+      // Se marcado para incluir demitidos, buscar dados da tabela demissoes
+      if (exportarComDemitidos) {
+        const { data: demissoes, error } = await supabase
+          .from('demissoes')
+          .select(`
+            *,
+            colaboradores (
+              matricula, colaborador, cargo, setor, subsetor, 
+              lideranca, turno, sabado_trabalho, sabado_horario, 
+              horario_almoco, horario_cafe, admissao
+            )
+          `)
+          .order('data_demissao', { ascending: false });
+
+        if (error) {
+          console.error('Erro ao buscar demissões:', error);
+        } else if (demissoes) {
+          const demitidosFormatados = demissoes.map(d => {
+            const col = d.colaboradores as any;
+            return {
+              matricula: col?.matricula || 'N/A',
+              colaborador: col?.colaborador || 'N/A',
+              status: 'Demitido',
+              cargo: col?.cargo || "",
+              setor: col?.setor || "",
+              subsetor: col?.subsetor || "",
+              lideranca: col?.lideranca || "",
+              turno: col?.turno || "",
+              sabado_trabalho: col?.sabado_trabalho || "",
+              sabado_horario: col?.sabado_horario || "",
+              horario_almoco: col?.horario_almoco || "",
+              horario_cafe: col?.horario_cafe || "",
+              admissao: col?.admissao ? formatarData(col.admissao) : "",
+              tempo_empresa: col?.admissao ? formatarTempoEmpresa(calcularTempoEmpresa(col.admissao)) : "",
+              data_demissao: formatarData(d.data_demissao),
+              motivo_demissao: d.motivo || ""
+            };
+          });
+          
+          // Adicionar demitidos que não estão na lista filtrada
+          const matriculasExistentes = new Set(dadosParaExportar.map(d => d.matricula));
+          demitidosFormatados.forEach(d => {
+            if (!matriculasExistentes.has(d.matricula)) {
+              dadosParaExportar.push(d);
+            }
+          });
+        }
+      }
+
+      const nomeArquivo = `colaboradores_${exportarComDemitidos ? 'com_demitidos_' : ''}${new Date().toISOString().split('T')[0]}`;
       exportToExcel(dadosParaExportar, nomeArquivo);
       
       toast({
@@ -339,7 +401,7 @@ export default function ListaColaboradores() {
             <div className="space-y-2">
               <Label>Status</Label>
               <MultiSelect
-                options={["Ativo", "Afastado"]}
+                options={["Ativo", "Afastado", "Demitido"]}
                 selected={filtros.status}
                 onChange={(values) => setFiltros(prev => ({ ...prev, status: values }))}
                 placeholder="Todos os status"
@@ -433,11 +495,23 @@ export default function ListaColaboradores() {
             </div>
           </div>
 
-          <div className="flex gap-2 mt-4">
+          <div className="flex flex-wrap items-center gap-4 mt-4">
             <Button variant="outline" onClick={limparFiltros}>
               <RefreshCw className="w-4 h-4 mr-2" />
               Limpar Filtros
             </Button>
+            
+            <div className="flex items-center gap-2">
+              <Checkbox 
+                id="exportarComDemitidos"
+                checked={exportarComDemitidos}
+                onCheckedChange={(checked) => setExportarComDemitidos(checked === true)}
+              />
+              <Label htmlFor="exportarComDemitidos" className="text-sm cursor-pointer">
+                Com demitidos
+              </Label>
+            </div>
+            
             <Button variant="default" onClick={exportarParaExcel}>
               <Download className="w-4 h-4 mr-2" />
               Exportar para Excel
