@@ -111,6 +111,7 @@ export default function RecrutamentoATS() {
   const [cargosUnicos, setCargosUnicos] = useState<string[]>([]);
   const [setoresUnicos, setSetoresUnicos] = useState<string[]>([]);
   const [liderancasUnicas, setLiderancasUnicas] = useState<string[]>([]);
+  const [turnosUnicos, setTurnosUnicos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNovaVaga, setShowNovaVaga] = useState(false);
   const [showDetalhes, setShowDetalhes] = useState(false);
@@ -226,6 +227,14 @@ export default function RecrutamentoATS() {
           .filter((lideranca): lideranca is string => Boolean(lideranca))
       )].sort();
       setLiderancasUnicas(liderancas);
+
+      // Extrair turnos únicos
+      const turnos = [...new Set(
+        (colabData || [])
+          .map((c) => c.turno)
+          .filter((turno): turno is string => Boolean(turno))
+      )].sort();
+      setTurnosUnicos(turnos);
 
       // Fetch aprovadores (gerencia e admin)
       const { data: profilesData, error: profilesError } = await supabase
@@ -714,10 +723,11 @@ export default function RecrutamentoATS() {
                     <SelectValue placeholder="Selecione o turno" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="manhã">Manhã</SelectItem>
-                    <SelectItem value="tarde">Tarde</SelectItem>
-                    <SelectItem value="noite">Noite</SelectItem>
-                    <SelectItem value="administrativo">Administrativo</SelectItem>
+                    {turnosUnicos.map((turno) => (
+                      <SelectItem key={turno} value={turno}>
+                        {turno}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
