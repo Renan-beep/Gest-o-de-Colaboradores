@@ -65,6 +65,7 @@ export default function Chamada() {
   const [movimentacoes, setMovimentacoes] = useState<Array<{colaborador_id: string, data_inicio: string, lideranca_origem: string | null, lideranca_destino: string | null, tipo_movimentacao: string}>>([])
   const [highlightedColaborador, setHighlightedColaborador] = useState<string | null>(null)
   const colaboradorRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+  const [chamadasMes, setChamadasMes] = useState<Array<{colaborador_id: string, data: string, status: string}>>([])
 
 
   useEffect(() => {
@@ -248,7 +249,7 @@ export default function Chamada() {
       // Buscar TODAS as chamadas do mês SEM filtros adicionais
       const { data: allChamadas, error: chamadasError } = await supabase
         .from('chamadas')
-        .select('data, colaborador_id')
+        .select('data, colaborador_id, status')
         .gte('data', startDate)
         .lte('data', endDate)
 
@@ -256,6 +257,9 @@ export default function Chamada() {
         console.error('❌ Erro ao buscar chamadas:', chamadasError)
         return
       }
+
+      // Salvar chamadas do mês para o gráfico de pendências
+      setChamadasMes(allChamadas || [])
 
       console.log(`📊 Total de chamadas encontradas no período: ${allChamadas?.length || 0}`)
       
@@ -678,6 +682,7 @@ export default function Chamada() {
             selectedDate={selectedDate}
             colaboradores={colaboradores}
             movimentacoes={movimentacoes}
+            chamadas={chamadasMes}
           />
         </div>
 
