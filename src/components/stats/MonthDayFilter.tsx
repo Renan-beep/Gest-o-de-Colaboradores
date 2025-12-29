@@ -54,10 +54,11 @@ export function MonthDayFilter({ selectedMonth, selectedDays = [], onSelectionCh
       const monthsMap = new Map<string, { year: number; month: number; days: Set<number> }>()
 
       chamadas?.forEach(chamada => {
-        const date = new Date(chamada.data)
-        const year = date.getFullYear()
-        const month = date.getMonth()
-        const day = date.getDate()
+        // Parse da data no formato YYYY-MM-DD para evitar problemas de timezone
+        const [yearStr, monthStr, dayStr] = chamada.data.split('-')
+        const year = parseInt(yearStr)
+        const month = parseInt(monthStr) - 1 // Mês é 0-indexed
+        const day = parseInt(dayStr)
         const key = `${year}-${month}`
 
         if (!monthsMap.has(key)) {
