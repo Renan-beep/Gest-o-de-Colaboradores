@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, History, Users, Briefcase, Clock, CheckCircle, XCircle, AlertCircle, UserPlus, UserMinus } from "lucide-react";
+import { Plus, History, Users, Briefcase, Clock, CheckCircle, XCircle, AlertCircle, UserPlus, UserMinus, Bell } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -572,8 +572,29 @@ export default function RecrutamentoATS() {
     );
   }
 
+  const vagasAguardandoAprovacao = vagas.filter(v => v.status === 'aguardando_aprovacao');
+  const temAprovacoesPendentes = vagasAguardandoAprovacao.length > 0;
+
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 relative">
+      {/* Notificação de aprovações pendentes */}
+      {temAprovacoesPendentes && (
+        <div className="fixed top-4 right-4 z-50 animate-pulse">
+          <div className="bg-amber-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 cursor-pointer hover:bg-amber-600 transition-colors"
+               onClick={() => {
+                 const element = document.getElementById('coluna-aguardando-aprovacao');
+                 element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+               }}>
+            <Bell className="h-5 w-5 animate-bounce" />
+            <div>
+              <p className="font-semibold">Aprovação Pendente</p>
+              <p className="text-sm opacity-90">
+                {vagasAguardandoAprovacao.length} {vagasAguardandoAprovacao.length === 1 ? 'vaga aguarda' : 'vagas aguardam'} sua aprovação
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -888,6 +909,7 @@ export default function RecrutamentoATS() {
             return (
               <div
                 key={column.key}
+                id={column.key === 'aguardando_aprovacao' ? 'coluna-aguardando-aprovacao' : undefined}
                 className="w-72 flex-shrink-0 bg-muted/30 rounded-xl p-3"
               >
                 <div className="flex items-center gap-2 mb-3 px-2">

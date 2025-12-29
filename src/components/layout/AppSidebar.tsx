@@ -121,6 +121,7 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
   const isCollapsed = state === "collapsed";
   const [pendingCount, setPendingCount] = useState(0);
+  const [vagasPendentesCount, setVagasPendentesCount] = useState(0);
   const [profile, setProfile] = useState<any>(null);
 
   // Buscar solicitações pendentes
@@ -150,6 +151,42 @@ export function AppSidebar() {
         },
         () => {
           fetchPendingCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Buscar vagas aguardando aprovação
+  useEffect(() => {
+    const fetchVagasPendentes = async () => {
+      const { count, error } = await supabase
+        .from('vagas')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'aguardando_aprovacao');
+      
+      if (!error && count !== null) {
+        setVagasPendentesCount(count);
+      }
+    };
+
+    fetchVagasPendentes();
+
+    // Subscrever a mudanças em tempo real
+    const channel = supabase
+      .channel('vagas-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'vagas'
+        },
+        () => {
+          fetchVagasPendentes();
         }
       )
       .subscribe();
@@ -222,10 +259,13 @@ export function AppSidebar() {
                     <NavLink to={item.url} className="flex items-center gap-3 rounded-lg transition-colors hover:bg-accent mx-0 px-[12px] py-[30px]">
                       <item.icon className="w-5 h-5" />
                       {!isCollapsed && <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm">
+                          <div className="font-medium text-sm flex items-center gap-1">
                             {item.title}
                             {item.title === "Solicitações" && pendingCount > 0 && (
                               <span className="ml-1 text-primary">({pendingCount})</span>
+                            )}
+                            {item.title === "Recrutamento" && vagasPendentesCount > 0 && (
+                              <span className="ml-1 text-primary animate-pulse">({vagasPendentesCount})</span>
                             )}
                           </div>
                           <div className="text-xs text-muted-foreground truncate">
