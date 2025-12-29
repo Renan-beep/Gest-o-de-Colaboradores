@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, UserCheck, BarChart3, Plus, Home, Building2, CalendarCheck, LogOut, User, FileText, Settings, TrendingUp, UserPlus, UserCog, Bot } from "lucide-react";
+import { Users, UserCheck, BarChart3, Plus, Home, Building2, CalendarCheck, LogOut, User, FileText, Settings, TrendingUp, UserPlus, UserCog, Bot, Briefcase } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,6 +22,11 @@ const gerenciaItems = [{
   url: "/cadastro",
   icon: UserPlus,
   description: "Cadastrar colaboradores"
+}, {
+  title: "Recrutamento",
+  url: "/recrutamento",
+  icon: Briefcase,
+  description: "ATS - Vagas e Contratações"
 }, {
   title: "Assistente IA",
   url: "/assistente-ia",
