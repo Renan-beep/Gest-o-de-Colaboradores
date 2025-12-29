@@ -108,6 +108,7 @@ export default function RecrutamentoATS() {
   const [vagas, setVagas] = useState<Vaga[]>([]);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [aprovadores, setAprovadores] = useState<Profile[]>([]);
+  const [cargosUnicos, setCargosUnicos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNovaVaga, setShowNovaVaga] = useState(false);
   const [showDetalhes, setShowDetalhes] = useState(false);
@@ -173,6 +174,14 @@ export default function RecrutamentoATS() {
 
       if (colabError) throw colabError;
       setColaboradores(colabData || []);
+
+      // Extrair cargos únicos
+      const cargos = [...new Set(
+        (colabData || [])
+          .map((c) => c.cargo)
+          .filter((cargo): cargo is string => Boolean(cargo))
+      )].sort();
+      setCargosUnicos(cargos);
 
       // Fetch aprovadores (gerencia e admin)
       const { data: profilesData, error: profilesError } = await supabase
@@ -511,11 +520,21 @@ export default function RecrutamentoATS() {
               {/* Cargo */}
               <div className="grid gap-2">
                 <Label>Cargo *</Label>
-                <Input
-                  placeholder="Ex: Analista de RH"
+                <Select
                   value={formData.cargo}
-                  onChange={(e) => handleInputChange("cargo", e.target.value)}
-                />
+                  onValueChange={(value) => handleInputChange("cargo", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o cargo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cargosUnicos.map((cargo) => (
+                      <SelectItem key={cargo} value={cargo}>
+                        {cargo}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Quantidade de Vagas */}
