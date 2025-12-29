@@ -374,6 +374,133 @@ export type Database = {
           },
         ]
       }
+      vagas: {
+        Row: {
+          aprovador_id: string | null
+          aprovador_nome: string | null
+          candidato_matricula: string | null
+          candidato_nome: string | null
+          cargo: string
+          colaborador_substituido_id: string | null
+          comentarios_aprovacao: string | null
+          created_at: string
+          data_aprovacao: string | null
+          descricao: string | null
+          gestor_solicitante_id: string
+          gestor_solicitante_nome: string
+          id: string
+          lideranca: string | null
+          motivo_abertura: string
+          quantidade_vagas: number
+          setor: string | null
+          status: string
+          subsetor: string | null
+          tipo_vaga: string | null
+          turno: string | null
+          updated_at: string
+        }
+        Insert: {
+          aprovador_id?: string | null
+          aprovador_nome?: string | null
+          candidato_matricula?: string | null
+          candidato_nome?: string | null
+          cargo: string
+          colaborador_substituido_id?: string | null
+          comentarios_aprovacao?: string | null
+          created_at?: string
+          data_aprovacao?: string | null
+          descricao?: string | null
+          gestor_solicitante_id: string
+          gestor_solicitante_nome: string
+          id?: string
+          lideranca?: string | null
+          motivo_abertura: string
+          quantidade_vagas?: number
+          setor?: string | null
+          status?: string
+          subsetor?: string | null
+          tipo_vaga?: string | null
+          turno?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aprovador_id?: string | null
+          aprovador_nome?: string | null
+          candidato_matricula?: string | null
+          candidato_nome?: string | null
+          cargo?: string
+          colaborador_substituido_id?: string | null
+          comentarios_aprovacao?: string | null
+          created_at?: string
+          data_aprovacao?: string | null
+          descricao?: string | null
+          gestor_solicitante_id?: string
+          gestor_solicitante_nome?: string
+          id?: string
+          lideranca?: string | null
+          motivo_abertura?: string
+          quantidade_vagas?: number
+          setor?: string | null
+          status?: string
+          subsetor?: string | null
+          tipo_vaga?: string | null
+          turno?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vagas_colaborador_substituido_id_fkey"
+            columns: ["colaborador_substituido_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vagas_historico: {
+        Row: {
+          acao: string
+          comentarios: string | null
+          created_at: string
+          id: string
+          status_anterior: string | null
+          status_novo: string | null
+          usuario_id: string
+          usuario_nome: string
+          vaga_id: string
+        }
+        Insert: {
+          acao: string
+          comentarios?: string | null
+          created_at?: string
+          id?: string
+          status_anterior?: string | null
+          status_novo?: string | null
+          usuario_id: string
+          usuario_nome: string
+          vaga_id: string
+        }
+        Update: {
+          acao?: string
+          comentarios?: string | null
+          created_at?: string
+          id?: string
+          status_anterior?: string | null
+          status_novo?: string | null
+          usuario_id?: string
+          usuario_nome?: string
+          vaga_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vagas_historico_vaga_id_fkey"
+            columns: ["vaga_id"]
+            isOneToOne: false
+            referencedRelation: "vagas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
