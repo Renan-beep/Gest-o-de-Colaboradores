@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, History, Users, Briefcase, Clock, CheckCircle, XCircle, AlertCircle, UserPlus } from "lucide-react";
+import { Plus, History, Users, Briefcase, Clock, CheckCircle, XCircle, AlertCircle, UserPlus, UserMinus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -137,6 +137,32 @@ export default function RecrutamentoATS() {
   });
 
   const [comentariosAprovacao, setComentariosAprovacao] = useState("");
+  
+  // Estados para fluxo de demissão no pré-cadastro (substituição)
+  const [showDemissaoForm, setShowDemissaoForm] = useState(false);
+  const [demissaoData, setDemissaoData] = useState({
+    motivo: "",
+    tipo_demissao: "sem_justa_causa",
+    observacoes: "",
+  });
+
+  const MOTIVOS_DEMISSAO = [
+    "Iniciativa empregadora/sem justa causa",
+    "Iniciativa empregadora/com justa causa",
+    "Pedido de demissão",
+    "Término de contrato",
+    "Acordo entre as partes",
+    "Falecimento",
+    "Aposentadoria",
+  ];
+
+  const TIPOS_DEMISSAO = [
+    { value: "sem_justa_causa", label: "Sem Justa Causa" },
+    { value: "com_justa_causa", label: "Com Justa Causa" },
+    { value: "pedido_demissao", label: "Pedido de Demissão" },
+    { value: "acordo", label: "Acordo" },
+    { value: "termino_contrato", label: "Término de Contrato" },
+  ];
 
   useEffect(() => {
     fetchData();
@@ -388,6 +414,34 @@ export default function RecrutamentoATS() {
     }
 
     try {
+      // Se for substituição e confirmou demissão, processar demissão primeiro
+      if (vagaSelecionada.motivo_abertura === "substituicao" && 
+          vagaSelecionada.colaborador_substituido_id && 
+          showDemissaoForm && 
+          demissaoData.motivo) {
+        
+        // Registrar demissão
+        const { error: demissaoError } = await supabase
+          .from("demissoes")
+          .insert({
+            colaborador_id: vagaSelecionada.colaborador_substituido_id,
+            data_demissao: new Date().toISOString().split("T")[0],
+            motivo: demissaoData.motivo,
+            tipo_demissao: demissaoData.tipo_demissao,
+            observacoes: demissaoData.observacoes || null,
+          });
+
+        if (demissaoError) throw demissaoError;
+
+        // Atualizar status do colaborador para Demitido
+        const { error: colabError } = await supabase
+          .from("colaboradores")
+          .update({ status: "Demitido" })
+          .eq("id", vagaSelecionada.colaborador_substituido_id);
+
+        if (colabError) throw colabError;
+      }
+
       const { error } = await supabase
         .from("vagas")
         .update({
@@ -411,11 +465,15 @@ export default function RecrutamentoATS() {
 
       toast({
         title: "Pré-cadastro salvo",
-        description: "Candidato registrado com sucesso!",
+        description: showDemissaoForm && demissaoData.motivo 
+          ? "Candidato registrado e demissão processada com sucesso!" 
+          : "Candidato registrado com sucesso!",
       });
 
       setShowDetalhes(false);
       setPreCadastro({ candidato_nome: "", candidato_matricula: "" });
+      setShowDemissaoForm(false);
+      setDemissaoData({ motivo: "", tipo_demissao: "sem_justa_causa", observacoes: "" });
       fetchData();
     } catch (error: any) {
       toast({
@@ -962,8 +1020,95 @@ export default function RecrutamentoATS() {
                         onChange={(e) => setPreCadastro(prev => ({ ...prev, candidato_nome: e.target.value }))}
                       />
                     </div>
-                    <Button onClick={salvarPreCadastro} className="w-full">
-                      Salvar Pré-Cadastro
+
+                    {/* Fluxo de demissão para substituição */}
+                    {vagaSelecionada.motivo_abertura === "substituicao" && vagaSelecionada.colaborador_substituido_id && (
+                      <Card className="border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20">
+                        <CardContent className="p-4 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <UserMinus className="h-5 w-5 text-orange-600" />
+                              <div>
+                                <p className="font-medium text-orange-900 dark:text-orange-100">
+                                  Colaborador a ser substituído
+                                </p>
+                                <p className="text-sm text-orange-700 dark:text-orange-300">
+                                  {colaboradores.find(c => c.id === vagaSelecionada.colaborador_substituido_id)?.colaborador || "Colaborador"}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              variant={showDemissaoForm ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setShowDemissaoForm(!showDemissaoForm)}
+                              className={showDemissaoForm ? "bg-orange-600 hover:bg-orange-700" : "border-orange-300 text-orange-700 hover:bg-orange-100"}
+                            >
+                              {showDemissaoForm ? "Cancelar Demissão" : "Demitir Colaborador"}
+                            </Button>
+                          </div>
+
+                          {showDemissaoForm && (
+                            <div className="space-y-3 pt-3 border-t border-orange-200 dark:border-orange-700">
+                              <div className="grid gap-2">
+                                <Label>Motivo da Demissão *</Label>
+                                <Select
+                                  value={demissaoData.motivo}
+                                  onValueChange={(value) => setDemissaoData(prev => ({ ...prev, motivo: value }))}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o motivo" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {MOTIVOS_DEMISSAO.map((motivo) => (
+                                      <SelectItem key={motivo} value={motivo}>
+                                        {motivo}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="grid gap-2">
+                                <Label>Tipo de Demissão *</Label>
+                                <Select
+                                  value={demissaoData.tipo_demissao}
+                                  onValueChange={(value) => setDemissaoData(prev => ({ ...prev, tipo_demissao: value }))}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o tipo" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {TIPOS_DEMISSAO.map((tipo) => (
+                                      <SelectItem key={tipo.value} value={tipo.value}>
+                                        {tipo.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="grid gap-2">
+                                <Label>Observações</Label>
+                                <Textarea
+                                  placeholder="Observações adicionais..."
+                                  value={demissaoData.observacoes}
+                                  onChange={(e) => setDemissaoData(prev => ({ ...prev, observacoes: e.target.value }))}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    <Button 
+                      onClick={salvarPreCadastro} 
+                      className="w-full"
+                      disabled={showDemissaoForm && !demissaoData.motivo}
+                    >
+                      {showDemissaoForm && demissaoData.motivo 
+                        ? "Salvar Pré-Cadastro e Processar Demissão" 
+                        : "Salvar Pré-Cadastro"}
                     </Button>
                   </CardContent>
                 </Card>
