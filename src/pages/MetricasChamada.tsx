@@ -564,24 +564,12 @@ export default function MetricasChamada() {
       </div>
 
       {/* Indicadores Principais */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           title="Colaboradores Ativos"
           value={loading ? '...' : metricasGerais.totalColaboradores}
           icon={Users}
           variant="primary"
-          loading={loading}
-        />
-
-        <StatCard
-          title="Faltas"
-          value={loading ? '...' : (() => {
-            if (viewType === "semanal") return metricas.reduce((acc, m) => acc + m.faltas, 0)
-            if (viewType === "mensal") return metricasMensais.reduce((acc, m) => acc + m.faltas, 0)
-            return metricasDiarias.reduce((acc, m) => acc + m.faltas, 0)
-          })()}
-          icon={XCircle}
-          variant="error"
           loading={loading}
         />
 
