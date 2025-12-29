@@ -110,6 +110,7 @@ export default function RecrutamentoATS() {
   const [aprovadores, setAprovadores] = useState<Profile[]>([]);
   const [cargosUnicos, setCargosUnicos] = useState<string[]>([]);
   const [setoresUnicos, setSetoresUnicos] = useState<string[]>([]);
+  const [liderancasUnicas, setLiderancasUnicas] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNovaVaga, setShowNovaVaga] = useState(false);
   const [showDetalhes, setShowDetalhes] = useState(false);
@@ -217,6 +218,14 @@ export default function RecrutamentoATS() {
           .filter((setor): setor is string => Boolean(setor))
       )].sort();
       setSetoresUnicos(setores);
+
+      // Extrair lideranças únicas
+      const liderancas = [...new Set(
+        (colabData || [])
+          .map((c) => c.lideranca)
+          .filter((lideranca): lideranca is string => Boolean(lideranca))
+      )].sort();
+      setLiderancasUnicas(liderancas);
 
       // Fetch aprovadores (gerencia e admin)
       const { data: profilesData, error: profilesError } = await supabase
@@ -716,11 +725,21 @@ export default function RecrutamentoATS() {
               {/* Liderança */}
               <div className="grid gap-2">
                 <Label>Liderança</Label>
-                <Input
-                  placeholder="Ex: João Silva"
+                <Select
                   value={formData.lideranca}
-                  onChange={(e) => handleInputChange("lideranca", e.target.value)}
-                />
+                  onValueChange={(value) => handleInputChange("lideranca", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a liderança" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {liderancasUnicas.map((lideranca) => (
+                      <SelectItem key={lideranca} value={lideranca}>
+                        {lideranca}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Subsetor */}
