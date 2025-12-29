@@ -109,6 +109,7 @@ export default function RecrutamentoATS() {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [aprovadores, setAprovadores] = useState<Profile[]>([]);
   const [cargosUnicos, setCargosUnicos] = useState<string[]>([]);
+  const [setoresUnicos, setSetoresUnicos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNovaVaga, setShowNovaVaga] = useState(false);
   const [showDetalhes, setShowDetalhes] = useState(false);
@@ -208,6 +209,14 @@ export default function RecrutamentoATS() {
           .filter((cargo): cargo is string => Boolean(cargo))
       )].sort();
       setCargosUnicos(cargos);
+
+      // Extrair setores únicos
+      const setores = [...new Set(
+        (colabData || [])
+          .map((c) => c.setor)
+          .filter((setor): setor is string => Boolean(setor))
+      )].sort();
+      setSetoresUnicos(setores);
 
       // Fetch aprovadores (gerencia e admin)
       const { data: profilesData, error: profilesError } = await supabase
@@ -668,11 +677,21 @@ export default function RecrutamentoATS() {
               {/* Setor */}
               <div className="grid gap-2">
                 <Label>Setor</Label>
-                <Input
-                  placeholder="Ex: Recursos Humanos"
+                <Select
                   value={formData.setor}
-                  onChange={(e) => handleInputChange("setor", e.target.value)}
-                />
+                  onValueChange={(value) => handleInputChange("setor", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o setor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {setoresUnicos.map((setor) => (
+                      <SelectItem key={setor} value={setor}>
+                        {setor}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Turno */}
