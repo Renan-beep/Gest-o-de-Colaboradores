@@ -13,7 +13,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { AdvancedMetricsCard } from "@/components/stats/AdvancedMetricsCard";
 import { MonthDayFilter } from "@/components/stats/MonthDayFilter";
 import { StatCard } from "@/components/stats/StatCard";
-import HistoricoPendencias from "@/components/dashboard/HistoricoPendencias";
+
 interface LiderancaPendencia {
   lideranca: string;
   colaboradores: number;
@@ -733,8 +733,5 @@ export default function MetricasChamada() {
             </div>}
         </CardContent>
       </Card>
-
-      {/* Histórico de Pendências Mensais */}
-      <HistoricoPendencias />
     </div>;
 }
