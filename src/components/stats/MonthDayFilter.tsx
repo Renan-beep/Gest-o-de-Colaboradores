@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/integrations/supabase/client"
 import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
 import { Calendar, Check, X } from "lucide-react"
 
 interface MonthData {
@@ -70,7 +71,7 @@ export function MonthDayFilter({ selectedMonth, selectedDays = [], onSelectionCh
         .map(([key, data]) => ({
           year: data.year,
           month: data.month,
-          label: format(new Date(data.year, data.month), 'MMMM yyyy'),
+          label: format(new Date(data.year, data.month), 'MMMM yyyy', { locale: ptBR }),
           days: Array.from(data.days).sort((a, b) => a - b)
         }))
         .sort((a, b) => {
