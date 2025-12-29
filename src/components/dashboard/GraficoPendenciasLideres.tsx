@@ -16,13 +16,20 @@ interface GraficoPendenciasLideresProps {
     lideranca_origem: string | null
     lideranca_destino: string | null
   }>
+  chamadas?: Array<{
+    colaborador_id: string
+    data: string
+    status: string
+  }>
 }
 
-export function GraficoPendenciasLideres({ selectedDate, colaboradores, movimentacoes }: GraficoPendenciasLideresProps) {
+export function GraficoPendenciasLideres({ selectedDate, colaboradores, movimentacoes, chamadas = [] }: GraficoPendenciasLideresProps) {
   const dadosGrafico = useMemo(() => {
     const [year, month] = selectedDate.split('-')
     const firstDay = new Date(parseInt(year), parseInt(month) - 1, 1)
     const lastDay = new Date(parseInt(year), parseInt(month), 0)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
 
     // Função para obter liderança do colaborador em uma data específica
     const getLiderancaNaData = (colaboradorId: string, liderancaAtual: string, dataVerificar: string): string => {
@@ -41,17 +48,22 @@ export function GraficoPendenciasLideres({ selectedDate, colaboradores, moviment
       return movMaisAntiga.lideranca_origem || liderancaAtual
     }
 
-    // Contar dias pendentes por líder ao longo do mês
+    // Criar set de chamadas registradas para busca rápida
+    const chamadasSet = new Set(
+      chamadas.map(c => `${c.colaborador_id}_${c.data}`)
+    )
+
+    // Contar pendências por líder apenas no mês selecionado
     const pendenciasPorLider: Record<string, number> = {}
     const currentDate = new Date(firstDay)
 
-    while (currentDate <= lastDay) {
+    while (currentDate <= lastDay && currentDate <= today) {
       const dateStr = currentDate.toISOString().split('T')[0]
       const dayOfWeek = currentDate.getDay()
       
       // Pular domingos
       if (dayOfWeek !== 0) {
-        // Para cada dia útil do mês, verificar colaboradores ativos
+        // Para cada dia útil do mês, verificar colaboradores ativos SEM chamada
         colaboradores.forEach(colaborador => {
           if (colaborador.status !== 'Ativo') return
 
@@ -59,10 +71,14 @@ export function GraficoPendenciasLideres({ selectedDate, colaboradores, moviment
           const admissaoDate = colaborador.admissao ? new Date(colaborador.admissao) : null
           if (admissaoDate && admissaoDate > currentDate) return
 
-          const liderancaNaData = getLiderancaNaData(colaborador.id, colaborador.lideranca || '', dateStr)
-          if (liderancaNaData) {
-            // Incrementar contador de dias-colaborador por líder
-            pendenciasPorLider[liderancaNaData] = (pendenciasPorLider[liderancaNaData] || 0) + 1
+          // Verificar se tem chamada registrada para este dia
+          const temChamada = chamadasSet.has(`${colaborador.id}_${dateStr}`)
+          
+          if (!temChamada) {
+            const liderancaNaData = getLiderancaNaData(colaborador.id, colaborador.lideranca || '', dateStr)
+            if (liderancaNaData) {
+              pendenciasPorLider[liderancaNaData] = (pendenciasPorLider[liderancaNaData] || 0) + 1
+            }
           }
         })
       }
@@ -73,14 +89,24 @@ export function GraficoPendenciasLideres({ selectedDate, colaboradores, moviment
     // Converter para array e ordenar do maior para o menor
     const dados = Object.entries(pendenciasPorLider)
       .map(([lideranca, total]) => ({ lideranca, total }))
+      .filter(item => item.total > 0)
       .sort((a, b) => b.total - a.total)
       .slice(0, 5)
 
     return dados
-  }, [selectedDate, colaboradores, movimentacoes])
+  }, [selectedDate, colaboradores, movimentacoes, chamadas])
 
   if (dadosGrafico.length === 0) {
-    return null
+    return (
+      <Card className="p-4 bg-background/95 backdrop-blur border-border/50 h-full flex flex-col">
+        <div className="text-sm font-medium text-muted-foreground mb-3">
+          Pendências por Líder
+        </div>
+        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+          Nenhuma pendência no mês
+        </div>
+      </Card>
+    )
   }
 
   // Cores gradientes do vermelho (mais pendências) ao verde (menos pendências)
