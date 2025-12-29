@@ -33,7 +33,7 @@ export default function TurnoverIndicator() {
       const { data: colaboradoresAtivos, error: ativosError } = await supabase
         .from('colaboradores')
         .select('id, admissao')
-        .eq('status', 'ativo')
+        .ilike('status', 'ativo')
         .not('admissao', 'is', null)
 
       if (ativosError) throw ativosError
