@@ -89,9 +89,23 @@ export default function MetricasChamada() {
   const [liderancasPendencias, setLiderancasPendencias] = useState<LiderancaPendencia[]>([])
   const [loading, setLoading] = useState(true)
   const [viewType, setViewType] = useState<"semanal" | "mensal" | "diario">("mensal")
-  const [selectedMonth, setSelectedMonth] = useState<string>()
+  
+  // Inicializar com o mês atual
+  const getCurrentMonth = () => {
+    const now = new Date()
+    return `${now.getFullYear()}-${now.getMonth()}`
+  }
+  
+  const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth())
   const [selectedDays, setSelectedDays] = useState<string[]>([])
 
+  // Buscar dados na montagem inicial
+  useEffect(() => {
+    fetchMetricas()
+    fetchLiderancasPendencias()
+  }, [])
+
+  // Buscar dados quando filtros mudam
   useEffect(() => {
     if (selectedMonth || selectedDays.length > 0) {
       fetchMetricas()
