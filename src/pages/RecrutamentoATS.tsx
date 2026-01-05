@@ -469,6 +469,26 @@ export default function RecrutamentoATS() {
         if (colabError) throw colabError;
       }
 
+      // INSERIR O NOVO COLABORADOR NA TABELA COLABORADORES COM STATUS "Pré-Cadastro"
+      const novoColaborador = {
+        matricula: preCadastro.candidato_matricula,
+        colaborador: preCadastro.candidato_nome,
+        status: "Pré-Cadastro",
+        cargo: vagaSelecionada.cargo || null,
+        setor: vagaSelecionada.setor || null,
+        turno: vagaSelecionada.turno || null,
+        lideranca: vagaSelecionada.lideranca || null,
+        subsetor: vagaSelecionada.subsetor || null,
+      };
+
+      const { data: colaboradorCriado, error: colaboradorError } = await supabase
+        .from("colaboradores")
+        .insert(novoColaborador)
+        .select()
+        .single();
+
+      if (colaboradorError) throw colaboradorError;
+
       const { error } = await supabase
         .from("vagas")
         .update({
@@ -493,8 +513,8 @@ export default function RecrutamentoATS() {
       toast({
         title: "Pré-cadastro salvo",
         description: showDemissaoForm && demissaoData.motivo 
-          ? "Candidato registrado e demissão processada com sucesso!" 
-          : "Candidato registrado com sucesso!",
+          ? "Candidato registrado e demissão processada. Complete o cadastro para finalizar." 
+          : "Candidato registrado. Complete o cadastro para finalizar a contratação.",
       });
 
       setShowDetalhes(false);
@@ -572,47 +592,54 @@ export default function RecrutamentoATS() {
     );
   }
 
-  const vagasAguardandoAprovacao = vagas.filter(v => v.status === 'aguardando_aprovacao');
-  const temAprovacoesPendentes = vagasAguardandoAprovacao.length > 0;
+  // Calcular indicadores Atual vs Previsto
+  const totalColaboradoresAtivos = colaboradores.length;
+  const vagasEmAberto = vagas.filter(v => 
+    ['aprovada', 'em_processo_seletivo', 'pre_cadastro', 'aguardando_cadastro'].includes(v.status)
+  ).reduce((acc, v) => acc + v.quantidade_vagas, 0);
+  const totalPrevisto = totalColaboradoresAtivos + vagasEmAberto;
 
   return (
     <div className="space-y-6 p-6 relative">
-      {/* Notificação de aprovações pendentes */}
-      {temAprovacoesPendentes && (
-        <div className="fixed top-4 right-4 z-50 animate-pulse">
-          <div className="bg-amber-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 cursor-pointer hover:bg-amber-600 transition-colors"
-               onClick={() => {
-                 const element = document.getElementById('coluna-aguardando-aprovacao');
-                 element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-               }}>
-            <Bell className="h-5 w-5 animate-bounce" />
-            <div>
-              <p className="font-semibold">Aprovação Pendente</p>
-              <p className="text-sm opacity-90">
-                {vagasAguardandoAprovacao.length} {vagasAguardandoAprovacao.length === 1 ? 'vaga aguarda' : 'vagas aguardam'} sua aprovação
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Recrutamento & Seleção</h1>
           <p className="text-muted-foreground">Gerencie o fluxo de vagas e contratações</p>
         </div>
-        <Dialog open={showNovaVaga} onOpenChange={setShowNovaVaga}>
-          <DialogTrigger asChild>
-            <Button size="lg" className="gap-2">
-              <Plus className="h-5 w-5" />
-              Nova Vaga
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Abertura de Vaga</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
+        
+        {/* Indicador Atual vs Previsto + Botão Nova Vaga */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 bg-card border border-border rounded-lg px-4 py-2 shadow-sm">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              <div className="text-sm">
+                <span className="text-muted-foreground">Atual:</span>{" "}
+                <span className="font-bold text-foreground">{totalColaboradoresAtivos}</span>
+              </div>
+            </div>
+            <div className="w-px h-6 bg-border" />
+            <div className="text-sm">
+              <span className="text-muted-foreground">Previsto:</span>{" "}
+              <span className="font-bold text-primary">{totalPrevisto}</span>
+              {vagasEmAberto > 0 && (
+                <span className="text-xs text-emerald-500 ml-1">(+{vagasEmAberto})</span>
+              )}
+            </div>
+          </div>
+          
+          <Dialog open={showNovaVaga} onOpenChange={setShowNovaVaga}>
+            <DialogTrigger asChild>
+              <Button size="lg" className="gap-2">
+                <Plus className="h-5 w-5" />
+                Nova Vaga
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Abertura de Vaga</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
               {/* Gestor Solicitante */}
               <div className="grid gap-2">
                 <Label>Gestor Solicitante</Label>
@@ -824,8 +851,9 @@ export default function RecrutamentoATS() {
                 </Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Estatísticas rápidas */}
