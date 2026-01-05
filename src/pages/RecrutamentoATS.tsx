@@ -194,11 +194,11 @@ export default function RecrutamentoATS() {
       if (vagasError) throw vagasError;
       setVagas(vagasData || []);
 
-      // Fetch colaboradores ativos
+      // Fetch colaboradores ativos e afastados (todos que fazem parte do quadro)
       const { data: colabData, error: colabError } = await supabase
         .from("colaboradores")
-        .select("id, colaborador, matricula, cargo, setor, turno, lideranca, subsetor")
-        .eq("status", "Ativo")
+        .select("id, colaborador, matricula, cargo, setor, turno, lideranca, subsetor, status")
+        .in("status", ["Ativo", "Afastado"])
         .order("colaborador");
 
       if (colabError) throw colabError;
