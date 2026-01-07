@@ -1,0 +1,537 @@
+import { useState, useEffect, useMemo } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useToast } from "@/hooks/use-toast"
+import { 
+  Search, 
+  Calendar as CalendarIcon, 
+  UserCheck, 
+  X, 
+  Home, 
+  Heart, 
+  Coffee,
+  Database,
+  Filter,
+  RotateCcw
+} from "lucide-react"
+import { format, parseISO } from "date-fns"
+import { ptBR } from "date-fns/locale"
+import { cn } from "@/lib/utils"
+import { supabase } from "@/integrations/supabase/client"
+import { ScrollArea } from "@/components/ui/scroll-area"
+
+interface Colaborador {
+  id: string
+  matricula: string
+  colaborador: string
+  setor: string
+  lideranca: string
+  status: string
+}
+
+interface Chamada {
+  id: string
+  colaborador_id: string
+  data: string
+  status: string
+}
+
+interface ColaboradorChamadas {
+  colaborador: Colaborador
+  chamadas: Chamada[]
+  totais: {
+    presente: number
+    folga: number
+    falta: number
+    atestado: number
+    ferias: number
+    total: number
+  }
+}
+
+const statusOptions = [
+  { value: "presente", label: "Presente", icon: UserCheck, color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
+  { value: "folga", label: "Folga", icon: Home, color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+  { value: "falta", label: "Falta", icon: X, color: "bg-red-500/10 text-red-600 border-red-500/20" },
+  { value: "atestado", label: "Atestado", icon: Heart, color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+  { value: "ferias", label: "Férias", icon: Coffee, color: "bg-purple-500/10 text-purple-600 border-purple-500/20" }
+]
+
+export function BancoChamadas() {
+  const { toast } = useToast()
+  const [colaboradores, setColaboradores] = useState<Colaborador[]>([])
+  const [chamadas, setChamadas] = useState<Chamada[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterLideranca, setFilterLideranca] = useState("todos")
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined)
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined)
+  const [selectedColaborador, setSelectedColaborador] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    if (startDate || endDate) {
+      fetchChamadas()
+    }
+  }, [startDate, endDate])
+
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      // Fetch colaboradores
+      const { data: colabData, error: colabError } = await supabase
+        .from('colaboradores')
+        .select('id, matricula, colaborador, setor, lideranca, status')
+        .in('status', ['Ativo', 'Afastado'])
+        .order('colaborador')
+
+      if (colabError) throw colabError
+      setColaboradores(colabData || [])
+
+      // Fetch all chamadas
+      await fetchChamadas()
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar dados: " + error.message,
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchChamadas = async () => {
+    try {
+      let query = supabase
+        .from('chamadas')
+        .select('id, colaborador_id, data, status')
+        .order('data', { ascending: false })
+
+      if (startDate) {
+        query = query.gte('data', format(startDate, 'yyyy-MM-dd'))
+      }
+      if (endDate) {
+        query = query.lte('data', format(endDate, 'yyyy-MM-dd'))
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+      setChamadas(data || [])
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar chamadas: " + error.message,
+        variant: "destructive"
+      })
+    }
+  }
+
+  const liderancas = useMemo(() => {
+    return [...new Set(colaboradores.map(c => c.lideranca).filter(l => l && l.trim() !== ''))].sort()
+  }, [colaboradores])
+
+  const colaboradoresFiltrados = useMemo(() => {
+    let filtered = colaboradores
+
+    // Filter by search term
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter(c => 
+        c.colaborador.toLowerCase().includes(term) ||
+        c.matricula.toLowerCase().includes(term)
+      )
+    }
+
+    // Filter by lideranca
+    if (filterLideranca !== "todos") {
+      filtered = filtered.filter(c => c.lideranca === filterLideranca)
+    }
+
+    return filtered
+  }, [colaboradores, searchTerm, filterLideranca])
+
+  const colaboradoresComChamadas: ColaboradorChamadas[] = useMemo(() => {
+    return colaboradoresFiltrados.map(colaborador => {
+      const colabChamadas = chamadas.filter(c => c.colaborador_id === colaborador.id)
+      
+      const totais = {
+        presente: colabChamadas.filter(c => c.status === 'presente').length,
+        folga: colabChamadas.filter(c => c.status === 'folga').length,
+        falta: colabChamadas.filter(c => c.status === 'falta').length,
+        atestado: colabChamadas.filter(c => c.status === 'atestado').length,
+        ferias: colabChamadas.filter(c => c.status === 'ferias').length,
+        total: colabChamadas.length
+      }
+
+      return {
+        colaborador,
+        chamadas: colabChamadas,
+        totais
+      }
+    })
+  }, [colaboradoresFiltrados, chamadas])
+
+  const totaisGerais = useMemo(() => {
+    return colaboradoresComChamadas.reduce((acc, item) => ({
+      presente: acc.presente + item.totais.presente,
+      folga: acc.folga + item.totais.folga,
+      falta: acc.falta + item.totais.falta,
+      atestado: acc.atestado + item.totais.atestado,
+      ferias: acc.ferias + item.totais.ferias,
+      total: acc.total + item.totais.total
+    }), { presente: 0, folga: 0, falta: 0, atestado: 0, ferias: 0, total: 0 })
+  }, [colaboradoresComChamadas])
+
+  const handleClearFilters = () => {
+    setSearchTerm("")
+    setFilterLideranca("todos")
+    setStartDate(undefined)
+    setEndDate(undefined)
+    setSelectedColaborador(null)
+  }
+
+  const getStatusBadge = (status: string) => {
+    const option = statusOptions.find(o => o.value === status)
+    if (!option) return <Badge variant="outline">{status}</Badge>
+    
+    const Icon = option.icon
+    return (
+      <Badge className={cn("flex items-center gap-1", option.color)}>
+        <Icon className="w-3 h-3" />
+        {option.label}
+      </Badge>
+    )
+  }
+
+  const selectedColaboradorData = selectedColaborador 
+    ? colaboradoresComChamadas.find(c => c.colaborador.id === selectedColaborador)
+    : null
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <Database className="w-8 h-8 mx-auto mb-2 animate-pulse text-primary" />
+          <p className="text-muted-foreground">Carregando banco de chamadas...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Filters */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-primary" />
+              <CardTitle className="text-lg">Filtros</CardTitle>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+              <RotateCcw className="w-4 h-4 mr-1" />
+              Limpar
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Search */}
+            <div className="space-y-2">
+              <Label>Buscar Colaborador</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Nome ou matrícula..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+
+            {/* Lideranca filter */}
+            <div className="space-y-2">
+              <Label>Liderança</Label>
+              <Select value={filterLideranca} onValueChange={setFilterLideranca}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todas</SelectItem>
+                  {liderancas.map(lid => (
+                    <SelectItem key={lid} value={lid}>{lid}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Start Date */}
+            <div className="space-y-2">
+              <Label>Data Início</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* End Date */}
+            <div className="space-y-2">
+              <Label>Data Fim</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    disabled={(date) => startDate ? date < startDate : false}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <Card>
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold text-foreground">{totaisGerais.total}</p>
+            <p className="text-xs text-muted-foreground">Total Registros</p>
+          </CardContent>
+        </Card>
+        {statusOptions.map(option => {
+          const Icon = option.icon
+          const count = totaisGerais[option.value as keyof typeof totaisGerais]
+          return (
+            <Card key={option.value}>
+              <CardContent className="p-4 text-center">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Icon className="w-4 h-4 text-muted-foreground" />
+                  <p className="text-2xl font-bold">{count}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">{option.label}</p>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Collaborators List */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="w-5 h-5" />
+              Colaboradores ({colaboradoresComChamadas.length})
+            </CardTitle>
+            <CardDescription>
+              Clique em um colaborador para ver o histórico detalhado
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[500px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Colaborador</TableHead>
+                    <TableHead className="text-center">Presente</TableHead>
+                    <TableHead className="text-center">Folga</TableHead>
+                    <TableHead className="text-center">Falta</TableHead>
+                    <TableHead className="text-center">Atestado</TableHead>
+                    <TableHead className="text-center">Férias</TableHead>
+                    <TableHead className="text-center">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {colaboradoresComChamadas.map(item => (
+                    <TableRow 
+                      key={item.colaborador.id}
+                      className={cn(
+                        "cursor-pointer hover:bg-muted/50 transition-colors",
+                        selectedColaborador === item.colaborador.id && "bg-primary/10"
+                      )}
+                      onClick={() => setSelectedColaborador(
+                        selectedColaborador === item.colaborador.id ? null : item.colaborador.id
+                      )}
+                    >
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{item.colaborador.colaborador}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.colaborador.matricula} • {item.colaborador.lideranca}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600">
+                          {item.totais.presente}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="bg-blue-500/10 text-blue-600">
+                          {item.totais.folga}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="bg-red-500/10 text-red-600">
+                          {item.totais.falta}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="bg-amber-500/10 text-amber-600">
+                          {item.totais.atestado}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="bg-purple-500/10 text-purple-600">
+                          {item.totais.ferias}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center font-medium">
+                        {item.totais.total}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {colaboradoresComChamadas.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        Nenhum colaborador encontrado com os filtros aplicados
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        {/* Detail Panel */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Detalhes</CardTitle>
+            <CardDescription>
+              {selectedColaboradorData 
+                ? `Histórico de ${selectedColaboradorData.colaborador.colaborador}`
+                : "Selecione um colaborador para ver detalhes"
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {selectedColaboradorData ? (
+              <div className="space-y-4">
+                {/* Collaborator Info */}
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <p className="font-semibold">{selectedColaboradorData.colaborador.colaborador}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Matrícula: {selectedColaboradorData.colaborador.matricula}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Setor: {selectedColaboradorData.colaborador.setor}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Liderança: {selectedColaboradorData.colaborador.lideranca}
+                  </p>
+                </div>
+
+                {/* Summary */}
+                <div className="grid grid-cols-2 gap-2">
+                  {statusOptions.map(option => {
+                    const count = selectedColaboradorData.totais[option.value as keyof typeof selectedColaboradorData.totais]
+                    const Icon = option.icon
+                    return (
+                      <div key={option.value} className={cn("p-2 rounded-lg text-center", option.color)}>
+                        <div className="flex items-center justify-center gap-1">
+                          <Icon className="w-3 h-3" />
+                          <span className="font-bold">{count}</span>
+                        </div>
+                        <p className="text-xs">{option.label}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Attendance History */}
+                <div>
+                  <p className="font-medium mb-2">Histórico ({selectedColaboradorData.chamadas.length} registros)</p>
+                  <ScrollArea className="h-[250px]">
+                    <div className="space-y-2">
+                      {selectedColaboradorData.chamadas
+                        .sort((a, b) => b.data.localeCompare(a.data))
+                        .map(chamada => (
+                          <div 
+                            key={chamada.id} 
+                            className="flex items-center justify-between p-2 rounded-lg bg-muted/30"
+                          >
+                            <span className="text-sm">
+                              {format(parseISO(chamada.data), "dd/MM/yyyy", { locale: ptBR })}
+                            </span>
+                            {getStatusBadge(chamada.status)}
+                          </div>
+                        ))
+                      }
+                      {selectedColaboradorData.chamadas.length === 0 && (
+                        <p className="text-center text-sm text-muted-foreground py-4">
+                          Nenhum registro no período selecionado
+                        </p>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <Database className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Selecione um colaborador na lista para ver o histórico detalhado de chamadas</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}

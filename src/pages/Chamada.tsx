@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { 
   UserCheck, 
@@ -19,7 +20,8 @@ import {
   AlertTriangle,
   ChevronRight,
   RotateCcw,
-  Settings
+  Settings,
+  Database
 } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -29,6 +31,7 @@ import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
 import { GraficoPendenciasLideres } from "@/components/dashboard/GraficoPendenciasLideres"
 import { PainelPendencias } from "@/components/dashboard/PainelPendencias"
+import { BancoChamadas } from "@/components/chamadas/BancoChamadas"
 
 interface Colaborador {
   id: string
@@ -596,8 +599,8 @@ export default function Chamada() {
         <div className="flex items-center gap-3">
           <UserCheck className="w-8 h-8 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold">Chamada Diária</h1>
-            <p className="text-muted-foreground">Registre a presença dos colaboradores</p>
+            <h1 className="text-2xl font-bold">Controle de Chamadas</h1>
+            <p className="text-muted-foreground">Gerencie a presença dos colaboradores</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -674,7 +677,20 @@ export default function Chamada() {
         </div>
       </div>
 
-      {/* Gráfico de Pendências e Datas com Pendências */}
+      <Tabs defaultValue="chamada-diaria" className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="chamada-diaria" className="flex items-center gap-2">
+            <UserCheck className="w-4 h-4" />
+            Chamada Diária
+          </TabsTrigger>
+          <TabsTrigger value="banco-chamadas" className="flex items-center gap-2">
+            <Database className="w-4 h-4" />
+            Banco de Chamadas
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="chamada-diaria" className="mt-6 space-y-6">
+          {/* Gráfico de Pendências e Datas com Pendências */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Gráfico de Pendências por Líder */}
         <div className="lg:col-span-1">
@@ -945,6 +961,12 @@ export default function Chamada() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="banco-chamadas" className="mt-6">
+          <BancoChamadas />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
