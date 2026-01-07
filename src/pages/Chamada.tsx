@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react"
+import { useSearchParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -677,7 +678,7 @@ export default function Chamada() {
         </div>
       </div>
 
-      <Tabs defaultValue="chamada-diaria" className="w-full">
+      <Tabs defaultValue={new URLSearchParams(window.location.search).get('tab') === 'banco' ? 'banco-chamadas' : 'chamada-diaria'} className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="chamada-diaria" className="flex items-center gap-2">
             <UserCheck className="w-4 h-4" />
