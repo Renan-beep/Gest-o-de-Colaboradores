@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, UserCheck, BarChart3, Plus, Home, Building2, CalendarCheck, LogOut, User, FileText, Settings, TrendingUp, UserPlus, UserCog, Bot, Briefcase } from "lucide-react";
+import { Users, UserCheck, BarChart3, Plus, Home, Building2, CalendarCheck, LogOut, User, FileText, Settings, TrendingUp, UserPlus, UserCog, Bot, Briefcase, ClipboardList } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -54,6 +54,11 @@ const chamadaGroupItems = [{
   icon: UserCheck,
   description: "Registrar presença diária"
 }, {
+  title: "Banco de Chamadas",
+  url: "/chamada?tab=banco",
+  icon: ClipboardList,
+  description: "Histórico por colaborador"
+}, {
   title: "Previsão de sábados",
   url: "/chamada-sabado",
   icon: CalendarCheck,
@@ -100,6 +105,11 @@ const encarregadoChamadaItems = [{
   url: "/chamada",
   icon: UserCheck,
   description: "Registrar presença diária"
+}, {
+  title: "Banco de Chamadas",
+  url: "/chamada?tab=banco",
+  icon: ClipboardList,
+  description: "Histórico por colaborador"
 }, {
   title: "Previsão de sábados",
   url: "/chamada-sabado",
