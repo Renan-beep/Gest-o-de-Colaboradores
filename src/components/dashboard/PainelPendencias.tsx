@@ -83,7 +83,8 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
 
       // Calcular pendências dia por dia
       const pendenciasEncontradas: PendenciaData[] = []
-      const dataInicioSistema = new Date('2025-09-01')
+      // Só verificar chamadas a partir de 16/01/2026
+      const dataInicioSistema = new Date('2026-01-16')
       const currentDate = new Date(firstDay)
 
       console.log('🔍 [PainelPendencias] Iniciando cálculo para:', mesAno)

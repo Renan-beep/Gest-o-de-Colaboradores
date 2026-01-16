@@ -328,8 +328,8 @@ export default function Chamada() {
       const datesWithPending: string[] = []
       const currentDate = new Date(firstDay)
 
-      // Só verificar chamadas de setembro/2025 em diante
-      const dataInicioSistema = new Date('2025-09-01')
+      // Só verificar chamadas a partir de 16/01/2026
+      const dataInicioSistema = new Date('2026-01-16')
       
       while (currentDate <= lastDayToCheck) {
         const dateStr = currentDate.toISOString().split('T')[0]
