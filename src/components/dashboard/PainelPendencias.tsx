@@ -238,8 +238,15 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
               return (
                 <button
                   key={p.data}
-                  onClick={() => onDateClick?.(p.data)}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    // Executar callback imediatamente sem aguardar
+                    if (onDateClick) {
+                      onDateClick(p.data)
+                    }
+                  }}
+                  className="w-full flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <div className="text-left">
