@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, UserCheck, Home, Building2, CalendarCheck, LogOut, User, FileText, Settings, TrendingUp, UserPlus, UserCog, ClipboardList } from "lucide-react";
+import { Users, UserCheck, Home, Building2, CalendarCheck, LogOut, User, FileText, TrendingUp, UserPlus, UserCog, ClipboardList } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
@@ -25,11 +25,6 @@ const gerenciaItems = [{
   url: "/cadastro",
   icon: UserPlus,
   description: "Cadastrar colaboradores"
-}, {
-  title: "Configurações",
-  url: "/indicadores",
-  icon: Settings,
-  description: "Configurações do sistema"
 }, {
   title: "Conta",
   url: "/configuracoes-conta",
@@ -74,11 +69,6 @@ const encarregadoItems = [{
   url: "/lista-colaboradores",
   icon: Users,
   description: "Visualizar todos os colaboradores"
-}, {
-  title: "Configurações",
-  url: "/indicadores",
-  icon: Settings,
-  description: "Configurações do sistema"
 }, {
   title: "Conta",
   url: "/configuracoes-conta",
