@@ -396,82 +396,50 @@ export default function Chamada() {
     setSaving(true)
 
     try {
-      // Buscar registros existentes para esta data
-      const { data: existingChamadas, error: fetchError } = await supabase
+      // Preparar dados para upsert (INSERT ON CONFLICT UPDATE)
+      // Isso é atômico e thread-safe - múltiplos usuários podem salvar simultaneamente
+      const chamadasToUpsert = Object.entries(chamadas).map(([colaboradorId, status]) => ({
+        colaborador_id: colaboradorId,
+        data: selectedDate,
+        status: status,
+        updated_at: new Date().toISOString()
+      }))
+
+      // Usar upsert com onConflict para garantir atomicidade
+      // O índice único em (colaborador_id, data) garante que não haverá duplicatas
+      const { error: upsertError, count } = await supabase
         .from('chamadas')
-        .select('id, colaborador_id')
-        .eq('data', selectedDate)
+        .upsert(chamadasToUpsert, {
+          onConflict: 'colaborador_id,data',
+          ignoreDuplicates: false // Atualiza se já existir
+        })
 
-      if (fetchError) throw fetchError
+      if (upsertError) {
+        console.error('Erro ao salvar chamadas:', upsertError)
+        throw upsertError
+      }
 
-      const existingMap = new Map(existingChamadas?.map(c => [c.colaborador_id, c.id]) || [])
-
-      // Separar em registros para atualizar e para inserir
-      const toUpdate: { id: string; status: string }[] = []
-      const toInsert: { colaborador_id: string; data: string; status: string }[] = []
-
-      Object.entries(chamadas).forEach(([colaboradorId, status]) => {
-        const existingId = existingMap.get(colaboradorId)
-        if (existingId) {
-          toUpdate.push({ id: existingId, status })
-        } else {
-          toInsert.push({
-            colaborador_id: colaboradorId,
-            data: selectedDate,
-            status
-          })
-        }
+      toast({
+        title: "Sucesso",
+        description: `Chamada salva para ${totalChamadas} colaborador(es)`,
       })
-
-      // Atualizar registros existentes um por um (evita problemas de concorrência)
-      let updateErrors = 0
-      for (const record of toUpdate) {
-        const { error } = await supabase
-          .from('chamadas')
-          .update({ status: record.status, updated_at: new Date().toISOString() })
-          .eq('id', record.id)
-        
-        if (error) {
-          console.error('Erro ao atualizar chamada:', record.id, error)
-          updateErrors++
-        }
-      }
-
-      // Inserir novos registros
-      let insertErrors = 0
-      if (toInsert.length > 0) {
-        const { error: insertError } = await supabase
-          .from('chamadas')
-          .insert(toInsert)
-
-        if (insertError) {
-          console.error('Erro ao inserir chamadas:', insertError)
-          insertErrors = toInsert.length
-        }
-      }
-
-      const totalSaved = totalChamadas - updateErrors - insertErrors
-      
-      if (updateErrors > 0 || insertErrors > 0) {
-        toast({
-          title: "Atenção",
-          description: `${totalSaved} de ${totalChamadas} registros salvos. ${updateErrors + insertErrors} erro(s) encontrado(s).`,
-          variant: "destructive"
-        })
-      } else {
-        toast({
-          title: "Sucesso",
-          description: `Chamada salva para ${totalChamadas} colaborador(es)`,
-        })
-      }
 
       // Recarregar as chamadas do dia para atualizar o estado e as pendências
       await fetchChamadasDoDia()
     } catch (error: any) {
       console.error('Erro ao salvar chamada:', error)
+      
+      // Mensagem de erro mais específica
+      let errorMessage = error.message
+      if (error.code === '23505') {
+        errorMessage = 'Conflito de dados detectado. Por favor, atualize a página e tente novamente.'
+      } else if (error.code === '23503') {
+        errorMessage = 'Colaborador não encontrado. Verifique se o colaborador ainda está ativo.'
+      }
+      
       toast({
-        title: "Erro",
-        description: "Erro ao salvar chamada: " + error.message,
+        title: "Erro ao salvar",
+        description: errorMessage,
         variant: "destructive"
       })
     } finally {
