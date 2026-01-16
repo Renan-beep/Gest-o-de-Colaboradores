@@ -17,7 +17,7 @@ import ConfiguracoesConta from "./pages/ConfiguracoesConta";
 
 import ListaColaboradores from "./pages/ListaColaboradores";
 import EditarColaborador from "./pages/EditarColaborador";
-import MetricasChamada from "./pages/MetricasChamada";
+
 import Dashboard from "./pages/Dashboard";
 import SolicitacaoMovimentacao from "./pages/SolicitacaoMovimentacao";
 import NotFound from "./pages/NotFound";
@@ -86,13 +86,6 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <ConfiguracoesConta />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/metricas-chamada" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <MetricasChamada />
                   </AppLayout>
                 </ProtectedRoute>
               } />
