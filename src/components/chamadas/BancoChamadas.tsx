@@ -73,8 +73,7 @@ export function BancoChamadas() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterLideranca, setFilterLideranca] = useState("todos")
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined)
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined)
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   
 
   useEffect(() => {
@@ -82,10 +81,10 @@ export function BancoChamadas() {
   }, [])
 
   useEffect(() => {
-    if (startDate || endDate) {
+    if (selectedDate) {
       fetchChamadas()
     }
-  }, [startDate, endDate])
+  }, [selectedDate])
 
   const fetchData = async () => {
     setLoading(true)
@@ -120,11 +119,8 @@ export function BancoChamadas() {
         .select('id, colaborador_id, data, status')
         .order('data', { ascending: false })
 
-      if (startDate) {
-        query = query.gte('data', format(startDate, 'yyyy-MM-dd'))
-      }
-      if (endDate) {
-        query = query.lte('data', format(endDate, 'yyyy-MM-dd'))
+      if (selectedDate) {
+        query = query.eq('data', format(selectedDate, 'yyyy-MM-dd'))
       }
 
       const { data, error } = await query
@@ -201,8 +197,7 @@ export function BancoChamadas() {
   const handleClearFilters = () => {
     setSearchTerm("")
     setFilterLideranca("todos")
-    setStartDate(undefined)
-    setEndDate(undefined)
+    setSelectedDate(undefined)
   }
 
   const getStatusBadge = (status: string) => {
@@ -247,7 +242,7 @@ export function BancoChamadas() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search */}
             <div className="space-y-2">
               <Label>Buscar Colaborador</Label>
@@ -278,56 +273,29 @@ export function BancoChamadas() {
               </Select>
             </div>
 
-            {/* Start Date */}
+            {/* Date Filter */}
             <div className="space-y-2">
-              <Label>Data Início</Label>
+              <Label>Data</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !startDate && "text-muted-foreground"
+                      !selectedDate && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar"}
+                    {selectedDate ? format(selectedDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
                     initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* End Date */}
-            <div className="space-y-2">
-              <Label>Data Fim</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !endDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    disabled={(date) => startDate ? date < startDate : false}
-                    initialFocus
+                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
