@@ -31,8 +31,7 @@ const Index = () => {
   const [stats, setStats] = useState({
     totalColaboradores: 0,
     afastados: 0,
-    presentesHoje: 0,
-    taxaPresenca: 0
+    turnoverRate: 0
   });
   const [indicators, setIndicators] = useState({
     porSetor: {} as Record<string, number>,
@@ -147,21 +146,30 @@ const Index = () => {
         }
       });
 
-      // Buscar chamadas de hoje
-      const hoje = new Date().toISOString().split('T')[0];
-      const {
-        data: chamadasHoje,
-        error: chamadasError
-      } = await supabase.from('chamadas').select('status').eq('data', hoje);
-      if (chamadasError && chamadasError.code !== 'PGRST116') throw chamadasError;
-      const presentesHoje = chamadasHoje?.filter(c => c.status === 'presente').length || 0;
-      const totalChamadas = chamadasHoje?.length || 0;
-      const taxaPresenca = totalChamadas > 0 ? presentesHoje / totalChamadas * 100 : 0;
+      // Calcular turnover do ano atual
+      const anoAtual = new Date().getFullYear();
+      const { data: demissoes, error: demissoesError } = await supabase
+        .from('demissoes')
+        .select('data_demissao')
+        .gte('data_demissao', `${anoAtual}-01-01`)
+        .lte('data_demissao', `${anoAtual}-12-31`);
+      
+      if (demissoesError) throw demissoesError;
+
+      const admissoesAno = colaboradores?.filter(c => {
+        if (!c.admissao) return false;
+        const ano = new Date(c.admissao + 'T12:00:00').getFullYear();
+        return ano === anoAtual;
+      }).length || 0;
+      
+      const demissoesAno = demissoes?.length || 0;
+      const mediaColaboradores = totalColaboradores > 0 ? totalColaboradores : 1;
+      const turnoverRate = ((admissoesAno + demissoesAno) / 2 / mediaColaboradores) * 100;
+
       setStats({
         totalColaboradores,
         afastados,
-        presentesHoje,
-        taxaPresenca
+        turnoverRate
       });
       setIndicators({
         porSetor,
@@ -286,11 +294,11 @@ const Index = () => {
         />
         
         <StatCard 
-          title="Taxa de Presença" 
-          value={loading ? '...' : `${stats.taxaPresenca.toFixed(1)}%`} 
-          subtitle="Média do dia atual" 
+          title="Turnover Anual" 
+          value={loading ? '...' : `${stats.turnoverRate.toFixed(1)}%`} 
+          subtitle={`Taxa de rotatividade ${new Date().getFullYear()}`}
           icon={TrendingUp} 
-          variant="default" 
+          variant={stats.turnoverRate > 10 ? "error" : stats.turnoverRate > 5 ? "warning" : "success"} 
           loading={loading} 
           className="animate-slide-in" 
         />
