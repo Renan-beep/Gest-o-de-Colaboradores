@@ -396,36 +396,79 @@ export default function Chamada() {
     setSaving(true)
 
     try {
-      // Preparar dados para inserção/atualização
-      const chamadasToSave = Object.entries(chamadas).map(([colaboradorId, status]) => ({
-        colaborador_id: colaboradorId,
-        data: selectedDate,
-        status: status
-      }))
-
-      // Primeiro, deletar registros existentes para esta data
-      const { error: deleteError } = await supabase
+      // Buscar registros existentes para esta data
+      const { data: existingChamadas, error: fetchError } = await supabase
         .from('chamadas')
-        .delete()
+        .select('id, colaborador_id')
         .eq('data', selectedDate)
 
-      if (deleteError) throw deleteError
+      if (fetchError) throw fetchError
 
-      // Depois, inserir os novos registros
-      const { error: insertError } = await supabase
-        .from('chamadas')
-        .insert(chamadasToSave)
+      const existingMap = new Map(existingChamadas?.map(c => [c.colaborador_id, c.id]) || [])
 
-      if (insertError) throw insertError
+      // Separar em registros para atualizar e para inserir
+      const toUpdate: { id: string; status: string }[] = []
+      const toInsert: { colaborador_id: string; data: string; status: string }[] = []
 
-      toast({
-        title: "Sucesso",
-        description: `Chamada salva para ${totalChamadas} colaborador(es)`,
+      Object.entries(chamadas).forEach(([colaboradorId, status]) => {
+        const existingId = existingMap.get(colaboradorId)
+        if (existingId) {
+          toUpdate.push({ id: existingId, status })
+        } else {
+          toInsert.push({
+            colaborador_id: colaboradorId,
+            data: selectedDate,
+            status
+          })
+        }
       })
+
+      // Atualizar registros existentes um por um (evita problemas de concorrência)
+      let updateErrors = 0
+      for (const record of toUpdate) {
+        const { error } = await supabase
+          .from('chamadas')
+          .update({ status: record.status, updated_at: new Date().toISOString() })
+          .eq('id', record.id)
+        
+        if (error) {
+          console.error('Erro ao atualizar chamada:', record.id, error)
+          updateErrors++
+        }
+      }
+
+      // Inserir novos registros
+      let insertErrors = 0
+      if (toInsert.length > 0) {
+        const { error: insertError } = await supabase
+          .from('chamadas')
+          .insert(toInsert)
+
+        if (insertError) {
+          console.error('Erro ao inserir chamadas:', insertError)
+          insertErrors = toInsert.length
+        }
+      }
+
+      const totalSaved = totalChamadas - updateErrors - insertErrors
+      
+      if (updateErrors > 0 || insertErrors > 0) {
+        toast({
+          title: "Atenção",
+          description: `${totalSaved} de ${totalChamadas} registros salvos. ${updateErrors + insertErrors} erro(s) encontrado(s).`,
+          variant: "destructive"
+        })
+      } else {
+        toast({
+          title: "Sucesso",
+          description: `Chamada salva para ${totalChamadas} colaborador(es)`,
+        })
+      }
 
       // Recarregar as chamadas do dia para atualizar o estado e as pendências
       await fetchChamadasDoDia()
     } catch (error: any) {
+      console.error('Erro ao salvar chamada:', error)
       toast({
         title: "Erro",
         description: "Erro ao salvar chamada: " + error.message,
