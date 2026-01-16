@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Users, UserX, Clock, TrendingUp, Building2, Sparkles, UserPlus, UserCheck, BarChart3 } from "lucide-react";
 import { StatCard } from "@/components/stats/StatCard";
-import { QuickActions } from "@/components/dashboard/QuickActions";
 import HistoricoDemissoes from "@/components/dashboard/HistoricoDemissoes";
 import TurnoverIndicator from "@/components/dashboard/TurnoverIndicator";
 import IndicadorContratacoes from "@/components/dashboard/IndicadorContratacoes";
@@ -242,24 +241,19 @@ const Index = () => {
         />
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">
-          <QuickActions />
-        </div>
-        
-        <div className="lg:col-span-2 space-y-6">
-          {/* Indicador de Contratações */}
-          <IndicadorContratacoes />
+      {/* Dashboard Content */}
+      <div className="space-y-6">
+        {/* Indicador de Contratações */}
+        <IndicadorContratacoes />
 
-          {/* Histórico de Demissões */}
-          <HistoricoDemissoes />
+        {/* Histórico de Demissões */}
+        <HistoricoDemissoes />
 
-          {/* Indicador de Turnover */}
-          <TurnoverIndicator />
+        {/* Indicador de Turnover */}
+        <TurnoverIndicator />
 
-          {/* Indicadores em Grid Moderno */}
-          <div>
+        {/* Indicadores em Grid Moderno */}
+        <div>
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
               <span className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 text-white" />
@@ -350,7 +344,6 @@ const Index = () => {
                     </div>}
                 </CardContent>
               </Card>
-            </div>
           </div>
         </div>
       </div>
