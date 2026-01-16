@@ -111,10 +111,7 @@ export function OnlineUsers() {
     return routes[path] || path
   }
 
-  if (onlineUsers.length === 0) {
-    return null
-  }
-
+  const totalOnline = onlineUsers.length + 1 // +1 para incluir o próprio usuário
   return (
     <div 
       className={cn(
@@ -140,27 +137,30 @@ export function OnlineUsers() {
           
           {!isExpanded ? (
             <div className="flex items-center gap-1">
-              <div className="flex -space-x-2">
-                {onlineUsers.slice(0, 3).map((onlineUser) => (
-                  <Tooltip key={onlineUser.id}>
-                    <TooltipTrigger asChild>
-                      <Avatar className="w-6 h-6 border-2 border-background">
-                        <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
-                          {getInitials(onlineUser.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p className="font-medium">{onlineUser.name}</p>
-                      {onlineUser.page && (
-                        <p className="text-xs text-muted-foreground">
-                          em {getPageName(onlineUser.page)}
-                        </p>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
+              <span className="text-sm font-medium">{totalOnline}</span>
+              {onlineUsers.length > 0 && (
+                <div className="flex -space-x-2 ml-1">
+                  {onlineUsers.slice(0, 3).map((onlineUser) => (
+                    <Tooltip key={onlineUser.id}>
+                      <TooltipTrigger asChild>
+                        <Avatar className="w-6 h-6 border-2 border-background">
+                          <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
+                            {getInitials(onlineUser.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p className="font-medium">{onlineUser.name}</p>
+                        {onlineUser.page && (
+                          <p className="text-xs text-muted-foreground">
+                            em {getPageName(onlineUser.page)}
+                          </p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+              )}
               {onlineUsers.length > 3 && (
                 <Badge variant="secondary" className="text-xs px-1.5">
                   +{onlineUsers.length - 3}
@@ -169,7 +169,7 @@ export function OnlineUsers() {
             </div>
           ) : (
             <span className="font-medium text-sm flex-1 text-left">
-              {onlineUsers.length} online
+              {totalOnline} online
             </span>
           )}
         </button>
@@ -177,6 +177,29 @@ export function OnlineUsers() {
         {/* Lista expandida */}
         {isExpanded && (
           <div className="border-t max-h-48 overflow-y-auto">
+            {/* Próprio usuário */}
+            {user && (
+              <div className="flex items-center gap-3 p-3 bg-muted/20">
+                <div className="relative">
+                  <Avatar className="w-8 h-8">
+                    <AvatarFallback className="bg-green-600 text-white text-xs">
+                      {getInitials(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Eu')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <Circle className="w-2.5 h-2.5 fill-green-500 text-green-500 absolute -bottom-0.5 -right-0.5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {user.user_metadata?.full_name || user.email?.split('@')[0]} <span className="text-muted-foreground">(você)</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {getPageName(window.location.pathname)}
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {/* Outros usuários */}
             {onlineUsers.map((onlineUser) => (
               <div 
                 key={onlineUser.id}
@@ -200,6 +223,12 @@ export function OnlineUsers() {
                 </div>
               </div>
             ))}
+            
+            {onlineUsers.length === 0 && (
+              <div className="p-3 text-center text-sm text-muted-foreground">
+                Nenhum outro usuário online
+              </div>
+            )}
           </div>
         )}
       </div>
