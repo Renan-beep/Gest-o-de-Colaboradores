@@ -421,10 +421,18 @@ export default function Chamada() {
   }
 
   const handleStatusChange = (colaboradorId: string, status: string) => {
-    setChamadas(prev => ({
-      ...prev,
-      [colaboradorId]: status
-    }))
+    setChamadas(prev => {
+      // Se o valor atual já é o mesmo, desseleciona (remove do estado)
+      if (prev[colaboradorId] === status) {
+        const newState = { ...prev }
+        delete newState[colaboradorId]
+        return newState
+      }
+      return {
+        ...prev,
+        [colaboradorId]: status
+      }
+    })
   }
 
   const handleSaveChamada = async (_event?: React.MouseEvent, retryCount = 0) => {
