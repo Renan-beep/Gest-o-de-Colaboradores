@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, UserCheck, BarChart3, Plus, Home, Building2, CalendarCheck, LogOut, User, FileText, Settings, TrendingUp, UserPlus, UserCog, Bot, Briefcase, ClipboardList } from "lucide-react";
+import { Users, UserCheck, Home, Building2, CalendarCheck, LogOut, User, FileText, Settings, TrendingUp, UserPlus, UserCog, Bot, ClipboardList } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+
 const gerenciaItems = [{
   title: "Início",
   url: "/",
@@ -22,11 +23,6 @@ const gerenciaItems = [{
   url: "/cadastro",
   icon: UserPlus,
   description: "Cadastrar colaboradores"
-}, {
-  title: "Recrutamento",
-  url: "/recrutamento",
-  icon: Briefcase,
-  description: "ATS - Vagas e Contratações"
 }, {
   title: "Assistente IA",
   url: "/assistente-ia",
@@ -48,6 +44,7 @@ const gerenciaItems = [{
   icon: FileText,
   description: "Movimentações"
 }];
+
 const chamadaGroupItems = [{
   title: "Controle de presença",
   url: "/chamada",
@@ -69,6 +66,7 @@ const chamadaGroupItems = [{
   icon: TrendingUp,
   description: "KPIs e relatórios"
 }];
+
 const encarregadoItems = [{
   title: "Início",
   url: "/",
@@ -100,6 +98,7 @@ const encarregadoItems = [{
   icon: FileText,
   description: "Movimentações"
 }];
+
 const encarregadoChamadaItems = [{
   title: "Controle de presença",
   url: "/chamada",
@@ -121,6 +120,7 @@ const encarregadoChamadaItems = [{
   icon: TrendingUp,
   description: "KPIs e relatórios"
 }];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
@@ -131,7 +131,6 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
   const isCollapsed = state === "collapsed";
   const [pendingCount, setPendingCount] = useState(0);
-  const [vagasPendentesCount, setVagasPendentesCount] = useState(0);
   const [profile, setProfile] = useState<any>(null);
 
   // Buscar solicitações pendentes
@@ -161,42 +160,6 @@ export function AppSidebar() {
         },
         () => {
           fetchPendingCount();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  // Buscar vagas aguardando aprovação
-  useEffect(() => {
-    const fetchVagasPendentes = async () => {
-      const { count, error } = await supabase
-        .from('vagas')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'aguardando_aprovacao');
-      
-      if (!error && count !== null) {
-        setVagasPendentesCount(count);
-      }
-    };
-
-    fetchVagasPendentes();
-
-    // Subscrever a mudanças em tempo real
-    const channel = supabase
-      .channel('vagas-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'vagas'
-        },
-        () => {
-          fetchVagasPendentes();
         }
       )
       .subscribe();
@@ -244,7 +207,9 @@ export function AppSidebar() {
       });
     }
   };
-  return <Sidebar className={isCollapsed ? "w-16" : "w-64"} collapsible="icon">
+
+  return (
+    <Sidebar className={isCollapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarContent>
         {/* Header */}
         <div className="p-4 border-b border-border">
@@ -252,10 +217,12 @@ export function AppSidebar() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Building2 className="w-5 h-5 text-primary-foreground" />
             </div>
-            {!isCollapsed && <div>
+            {!isCollapsed && (
+              <div>
                 <h1 className="font-semibold text-sm">Gestão de Colaboradores</h1>
                 <p className="text-xs text-muted-foreground">Sistema de Gestão</p>
-              </div>}
+              </div>
+            )}
           </div>
         </div>
 
@@ -264,27 +231,28 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navegação</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map(item => <SidebarMenuItem key={item.title}>
+              {navigationItems.map(item => (
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} className="flex items-center gap-3 rounded-lg transition-colors hover:bg-accent mx-0 px-[12px] py-[30px]">
                       <item.icon className="w-5 h-5" />
-                      {!isCollapsed && <div className="flex-1 min-w-0">
+                      {!isCollapsed && (
+                        <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm flex items-center gap-1">
                             {item.title}
                             {item.title === "Solicitações" && pendingCount > 0 && (
                               <span className="ml-1 text-primary">({pendingCount})</span>
                             )}
-                            {item.title === "Recrutamento" && vagasPendentesCount > 0 && (
-                              <span className="ml-1 text-primary animate-pulse">({vagasPendentesCount})</span>
-                            )}
                           </div>
                           <div className="text-xs text-muted-foreground truncate">
                             {item.description}
                           </div>
-                        </div>}
+                        </div>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
-                </SidebarMenuItem>)}
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -294,19 +262,23 @@ export function AppSidebar() {
           <SidebarGroupLabel>Chamada</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {(isGerencia ? chamadaGroupItems : encarregadoChamadaItems).map(item => <SidebarMenuItem key={item.title}>
+              {(isGerencia ? chamadaGroupItems : encarregadoChamadaItems).map(item => (
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} className="flex items-center gap-3 rounded-lg transition-colors hover:bg-accent mx-0 px-[12px] py-[30px]">
                       <item.icon className="w-5 h-5" />
-                      {!isCollapsed && <div className="flex-1 min-w-0">
+                      {!isCollapsed && (
+                        <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm">{item.title}</div>
                           <div className="text-xs text-muted-foreground truncate">
                             {item.description}
                           </div>
-                        </div>}
+                        </div>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
-                </SidebarMenuItem>)}
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -322,34 +294,39 @@ export function AppSidebar() {
             {!isCollapsed && "Sair"}
           </Button>
         </div>
-        </SidebarContent>
-        
-        {/* Footer with user info */}
-        <SidebarFooter>
-          <div className="p-4 border-t border-border">
-            {!isCollapsed && user && <div className="flex items-center gap-3">
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={profile?.avatar_url} alt="Avatar" />
-                  <AvatarFallback>
-                    <User className="w-4 h-4" />
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{user.email}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {isGerencia ? 'Gerência' : isEncarregado ? 'Encarregado' : 'Usuário'}
-                  </div>
+      </SidebarContent>
+      
+      {/* Footer with user info */}
+      <SidebarFooter>
+        <div className="p-4 border-t border-border">
+          {!isCollapsed && user && (
+            <div className="flex items-center gap-3">
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={profile?.avatar_url} alt="Avatar" />
+                <AvatarFallback>
+                  <User className="w-4 h-4" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium truncate">{user.email}</div>
+                <div className="text-xs text-muted-foreground">
+                  {isGerencia ? 'Gerência' : isEncarregado ? 'Encarregado' : 'Usuário'}
                 </div>
-              </div>}
-            {isCollapsed && user && <div className="flex justify-center">
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={profile?.avatar_url} alt="Avatar" />
-                  <AvatarFallback>
-                    <User className="w-4 h-4" />
-                  </AvatarFallback>
-                </Avatar>
-              </div>}
-          </div>
-        </SidebarFooter>
-      </Sidebar>;
+              </div>
+            </div>
+          )}
+          {isCollapsed && user && (
+            <div className="flex justify-center">
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={profile?.avatar_url} alt="Avatar" />
+                <AvatarFallback>
+                  <User className="w-4 h-4" />
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          )}
+        </div>
+      </SidebarFooter>
+    </Sidebar>
+  );
 }
