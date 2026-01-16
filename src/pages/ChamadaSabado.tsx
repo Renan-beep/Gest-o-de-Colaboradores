@@ -179,10 +179,18 @@ export default function ChamadaSabado() {
   }
 
   const handlePrevisaoChange = (colaboradorId: string, vira: boolean) => {
-    setPrevisoes(prev => ({
-      ...prev,
-      [colaboradorId]: vira
-    }))
+    setPrevisoes(prev => {
+      // Se o valor atual já é o mesmo, desseleciona (remove do estado)
+      if (prev[colaboradorId] === vira) {
+        const newState = { ...prev }
+        delete newState[colaboradorId]
+        return newState
+      }
+      return {
+        ...prev,
+        [colaboradorId]: vira
+      }
+    })
   }
 
   const handleSavePrevisoes = async () => {
