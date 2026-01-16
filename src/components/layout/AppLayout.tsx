@@ -1,5 +1,6 @@
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
+import { OnlineUsers } from "@/components/common/OnlineUsers";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -24,6 +25,9 @@ export function AppLayout({ children }: AppLayoutProps) {
             {children}
           </main>
         </SidebarInset>
+        
+        {/* Indicador de usuários online */}
+        <OnlineUsers />
       </div>
     </SidebarProvider>
   );
