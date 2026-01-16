@@ -1,8 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Card } from '@/components/ui/card'
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } from 'recharts'
-import { Calendar, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Calendar, CalendarDays } from 'lucide-react'
 
 interface GraficoPendenciasLideresProps {
   selectedDate: string
@@ -26,8 +25,6 @@ interface GraficoPendenciasLideresProps {
 }
 
 export function GraficoPendenciasLideres({ selectedDate, colaboradores, movimentacoes, chamadas = [] }: GraficoPendenciasLideresProps) {
-  const [showMonthly, setShowMonthly] = useState(false)
-
   // Função para obter liderança do colaborador em uma data específica
   const getLiderancaNaData = (colaboradorId: string, liderancaAtual: string, dataVerificar: string): string => {
     const movs = movimentacoes.filter(m => m.colaborador_id === colaboradorId && m.lideranca_destino)
@@ -135,28 +132,11 @@ export function GraficoPendenciasLideres({ selectedDate, colaboradores, moviment
     return 'hsl(45, 70%, 50%)' // Amarelo
   }
 
-  const dados = showMonthly ? dadosGraficoMensal : dadosGraficoDiario
-  const titulo = showMonthly 
-    ? `Pendências do Mês (${new Date(selectedDate + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'long' })})`
-    : `Pendências do Dia (${new Date(selectedDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })})`
-  const icon = showMonthly ? <CalendarDays className="w-4 h-4" /> : <Calendar className="w-4 h-4" />
-
-  return (
+  const renderChart = (dados: Array<{lideranca: string, total: number}>, titulo: string, icon: React.ReactNode) => (
     <Card className="p-4 bg-background/95 backdrop-blur border-border/50 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          {icon}
-          {titulo}
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0"
-          onClick={() => setShowMonthly(!showMonthly)}
-          title={showMonthly ? 'Ver Pendências do Dia' : 'Ver Pendências do Mês'}
-        >
-          {showMonthly ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </Button>
+      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
+        {icon}
+        {titulo}
       </div>
       {dados.length === 0 ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
@@ -188,5 +168,20 @@ export function GraficoPendenciasLideres({ selectedDate, colaboradores, moviment
         </div>
       )}
     </Card>
+  )
+
+  return (
+    <div className="grid grid-cols-1 gap-4 h-full">
+      {renderChart(
+        dadosGraficoDiario, 
+        `Pendências do Dia (${new Date(selectedDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })})`,
+        <Calendar className="w-4 h-4" />
+      )}
+      {renderChart(
+        dadosGraficoMensal, 
+        `Pendências do Mês (${new Date(selectedDate + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'long' })})`,
+        <CalendarDays className="w-4 h-4" />
+      )}
+    </div>
   )
 }
