@@ -113,7 +113,8 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
   const isCollapsed = state === "collapsed";
   const [pendingCount, setPendingCount] = useState(0);
-  const [profile, setProfile] = useState<any>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
 
   // Buscar solicitações pendentes
   useEffect(() => {
@@ -151,23 +152,58 @@ export function AppSidebar() {
     };
   }, []);
 
-  // Buscar perfil do usuário
+  // Buscar perfil do usuário com URLs públicas
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) return;
       
       const { data } = await supabase
         .from('profiles')
-        .select('*')
+        .select('avatar_url, company_logo_url')
         .eq('user_id', user.id)
         .single();
       
       if (data) {
-        setProfile(data);
+        // Gerar URL pública para o avatar
+        if (data.avatar_url) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(data.avatar_url);
+          setAvatarUrl(publicUrl);
+        }
+        
+        // Gerar URL pública para o logo
+        if (data.company_logo_url) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('company-logos')
+            .getPublicUrl(data.company_logo_url);
+          setCompanyLogoUrl(publicUrl);
+        }
       }
     };
 
     fetchProfile();
+    
+    // Subscrever a mudanças no perfil
+    const channel = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${user?.id}`
+        },
+        () => {
+          fetchProfile();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   // Determine navigation items based on user role
@@ -196,9 +232,15 @@ export function AppSidebar() {
         {/* Header */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-primary-foreground" />
-            </div>
+            {companyLogoUrl ? (
+              <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-muted">
+                <img src={companyLogoUrl} alt="Logo da Empresa" className="w-full h-full object-contain" />
+              </div>
+            ) : (
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-primary-foreground" />
+              </div>
+            )}
             {!isCollapsed && (
               <div>
                 <h1 className="font-semibold text-sm">Gestão de Colaboradores</h1>
@@ -302,7 +344,7 @@ export function AppSidebar() {
           {!isCollapsed && user && (
             <div className="flex items-center gap-3">
               <Avatar className="w-8 h-8">
-                <AvatarImage src={profile?.avatar_url} alt="Avatar" />
+                <AvatarImage src={avatarUrl || undefined} alt="Avatar" />
                 <AvatarFallback>
                   <User className="w-4 h-4" />
                 </AvatarFallback>
@@ -318,7 +360,7 @@ export function AppSidebar() {
           {isCollapsed && user && (
             <div className="flex justify-center">
               <Avatar className="w-8 h-8">
-                <AvatarImage src={profile?.avatar_url} alt="Avatar" />
+                <AvatarImage src={avatarUrl || undefined} alt="Avatar" />
                 <AvatarFallback>
                   <User className="w-4 h-4" />
                 </AvatarFallback>
