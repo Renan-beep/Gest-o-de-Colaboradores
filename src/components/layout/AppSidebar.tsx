@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, UserCheck, Home, Building2, CalendarCheck, LogOut, User, FileText, Settings, TrendingUp, UserPlus, UserCog, Bot, ClipboardList } from "lucide-react";
+import { Users, UserCheck, Home, Building2, CalendarCheck, LogOut, User, FileText, Settings, TrendingUp, UserPlus, UserCog, ClipboardList } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,11 +23,6 @@ const gerenciaItems = [{
   url: "/cadastro",
   icon: UserPlus,
   description: "Cadastrar colaboradores"
-}, {
-  title: "Assistente IA",
-  url: "/assistente-ia",
-  icon: Bot,
-  description: "Relatórios e automação com IA"
 }, {
   title: "Configurações",
   url: "/indicadores",
@@ -77,11 +72,6 @@ const encarregadoItems = [{
   url: "/lista-colaboradores",
   icon: Users,
   description: "Visualizar todos os colaboradores"
-}, {
-  title: "Assistente IA",
-  url: "/assistente-ia",
-  icon: Bot,
-  description: "Relatórios e automação com IA"
 }, {
   title: "Configurações",
   url: "/indicadores",
