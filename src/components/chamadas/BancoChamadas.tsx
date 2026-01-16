@@ -52,6 +52,7 @@ interface ColaboradorChamadas {
     falta: number
     atestado: number
     ferias: number
+    vira_sabado: number
     total: number
   }
 }
@@ -61,7 +62,8 @@ const statusOptions = [
   { value: "folga", label: "Folga", icon: Home, color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
   { value: "falta", label: "Falta", icon: X, color: "bg-red-500/10 text-red-600 border-red-500/20" },
   { value: "atestado", label: "Atestado", icon: Heart, color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
-  { value: "ferias", label: "Férias", icon: Coffee, color: "bg-purple-500/10 text-purple-600 border-purple-500/20" }
+  { value: "ferias", label: "Férias", icon: Coffee, color: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
+  { value: "vira_sabado", label: "Vira Sábado", icon: CalendarIcon, color: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20" }
 ]
 
 export function BancoChamadas() {
@@ -172,6 +174,7 @@ export function BancoChamadas() {
         falta: colabChamadas.filter(c => c.status === 'falta').length,
         atestado: colabChamadas.filter(c => c.status === 'atestado').length,
         ferias: colabChamadas.filter(c => c.status === 'ferias').length,
+        vira_sabado: colabChamadas.filter(c => c.status === 'vira_sabado').length,
         total: colabChamadas.length
       }
 
@@ -190,8 +193,9 @@ export function BancoChamadas() {
       falta: acc.falta + item.totais.falta,
       atestado: acc.atestado + item.totais.atestado,
       ferias: acc.ferias + item.totais.ferias,
+      vira_sabado: acc.vira_sabado + item.totais.vira_sabado,
       total: acc.total + item.totais.total
-    }), { presente: 0, folga: 0, falta: 0, atestado: 0, ferias: 0, total: 0 })
+    }), { presente: 0, folga: 0, falta: 0, atestado: 0, ferias: 0, vira_sabado: 0, total: 0 })
   }, [colaboradoresComChamadas])
 
   const handleClearFilters = () => {
@@ -333,7 +337,7 @@ export function BancoChamadas() {
       </Card>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-foreground">{totaisGerais.total}</p>
@@ -376,6 +380,7 @@ export function BancoChamadas() {
                   <TableHead className="text-center">Falta</TableHead>
                   <TableHead className="text-center">Atestado</TableHead>
                   <TableHead className="text-center">Férias</TableHead>
+                  <TableHead className="text-center">Vira Sáb.</TableHead>
                   <TableHead className="text-center">Total</TableHead>
                 </TableRow>
               </TableHeader>
@@ -415,6 +420,11 @@ export function BancoChamadas() {
                         {item.totais.ferias}
                       </Badge>
                     </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline" className="bg-cyan-500/10 text-cyan-600">
+                        {item.totais.vira_sabado}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-center font-medium">
                       {item.totais.total}
                     </TableCell>
@@ -422,7 +432,7 @@ export function BancoChamadas() {
                 ))}
                 {colaboradoresComChamadas.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       Nenhum colaborador encontrado com os filtros aplicados
                     </TableCell>
                   </TableRow>
