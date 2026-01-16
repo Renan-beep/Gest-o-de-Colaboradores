@@ -20,7 +20,6 @@ import EditarColaborador from "./pages/EditarColaborador";
 import MetricasChamada from "./pages/MetricasChamada";
 import Dashboard from "./pages/Dashboard";
 import SolicitacaoMovimentacao from "./pages/SolicitacaoMovimentacao";
-import RecrutamentoATS from "./pages/RecrutamentoATS";
 import NotFound from "./pages/NotFound";
 
 // Configuração do React Query com configurações otimizadas
@@ -122,13 +121,6 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <AssistenteIA />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/recrutamento" element={
-                <ProtectedRoute requireGerencia>
-                  <AppLayout>
-                    <RecrutamentoATS />
                   </AppLayout>
                 </ProtectedRoute>
               } />
