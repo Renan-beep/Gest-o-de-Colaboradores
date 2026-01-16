@@ -71,7 +71,8 @@ export default function HistoricoDemissoes() {
   }
 
   const formatarData = (dataString: string) => {
-    const data = new Date(dataString)
+    // Fix timezone issue: add T12:00:00 to prevent date shifting
+    const data = new Date(dataString + 'T12:00:00')
     return data.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: 'short',
