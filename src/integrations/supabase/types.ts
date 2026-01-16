@@ -139,6 +139,65 @@ export type Database = {
         }
         Relationships: []
       }
+      conversas: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          id: string
+          nome: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          nome?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          nome?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      conversas_participantes: {
+        Row: {
+          conversa_id: string
+          id: string
+          joined_at: string
+          ultima_leitura: string | null
+          user_id: string
+        }
+        Insert: {
+          conversa_id: string
+          id?: string
+          joined_at?: string
+          ultima_leitura?: string | null
+          user_id: string
+        }
+        Update: {
+          conversa_id?: string
+          id?: string
+          joined_at?: string
+          ultima_leitura?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversas_participantes_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "conversas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demissoes: {
         Row: {
           colaborador_id: string
@@ -249,6 +308,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      mensagens: {
+        Row: {
+          conteudo: string
+          conversa_id: string
+          created_at: string
+          id: string
+          lida: boolean | null
+          sender_id: string
+        }
+        Insert: {
+          conteudo: string
+          conversa_id: string
+          created_at?: string
+          id?: string
+          lida?: boolean | null
+          sender_id: string
+        }
+        Update: {
+          conteudo?: string
+          conversa_id?: string
+          created_at?: string
+          id?: string
+          lida?: boolean | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensagens_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "conversas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -511,6 +605,10 @@ export type Database = {
     Functions: {
       cleanup_old_chamadas: { Args: { days_to_keep?: number }; Returns: number }
       get_current_user_role: { Args: never; Returns: string }
+      get_or_create_private_conversation: {
+        Args: { other_user_id: string }
+        Returns: string
+      }
       is_admin: { Args: never; Returns: boolean }
       is_encarregado: { Args: never; Returns: boolean }
       is_gerencia: { Args: never; Returns: boolean }
