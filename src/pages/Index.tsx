@@ -1,15 +1,30 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Users, UserX, Clock, TrendingUp, Building2, Sparkles, UserPlus, UserCheck, BarChart3 } from "lucide-react";
+import { Users, UserX, Clock, TrendingUp, Building2, Sparkles, UserPlus, UserCheck, BarChart3, ChevronRight } from "lucide-react";
 import { StatCard } from "@/components/stats/StatCard";
 import HistoricoDemissoes from "@/components/dashboard/HistoricoDemissoes";
 import TurnoverIndicator from "@/components/dashboard/TurnoverIndicator";
 import IndicadorContratacoes from "@/components/dashboard/IndicadorContratacoes";
 
+interface Colaborador {
+  id: string;
+  matricula: string;
+  colaborador: string;
+  cargo: string | null;
+  setor: string | null;
+  turno: string | null;
+  lideranca: string | null;
+  status: string;
+}
+
 const Index = () => {
+  const navigate = useNavigate();
   const {
     toast
   } = useToast();
@@ -31,6 +46,10 @@ const Index = () => {
     porHorarioCafe: {} as Record<string, number>
   });
   const [loading, setLoading] = useState(true);
+  const [allColaboradores, setAllColaboradores] = useState<Colaborador[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState("");
+  const [dialogColaboradores, setDialogColaboradores] = useState<Colaborador[]>([]);
   
   useEffect(() => {
     fetchStats();
@@ -64,6 +83,9 @@ const Index = () => {
         error: colaboradoresError
       } = await supabase.from('colaboradores').select('*').order('colaborador');
       if (colaboradoresError) throw colaboradoresError;
+      
+      setAllColaboradores(colaboradores || []);
+      
       const totalColaboradores = colaboradores?.filter(c => c.status?.toLowerCase() === 'ativo').length || 0;
       const afastados = colaboradores?.filter(c => c.status?.toLowerCase() === 'afastado').length || 0;
 
@@ -161,6 +183,39 @@ const Index = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleIndicatorClick = (tipo: 'setor' | 'turno' | 'lideranca' | 'cargo', valor: string) => {
+    let filtered: Colaborador[] = [];
+    let title = "";
+    
+    switch (tipo) {
+      case 'setor':
+        filtered = allColaboradores.filter(c => c.setor === valor);
+        title = `Colaboradores do setor: ${valor}`;
+        break;
+      case 'turno':
+        filtered = allColaboradores.filter(c => c.turno === valor);
+        title = `Colaboradores do turno: ${valor}`;
+        break;
+      case 'lideranca':
+        filtered = allColaboradores.filter(c => c.lideranca === valor);
+        title = `Colaboradores da liderança: ${valor}`;
+        break;
+      case 'cargo':
+        filtered = allColaboradores.filter(c => c.cargo === valor);
+        title = `Colaboradores com cargo: ${valor}`;
+        break;
+    }
+    
+    setDialogTitle(title);
+    setDialogColaboradores(filtered);
+    setDialogOpen(true);
+  };
+
+  const handleColaboradorClick = (colaboradorId: string) => {
+    setDialogOpen(false);
+    navigate(`/editar-colaborador/${colaboradorId}`);
   };
   const menuOptions = [{
     title: "Cadastro de Colaboradores",
@@ -273,9 +328,16 @@ const Index = () => {
                           <div className="w-24 h-4 bg-muted animate-pulse rounded" />
                           <div className="w-8 h-6 bg-muted animate-pulse rounded-full" />
                         </div>)}
-                    </div> : Object.entries(indicators.porSetor).length > 0 ? Object.entries(indicators.porSetor).map(([setor, count]) => <div key={setor} className="flex justify-between items-center p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                        <span className="text-base font-medium truncate">{setor}</span>
-                        <Badge variant="secondary" className="font-semibold text-sm px-3 py-1">{count}</Badge>
+                    </div> : Object.entries(indicators.porSetor).length > 0 ? Object.entries(indicators.porSetor).map(([setor, count]) => <div 
+                        key={setor} 
+                        onClick={() => handleIndicatorClick('setor', setor)}
+                        className="flex justify-between items-center p-3 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer group"
+                      >
+                        <span className="text-base font-medium truncate group-hover:text-primary">{setor}</span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="font-semibold text-sm px-3 py-1">{count}</Badge>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
                       </div>) : <div className="text-center text-muted-foreground text-sm py-4">
                       Nenhum dado disponível
                     </div>}
@@ -294,9 +356,16 @@ const Index = () => {
                           <div className="w-20 h-4 bg-muted animate-pulse rounded" />
                           <div className="w-8 h-6 bg-muted animate-pulse rounded-full" />
                         </div>)}
-                    </div> : Object.entries(indicators.porTurno).length > 0 ? Object.entries(indicators.porTurno).map(([turno, count]) => <div key={turno} className="flex justify-between items-center p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                        <span className="text-base font-medium truncate">{turno}</span>
-                        <Badge variant="secondary" className="font-semibold text-sm px-3 py-1">{count}</Badge>
+                    </div> : Object.entries(indicators.porTurno).length > 0 ? Object.entries(indicators.porTurno).map(([turno, count]) => <div 
+                        key={turno}
+                        onClick={() => handleIndicatorClick('turno', turno)}
+                        className="flex justify-between items-center p-3 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer group"
+                      >
+                        <span className="text-base font-medium truncate group-hover:text-primary">{turno}</span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="font-semibold text-sm px-3 py-1">{count}</Badge>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
                       </div>) : <div className="text-center text-muted-foreground text-sm py-4">
                       Nenhum dado disponível
                     </div>}
@@ -315,9 +384,16 @@ const Index = () => {
                           <div className="w-28 h-4 bg-muted animate-pulse rounded" />
                           <div className="w-8 h-6 bg-muted animate-pulse rounded-full" />
                         </div>)}
-                    </div> : Object.entries(indicators.porLideranca).length > 0 ? Object.entries(indicators.porLideranca).map(([lideranca, count]) => <div key={lideranca} className="flex justify-between items-center p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                        <span className="text-base font-medium truncate">{lideranca}</span>
-                        <Badge variant="secondary" className="font-semibold text-sm px-3 py-1">{count}</Badge>
+                    </div> : Object.entries(indicators.porLideranca).length > 0 ? Object.entries(indicators.porLideranca).map(([lideranca, count]) => <div 
+                        key={lideranca}
+                        onClick={() => handleIndicatorClick('lideranca', lideranca)}
+                        className="flex justify-between items-center p-3 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer group"
+                      >
+                        <span className="text-base font-medium truncate group-hover:text-primary">{lideranca}</span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="font-semibold text-sm px-3 py-1">{count}</Badge>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
                       </div>) : <div className="text-center text-muted-foreground text-sm py-4">
                       Nenhum dado disponível
                     </div>}
@@ -336,9 +412,16 @@ const Index = () => {
                           <div className="w-32 h-4 bg-muted animate-pulse rounded" />
                           <div className="w-8 h-6 bg-muted animate-pulse rounded-full" />
                         </div>)}
-                    </div> : Object.entries(indicators.porCargo).length > 0 ? Object.entries(indicators.porCargo).map(([cargo, count]) => <div key={cargo} className="flex justify-between items-center p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                        <span className="text-base font-medium truncate">{cargo}</span>
-                        <Badge variant="secondary" className="font-semibold text-sm px-3 py-1">{count}</Badge>
+                    </div> : Object.entries(indicators.porCargo).length > 0 ? Object.entries(indicators.porCargo).map(([cargo, count]) => <div 
+                        key={cargo}
+                        onClick={() => handleIndicatorClick('cargo', cargo)}
+                        className="flex justify-between items-center p-3 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer group"
+                      >
+                        <span className="text-base font-medium truncate group-hover:text-primary">{cargo}</span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="font-semibold text-sm px-3 py-1">{count}</Badge>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
                       </div>) : <div className="text-center text-muted-foreground text-sm py-4">
                       Nenhum dado disponível
                     </div>}
@@ -347,6 +430,55 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Dialog para mostrar colaboradores */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              {dialogTitle}
+            </DialogTitle>
+            <DialogDescription>
+              Clique em um colaborador para ver seus detalhes
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[400px] pr-4">
+            <div className="space-y-2">
+              {dialogColaboradores.map((colab) => (
+                <div
+                  key={colab.id}
+                  onClick={() => handleColaboradorClick(colab.id)}
+                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer group"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground group-hover:text-primary truncate">
+                      {colab.colaborador}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Mat: {colab.matricula} • {colab.cargo || 'Sem cargo'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 ml-3">
+                    <Badge 
+                      variant={colab.status?.toLowerCase() === 'ativo' ? 'default' : 'secondary'}
+                      className="text-xs"
+                    >
+                      {colab.status}
+                    </Badge>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
+                  </div>
+                </div>
+              ))}
+              {dialogColaboradores.length === 0 && (
+                <div className="text-center text-muted-foreground py-8">
+                  Nenhum colaborador encontrado
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
     </div>;
 };
