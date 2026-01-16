@@ -34,10 +34,10 @@
     --muted: 240 20% 95%;
     --muted-foreground: 240 15% 45%;
 
-    /* Accent - Modern Teal */
-    --accent: 180 85% 55%;
-    --accent-light: 180 85% 65%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent - Neutral Soft Blue */
+    --accent: 220 25% 92%;
+    --accent-light: 220 25% 96%;
+    --accent-foreground: 220 15% 25%;
 
     /* Status Colors - More vibrant and modern */
     --success: 145 75% 50%;
@@ -114,9 +114,9 @@
     --muted: 240 15% 12%;
     --muted-foreground: 240 15% 60%;
 
-    --accent: 180 85% 60%;
-    --accent-light: 180 85% 70%;
-    --accent-foreground: 240 15% 6%;
+    --accent: 220 20% 20%;
+    --accent-light: 220 20% 25%;
+    --accent-foreground: 220 20% 90%;
 
     --destructive: 0 85% 70%;
     --destructive-foreground: 240 15% 6%;
