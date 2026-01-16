@@ -70,7 +70,7 @@ export default function Chamada() {
   const [highlightedColaborador, setHighlightedColaborador] = useState<string | null>(null)
   const colaboradorRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const [chamadasMes, setChamadasMes] = useState<Array<{colaborador_id: string, data: string, status: string}>>([])
-
+  const [pendenciasVersion, setPendenciasVersion] = useState(0) // Trigger para recalcular pendências
 
   useEffect(() => {
     fetchColaboradores()
@@ -157,18 +157,18 @@ export default function Chamada() {
     }
   }, [selectedDate])
 
-  // Calcular pendências apenas quando colaboradores ou mês mudam (não a cada mudança de dia)
+  // Calcular pendências: no carregamento inicial, quando mês muda, ou após salvar chamadas
   const currentMonth = selectedDate.substring(0, 7)
   useEffect(() => {
     if (colaboradores.length > 0) {
-      // Debounce maior para evitar recálculos excessivos
+      // Pequeno delay apenas para evitar múltiplas chamadas simultâneas
       const timer = setTimeout(() => {
         fetchDatesWithPendencies()
-      }, 500)
+      }, 100)
       
       return () => clearTimeout(timer)
     }
-  }, [colaboradores.length, currentMonth, movimentacoes.length])
+  }, [colaboradores.length, currentMonth, movimentacoes.length, pendenciasVersion])
 
   const fetchPrimeiraDataChamada = async () => {
     try {
@@ -475,8 +475,11 @@ export default function Chamada() {
         description: `Chamada salva para ${totalChamadas} colaborador(es)`,
       })
 
-      // Recarregar as chamadas do dia para atualizar o estado e as pendências
+      // Recarregar as chamadas do dia e atualizar pendências
       await fetchChamadasDoDia()
+      
+      // Forçar recálculo das pendências após salvar
+      setPendenciasVersion(v => v + 1)
     } catch (error: any) {
       console.error('Erro ao salvar chamada:', error)
       
