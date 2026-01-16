@@ -150,35 +150,47 @@ export default function ChamadaSabado() {
 
       const selectedDate = selectedSaturday.toISOString().split('T')[0]
       
-      // Preparar dados para inserção/atualização
-      const previsoesToSave = Object.entries(previsoes)
-        .filter(([_, vira]) => vira) // Apenas os que virão no sábado
-        .map(([colaboradorId]) => ({
+      // Separar colaboradores que virão e que não virão
+      const colaboradoresQueVirao = Object.entries(previsoes)
+        .filter(([_, vira]) => vira === true)
+        .map(([colaboradorId]) => colaboradorId)
+      
+      const colaboradoresQueNaoVirao = Object.entries(previsoes)
+        .filter(([_, vira]) => vira === false)
+        .map(([colaboradorId]) => colaboradorId)
+
+      // Usar upsert para os que virão (inserir ou atualizar)
+      if (colaboradoresQueVirao.length > 0) {
+        const previsoesToUpsert = colaboradoresQueVirao.map(colaboradorId => ({
           colaborador_id: colaboradorId,
           data: selectedDate,
           status: "vira_sabado"
         }))
 
-      // Primeiro, deletar registros existentes para esta data
-      const { error: deleteError } = await supabase
-        .from('chamadas')
-        .delete()
-        .eq('data', selectedDate)
-
-      if (deleteError) throw deleteError
-
-      // Depois, inserir os novos registros (apenas os que virão)
-      if (previsoesToSave.length > 0) {
-        const { error: insertError } = await supabase
+        const { error: upsertError } = await supabase
           .from('chamadas')
-          .insert(previsoesToSave)
+          .upsert(previsoesToUpsert, { 
+            onConflict: 'colaborador_id,data',
+            ignoreDuplicates: false 
+          })
 
-        if (insertError) throw insertError
+        if (upsertError) throw upsertError
+      }
+
+      // Deletar APENAS os registros dos colaboradores marcados como "não virão"
+      if (colaboradoresQueNaoVirao.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('chamadas')
+          .delete()
+          .eq('data', selectedDate)
+          .in('colaborador_id', colaboradoresQueNaoVirao)
+
+        if (deleteError) throw deleteError
       }
 
       toast({
         title: "Sucesso",
-        description: `Previsão salva para ${previsoesToSave.length} colaborador(es) que virão no sábado`,
+        description: `Previsão salva: ${colaboradoresQueVirao.length} virão no sábado`,
       })
     } catch (error: any) {
       toast({
