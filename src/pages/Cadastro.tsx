@@ -15,6 +15,7 @@ export default function Cadastro() {
   const [formData, setFormData] = useState({
     matricula: "",
     colaborador: "",
+    sexo: "",
     status: "",
     cargo: "",
     setor: "",
@@ -50,6 +51,7 @@ export default function Cadastro() {
           {
             matricula: formData.matricula,
             colaborador: formData.colaborador,
+            sexo: formData.sexo || null,
             status: formData.status || 'Ativo',
             cargo: formData.cargo,
             setor: formData.setor,
@@ -82,6 +84,7 @@ export default function Cadastro() {
       setFormData({
         matricula: "",
         colaborador: "",
+        sexo: "",
         status: "",
         cargo: "",
         setor: "",
@@ -150,6 +153,20 @@ export default function Cadastro() {
                   value={formData.colaborador}
                   onChange={(e) => handleChange("colaborador", e.target.value)}
                 />
+              </div>
+
+              {/* Sexo */}
+              <div className="space-y-2">
+                <Label htmlFor="sexo">Sexo</Label>
+                <Select value={formData.sexo} onValueChange={(value) => handleChange("sexo", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o sexo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Masculino">Masculino</SelectItem>
+                    <SelectItem value="Feminino">Feminino</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Status */}
@@ -368,6 +385,7 @@ export default function Cadastro() {
                 onClick={() => setFormData({
                   matricula: "",
                   colaborador: "",
+                  sexo: "",
                   status: "",
                   cargo: "",
                   setor: "",

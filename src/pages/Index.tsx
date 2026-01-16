@@ -31,7 +31,9 @@ const Index = () => {
   const [stats, setStats] = useState({
     totalColaboradores: 0,
     afastados: 0,
-    turnoverRate: 0
+    turnoverRate: 0,
+    masculino: 0,
+    feminino: 0
   });
   const [indicators, setIndicators] = useState({
     porSetor: {} as Record<string, number>,
@@ -42,7 +44,8 @@ const Index = () => {
     porSubsetor: {} as Record<string, number>,
     porSabadoObrigatorio: {} as Record<string, number>,
     porHorarioAlmoco: {} as Record<string, number>,
-    porHorarioCafe: {} as Record<string, number>
+    porHorarioCafe: {} as Record<string, number>,
+    porSexo: {} as Record<string, number>
   });
   const [loading, setLoading] = useState(true);
   const [allColaboradores, setAllColaboradores] = useState<Colaborador[]>([]);
@@ -98,6 +101,7 @@ const Index = () => {
       const porSabadoObrigatorio: Record<string, number> = {};
       const porHorarioAlmoco: Record<string, number> = {};
       const porHorarioCafe: Record<string, number> = {};
+      const porSexo: Record<string, number> = {};
       colaboradores?.forEach(colaborador => {
         // Por setor
         if (colaborador.setor) {
@@ -144,6 +148,11 @@ const Index = () => {
         if (colaborador.horario_cafe) {
           porHorarioCafe[colaborador.horario_cafe] = (porHorarioCafe[colaborador.horario_cafe] || 0) + 1;
         }
+
+        // Por sexo (apenas ativos)
+        if (colaborador.sexo && colaborador.status?.toLowerCase() === 'ativo') {
+          porSexo[colaborador.sexo] = (porSexo[colaborador.sexo] || 0) + 1;
+        }
       });
 
       // Calcular turnover do ano atual
@@ -166,10 +175,16 @@ const Index = () => {
       const mediaColaboradores = totalColaboradores > 0 ? totalColaboradores : 1;
       const turnoverRate = ((admissoesAno + demissoesAno) / 2 / mediaColaboradores) * 100;
 
+      // Calcular estatísticas de gênero
+      const masculino = porSexo['Masculino'] || 0;
+      const feminino = porSexo['Feminino'] || 0;
+
       setStats({
         totalColaboradores,
         afastados,
-        turnoverRate
+        turnoverRate,
+        masculino,
+        feminino
       });
       setIndicators({
         porSetor,
@@ -180,7 +195,8 @@ const Index = () => {
         porSubsetor,
         porSabadoObrigatorio,
         porHorarioAlmoco,
-        porHorarioCafe
+        porHorarioCafe,
+        porSexo
       });
     } catch (error: any) {
       toast({
@@ -303,6 +319,68 @@ const Index = () => {
           className="animate-slide-in" 
         />
       </div>
+
+      {/* Indicador de Gênero */}
+      <Card className="glass-card card-hover">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            Distribuição por Gênero
+          </CardTitle>
+          <CardDescription>Quantitativo de colaboradores ativos por sexo</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex gap-8 justify-center">
+              <div className="w-32 h-24 bg-muted animate-pulse rounded-lg" />
+              <div className="w-32 h-24 bg-muted animate-pulse rounded-lg" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Homens */}
+              <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl p-4 text-center border border-blue-200 dark:border-blue-800">
+                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.masculino}</div>
+                <div className="text-sm text-muted-foreground mt-1">Homens</div>
+                <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
+                  {stats.totalColaboradores > 0 
+                    ? `${((stats.masculino / stats.totalColaboradores) * 100).toFixed(1)}%` 
+                    : '0%'}
+                </div>
+              </div>
+              
+              {/* Mulheres */}
+              <div className="bg-pink-50 dark:bg-pink-950/30 rounded-xl p-4 text-center border border-pink-200 dark:border-pink-800">
+                <div className="text-3xl font-bold text-pink-600 dark:text-pink-400">{stats.feminino}</div>
+                <div className="text-sm text-muted-foreground mt-1">Mulheres</div>
+                <div className="text-xs text-pink-600 dark:text-pink-400 font-medium mt-1">
+                  {stats.totalColaboradores > 0 
+                    ? `${((stats.feminino / stats.totalColaboradores) * 100).toFixed(1)}%` 
+                    : '0%'}
+                </div>
+              </div>
+
+              {/* Barra de proporção */}
+              <div className="col-span-2 flex flex-col justify-center">
+                <div className="text-xs text-muted-foreground mb-2">Proporção do total de ativos</div>
+                <div className="h-4 rounded-full overflow-hidden bg-muted flex">
+                  <div 
+                    className="bg-blue-500 h-full transition-all duration-500"
+                    style={{ width: stats.totalColaboradores > 0 ? `${(stats.masculino / stats.totalColaboradores) * 100}%` : '50%' }}
+                  />
+                  <div 
+                    className="bg-pink-500 h-full transition-all duration-500"
+                    style={{ width: stats.totalColaboradores > 0 ? `${(stats.feminino / stats.totalColaboradores) * 100}%` : '50%' }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs mt-1">
+                  <span className="text-blue-600">Masculino</span>
+                  <span className="text-pink-600">Feminino</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Dashboard Content */}
       <div className="space-y-6">
