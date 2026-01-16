@@ -1,6 +1,8 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Users, UserCheck, Home, Building2, CalendarCheck, LogOut, User, FileText, Settings, TrendingUp, UserPlus, UserCog, ClipboardList } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -217,61 +219,79 @@ export function AppSidebar() {
         </div>
 
         {/* Navigation */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Navegação</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navigationItems.map(item => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} className="flex items-center gap-3 rounded-lg transition-colors hover:bg-accent mx-0 px-[12px] py-[30px]">
-                      <item.icon className="w-5 h-5" />
-                      {!isCollapsed && (
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm flex items-center gap-1">
-                            {item.title}
-                            {item.title === "Solicitações" && pendingCount > 0 && (
-                              <span className="ml-1 text-primary">({pendingCount})</span>
-                            )}
-                          </div>
-                          <div className="text-xs text-muted-foreground truncate">
-                            {item.description}
-                          </div>
-                        </div>
-                      )}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <Collapsible defaultOpen className="group/collapsible">
+          <SidebarGroup>
+            <SidebarGroupLabel asChild>
+              <CollapsibleTrigger className="flex w-full items-center justify-between">
+                Navegação
+                <ChevronDown className="w-4 h-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+              </CollapsibleTrigger>
+            </SidebarGroupLabel>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {navigationItems.map(item => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                        <NavLink to={item.url} className="flex items-center gap-3 rounded-lg transition-colors hover:bg-accent mx-0 px-[12px] py-[30px]">
+                          <item.icon className="w-5 h-5" />
+                          {!isCollapsed && (
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm flex items-center gap-1">
+                                {item.title}
+                                {item.title === "Solicitações" && pendingCount > 0 && (
+                                  <span className="ml-1 text-primary">({pendingCount})</span>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground truncate">
+                                {item.description}
+                              </div>
+                            </div>
+                          )}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
 
         {/* Chamada Group */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Chamada</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {(isGerencia ? chamadaGroupItems : encarregadoChamadaItems).map(item => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} className="flex items-center gap-3 rounded-lg transition-colors hover:bg-accent mx-0 px-[12px] py-[30px]">
-                      <item.icon className="w-5 h-5" />
-                      {!isCollapsed && (
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm">{item.title}</div>
-                          <div className="text-xs text-muted-foreground truncate">
-                            {item.description}
-                          </div>
-                        </div>
-                      )}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <Collapsible defaultOpen className="group/collapsible-chamada">
+          <SidebarGroup>
+            <SidebarGroupLabel asChild>
+              <CollapsibleTrigger className="flex w-full items-center justify-between">
+                Chamada
+                <ChevronDown className="w-4 h-4 transition-transform group-data-[state=open]/collapsible-chamada:rotate-180" />
+              </CollapsibleTrigger>
+            </SidebarGroupLabel>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {(isGerencia ? chamadaGroupItems : encarregadoChamadaItems).map(item => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                        <NavLink to={item.url} className="flex items-center gap-3 rounded-lg transition-colors hover:bg-accent mx-0 px-[12px] py-[30px]">
+                          <item.icon className="w-5 h-5" />
+                          {!isCollapsed && (
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm">{item.title}</div>
+                              <div className="text-xs text-muted-foreground truncate">
+                                {item.description}
+                              </div>
+                            </div>
+                          )}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
 
         {/* Logout Button - Outside groups */}
         <div className="px-4 py-2 mt-4">
