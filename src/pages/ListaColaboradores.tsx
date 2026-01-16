@@ -30,6 +30,7 @@ interface Colaborador {
   horario_almoco: string;
   horario_cafe: string;
   admissao: string;
+  sexo: string;
   created_at: string;
   updated_at: string;
 }
@@ -582,6 +583,7 @@ export default function ListaColaboradores() {
                 <TableRow>
                   <TableHead>Matrícula</TableHead>
                   <TableHead>Nome</TableHead>
+                  <TableHead>Sexo</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Cargo</TableHead>
                   <TableHead>Setor</TableHead>
@@ -604,6 +606,7 @@ export default function ListaColaboradores() {
                     <TableRow key={colaborador.id}>
                       <TableCell className="font-medium">{colaborador.matricula}</TableCell>
                       <TableCell>{colaborador.colaborador}</TableCell>
+                      <TableCell>{colaborador.sexo || "-"}</TableCell>
                       <TableCell>{getStatusBadge(colaborador.status)}</TableCell>
                       <TableCell>{colaborador.cargo || "-"}</TableCell>
                       <TableCell>{colaborador.setor || "-"}</TableCell>
