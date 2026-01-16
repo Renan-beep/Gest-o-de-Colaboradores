@@ -93,6 +93,7 @@ export type Database = {
           sabado_horario: string | null
           sabado_trabalho: string | null
           setor: string | null
+          sexo: string | null
           status: string
           subsetor: string | null
           turno: string | null
@@ -111,6 +112,7 @@ export type Database = {
           sabado_horario?: string | null
           sabado_trabalho?: string | null
           setor?: string | null
+          sexo?: string | null
           status: string
           subsetor?: string | null
           turno?: string | null
@@ -129,6 +131,7 @@ export type Database = {
           sabado_horario?: string | null
           sabado_trabalho?: string | null
           setor?: string | null
+          sexo?: string | null
           status?: string
           subsetor?: string | null
           turno?: string | null
