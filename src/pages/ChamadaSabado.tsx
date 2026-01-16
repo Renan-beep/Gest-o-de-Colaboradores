@@ -61,21 +61,29 @@ export default function ChamadaSabado() {
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             const newRecord = payload.new as { colaborador_id: string; data: string; status: string }
             
-            // Só atualiza se for da data selecionada e status de sábado
-            if (newRecord.data === selectedDate && newRecord.status === 'vira_sabado') {
-              setPrevisoes(prev => ({
-                ...prev,
-                [newRecord.colaborador_id]: true
-              }))
+            // Só atualiza se for da data selecionada
+            if (newRecord.data === selectedDate) {
+              if (newRecord.status === 'vira_sabado') {
+                setPrevisoes(prev => ({
+                  ...prev,
+                  [newRecord.colaborador_id]: true
+                }))
+              } else if (newRecord.status === 'nao_vira_sabado') {
+                setPrevisoes(prev => ({
+                  ...prev,
+                  [newRecord.colaborador_id]: false
+                }))
+              }
             }
           } else if (payload.eventType === 'DELETE') {
             const oldRecord = payload.old as { colaborador_id: string; data: string }
             
             if (oldRecord.data === selectedDate) {
-              setPrevisoes(prev => ({
-                ...prev,
-                [oldRecord.colaborador_id]: false
-              }))
+              setPrevisoes(prev => {
+                const newPrevisoes = { ...prev }
+                delete newPrevisoes[oldRecord.colaborador_id]
+                return newPrevisoes
+              })
             }
           }
         }
@@ -153,7 +161,12 @@ export default function ChamadaSabado() {
 
       const previsoesMap: { [key: string]: boolean } = {}
       data?.forEach(chamada => {
-        previsoesMap[chamada.colaborador_id] = chamada.status === "vira_sabado"
+        // vira_sabado = true, nao_vira_sabado = false
+        if (chamada.status === "vira_sabado") {
+          previsoesMap[chamada.colaborador_id] = true
+        } else if (chamada.status === "nao_vira_sabado") {
+          previsoesMap[chamada.colaborador_id] = false
+        }
       })
       setPrevisoes(previsoesMap)
     } catch (error) {
@@ -197,26 +210,17 @@ export default function ChamadaSabado() {
 
       const selectedDate = selectedSaturday.toISOString().split('T')[0]
       
-      // Separar colaboradores que virão e que não virão
-      const colaboradoresQueVirao = Object.entries(previsoes)
-        .filter(([_, vira]) => vira === true)
-        .map(([colaboradorId]) => colaboradorId)
-      
-      const colaboradoresQueNaoVirao = Object.entries(previsoes)
-        .filter(([_, vira]) => vira === false)
-        .map(([colaboradorId]) => colaboradorId)
+      // Preparar todos os registros para upsert (tanto vira quanto não vira)
+      const allPrevisoes = Object.entries(previsoes).map(([colaboradorId, vira]) => ({
+        colaborador_id: colaboradorId,
+        data: selectedDate,
+        status: vira ? "vira_sabado" : "nao_vira_sabado"
+      }))
 
-      // Usar upsert para os que virão (inserir ou atualizar)
-      if (colaboradoresQueVirao.length > 0) {
-        const previsoesToUpsert = colaboradoresQueVirao.map(colaboradorId => ({
-          colaborador_id: colaboradorId,
-          data: selectedDate,
-          status: "vira_sabado"
-        }))
-
+      if (allPrevisoes.length > 0) {
         const { error: upsertError } = await supabase
           .from('chamadas')
-          .upsert(previsoesToUpsert, { 
+          .upsert(allPrevisoes, { 
             onConflict: 'colaborador_id,data',
             ignoreDuplicates: false 
           })
@@ -224,20 +228,12 @@ export default function ChamadaSabado() {
         if (upsertError) throw upsertError
       }
 
-      // Deletar APENAS os registros dos colaboradores marcados como "não virão"
-      if (colaboradoresQueNaoVirao.length > 0) {
-        const { error: deleteError } = await supabase
-          .from('chamadas')
-          .delete()
-          .eq('data', selectedDate)
-          .in('colaborador_id', colaboradoresQueNaoVirao)
-
-        if (deleteError) throw deleteError
-      }
+      const colaboradoresQueVirao = Object.values(previsoes).filter(v => v === true).length
+      const colaboradoresQueNaoVirao = Object.values(previsoes).filter(v => v === false).length
 
       toast({
         title: "Sucesso",
-        description: `Previsão salva: ${colaboradoresQueVirao.length} virão no sábado`,
+        description: `Previsão salva: ${colaboradoresQueVirao} virão no sábado, ${colaboradoresQueNaoVirao} não virão`,
       })
     } catch (error: any) {
       toast({
