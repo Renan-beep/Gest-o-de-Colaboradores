@@ -157,16 +157,18 @@ export default function Chamada() {
     }
   }, [selectedDate])
 
+  // Calcular pendências apenas quando colaboradores ou mês mudam (não a cada mudança de dia)
+  const currentMonth = selectedDate.substring(0, 7)
   useEffect(() => {
     if (colaboradores.length > 0) {
-      // Usar um pequeno delay para garantir que os estados estão sincronizados
+      // Debounce maior para evitar recálculos excessivos
       const timer = setTimeout(() => {
         fetchDatesWithPendencies()
-      }, 200)
+      }, 500)
       
       return () => clearTimeout(timer)
     }
-  }, [colaboradores, chamadas, selectedDate, filterLideranca])
+  }, [colaboradores.length, currentMonth, movimentacoes.length])
 
   const fetchPrimeiraDataChamada = async () => {
     try {
