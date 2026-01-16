@@ -40,7 +40,54 @@ export default function ChamadaSabado() {
 
   useEffect(() => {
     fetchColaboradores()
-  }, [])
+
+    // Configurar listener para atualizações em tempo real na tabela chamadas
+    // Isso garante sincronização quando múltiplos usuários editam simultaneamente
+    const chamadasChannel = supabase
+      .channel('chamadas-sabado-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chamadas'
+        },
+        (payload) => {
+          console.log('📡 Previsão atualizada por outro usuário:', payload)
+          
+          if (!selectedSaturday) return
+          const selectedDate = selectedSaturday.toISOString().split('T')[0]
+          
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            const newRecord = payload.new as { colaborador_id: string; data: string; status: string }
+            
+            // Só atualiza se for da data selecionada e status de sábado
+            if (newRecord.data === selectedDate && newRecord.status === 'vira_sabado') {
+              setPrevisoes(prev => ({
+                ...prev,
+                [newRecord.colaborador_id]: true
+              }))
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const oldRecord = payload.old as { colaborador_id: string; data: string }
+            
+            if (oldRecord.data === selectedDate) {
+              setPrevisoes(prev => ({
+                ...prev,
+                [oldRecord.colaborador_id]: false
+              }))
+            }
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Status do canal de previsões de sábado:', status)
+      })
+
+    return () => {
+      supabase.removeChannel(chamadasChannel)
+    }
+  }, [selectedSaturday])
 
   useEffect(() => {
     if (selectedSaturday) {
