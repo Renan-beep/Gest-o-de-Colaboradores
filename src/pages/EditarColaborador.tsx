@@ -27,6 +27,7 @@ interface ColaboradorForm {
   horario_almoco: string
   horario_cafe: string
   admissao: string
+  sexo: string
 }
 
 export default function EditarColaborador() {
@@ -54,7 +55,8 @@ export default function EditarColaborador() {
     sabado_horario: "",
     horario_almoco: "",
     horario_cafe: "",
-    admissao: ""
+    admissao: "",
+    sexo: ""
   })
 
   useEffect(() => {
@@ -95,7 +97,8 @@ export default function EditarColaborador() {
           sabado_horario: data.sabado_horario || "",
           horario_almoco: data.horario_almoco ? data.horario_almoco.replace(/[()]/g, '') : "",
           horario_cafe: data.horario_cafe ? data.horario_cafe.replace(/[()]/g, '') : "",
-          admissao: data.admissao || ""
+          admissao: data.admissao || "",
+          sexo: data.sexo || ""
         })
         setLastUpdated(data.updated_at || data.created_at || "")
       }
@@ -148,6 +151,7 @@ export default function EditarColaborador() {
           horario_almoco: formData.horario_almoco,
           horario_cafe: formData.horario_cafe,
           admissao: formData.admissao || null,
+          sexo: formData.sexo || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
@@ -364,6 +368,23 @@ export default function EditarColaborador() {
                   required
                   disabled={!isGerencia}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sexo">Sexo</Label>
+                <Select 
+                  value={formData.sexo} 
+                  onValueChange={(value) => handleChange('sexo', value)}
+                  disabled={!isGerencia}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o sexo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Masculino">Masculino</SelectItem>
+                    <SelectItem value="Feminino">Feminino</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
