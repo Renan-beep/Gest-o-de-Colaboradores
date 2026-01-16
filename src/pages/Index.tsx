@@ -273,9 +273,9 @@ const Index = () => {
                           <div className="w-24 h-4 bg-muted animate-pulse rounded" />
                           <div className="w-8 h-6 bg-muted animate-pulse rounded-full" />
                         </div>)}
-                    </div> : Object.entries(indicators.porSetor).length > 0 ? Object.entries(indicators.porSetor).map(([setor, count]) => <div key={setor} className="flex justify-between items-center p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                        <span className="text-sm font-medium truncate">{setor}</span>
-                        <Badge variant="secondary" className="font-semibold">{count}</Badge>
+                    </div> : Object.entries(indicators.porSetor).length > 0 ? Object.entries(indicators.porSetor).map(([setor, count]) => <div key={setor} className="flex justify-between items-center p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                        <span className="text-base font-medium truncate">{setor}</span>
+                        <Badge variant="secondary" className="font-semibold text-sm px-3 py-1">{count}</Badge>
                       </div>) : <div className="text-center text-muted-foreground text-sm py-4">
                       Nenhum dado disponível
                     </div>}
@@ -294,9 +294,9 @@ const Index = () => {
                           <div className="w-20 h-4 bg-muted animate-pulse rounded" />
                           <div className="w-8 h-6 bg-muted animate-pulse rounded-full" />
                         </div>)}
-                    </div> : Object.entries(indicators.porTurno).length > 0 ? Object.entries(indicators.porTurno).map(([turno, count]) => <div key={turno} className="flex justify-between items-center p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                        <span className="text-sm font-medium truncate">{turno}</span>
-                        <Badge variant="secondary" className="font-semibold">{count}</Badge>
+                    </div> : Object.entries(indicators.porTurno).length > 0 ? Object.entries(indicators.porTurno).map(([turno, count]) => <div key={turno} className="flex justify-between items-center p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                        <span className="text-base font-medium truncate">{turno}</span>
+                        <Badge variant="secondary" className="font-semibold text-sm px-3 py-1">{count}</Badge>
                       </div>) : <div className="text-center text-muted-foreground text-sm py-4">
                       Nenhum dado disponível
                     </div>}
@@ -315,9 +315,9 @@ const Index = () => {
                           <div className="w-28 h-4 bg-muted animate-pulse rounded" />
                           <div className="w-8 h-6 bg-muted animate-pulse rounded-full" />
                         </div>)}
-                    </div> : Object.entries(indicators.porLideranca).length > 0 ? Object.entries(indicators.porLideranca).map(([lideranca, count]) => <div key={lideranca} className="flex justify-between items-center p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                        <span className="text-sm font-medium truncate">{lideranca}</span>
-                        <Badge variant="secondary" className="font-semibold">{count}</Badge>
+                    </div> : Object.entries(indicators.porLideranca).length > 0 ? Object.entries(indicators.porLideranca).map(([lideranca, count]) => <div key={lideranca} className="flex justify-between items-center p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                        <span className="text-base font-medium truncate">{lideranca}</span>
+                        <Badge variant="secondary" className="font-semibold text-sm px-3 py-1">{count}</Badge>
                       </div>) : <div className="text-center text-muted-foreground text-sm py-4">
                       Nenhum dado disponível
                     </div>}
@@ -336,9 +336,9 @@ const Index = () => {
                           <div className="w-32 h-4 bg-muted animate-pulse rounded" />
                           <div className="w-8 h-6 bg-muted animate-pulse rounded-full" />
                         </div>)}
-                    </div> : Object.entries(indicators.porCargo).length > 0 ? Object.entries(indicators.porCargo).map(([cargo, count]) => <div key={cargo} className="flex justify-between items-center p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                        <span className="text-sm font-medium truncate">{cargo}</span>
-                        <Badge variant="secondary" className="font-semibold">{count}</Badge>
+                    </div> : Object.entries(indicators.porCargo).length > 0 ? Object.entries(indicators.porCargo).map(([cargo, count]) => <div key={cargo} className="flex justify-between items-center p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                        <span className="text-base font-medium truncate">{cargo}</span>
+                        <Badge variant="secondary" className="font-semibold text-sm px-3 py-1">{count}</Badge>
                       </div>) : <div className="text-center text-muted-foreground text-sm py-4">
                       Nenhum dado disponível
                     </div>}
