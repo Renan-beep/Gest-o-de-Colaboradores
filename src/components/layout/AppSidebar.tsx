@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, UserCheck, Home, Building2, CalendarCheck, LogOut, User, FileText, TrendingUp, UserPlus, UserCog, ClipboardList } from "lucide-react";
+import { Users, UserCheck, Home, Building2, CalendarCheck, LogOut, User, FileText, UserPlus, UserCog, ClipboardList } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
@@ -52,11 +52,6 @@ const chamadaGroupItems = [{
   url: "/chamada-sabado",
   icon: CalendarCheck,
   description: "Definir trabalho aos sábados"
-}, {
-  title: "Métricas da chamada",
-  url: "/metricas-chamada",
-  icon: TrendingUp,
-  description: "KPIs e relatórios"
 }];
 
 const encarregadoItems = [{
@@ -96,11 +91,6 @@ const encarregadoChamadaItems = [{
   url: "/chamada-sabado",
   icon: CalendarCheck,
   description: "Definir trabalho aos sábados"
-}, {
-  title: "Métricas da chamada",
-  url: "/metricas-chamada",
-  icon: TrendingUp,
-  description: "KPIs e relatórios"
 }];
 
 export function AppSidebar() {
