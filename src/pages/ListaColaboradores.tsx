@@ -61,6 +61,8 @@ export default function ListaColaboradores() {
     lideranca: [] as string[],
     turno: [] as string[],
     sabadoTrabalho: [] as string[],
+    horarioAlmoco: [] as string[],
+    horarioCafe: [] as string[],
     tempoEmpresa: "todos"
   });
   
@@ -73,7 +75,9 @@ export default function ListaColaboradores() {
     setores: [] as string[],
     subsetores: [] as string[],
     liderancas: [] as string[],
-    turnos: [] as string[]
+    turnos: [] as string[],
+    horariosAlmoco: [] as string[],
+    horariosCafe: [] as string[]
   });
   useEffect(() => {
     fetchColaboradores();
@@ -104,12 +108,16 @@ export default function ListaColaboradores() {
       const subsetores = [...new Set(data?.map(c => c.subsetor).filter(s => s && s.trim() !== '') || [])];
       const liderancas = [...new Set(data?.map(c => c.lideranca).filter(l => l && l.trim() !== '') || [])];
       const turnos = [...new Set(data?.map(c => c.turno).filter(t => t && t.trim() !== '') || [])];
+      const horariosAlmoco = [...new Set(data?.map(c => c.horario_almoco).filter(h => h && h.trim() !== '') || [])];
+      const horariosCafe = [...new Set(data?.map(c => c.horario_cafe).filter(h => h && h.trim() !== '') || [])];
       setOpcoesFiltros({
         cargos: cargos.sort(),
         setores: setores.sort(),
         subsetores: subsetores.sort(),
         liderancas: liderancas.sort(),
-        turnos: turnos.sort()
+        turnos: turnos.sort(),
+        horariosAlmoco: horariosAlmoco.sort(),
+        horariosCafe: horariosCafe.sort()
       });
     } catch (error) {
       toast({
@@ -158,6 +166,12 @@ export default function ListaColaboradores() {
     if (filtros.sabadoTrabalho.length > 0) {
       filtered = filtered.filter(c => filtros.sabadoTrabalho.includes(c.sabado_trabalho));
     }
+    if (filtros.horarioAlmoco.length > 0) {
+      filtered = filtered.filter(c => filtros.horarioAlmoco.includes(c.horario_almoco));
+    }
+    if (filtros.horarioCafe.length > 0) {
+      filtered = filtered.filter(c => filtros.horarioCafe.includes(c.horario_cafe));
+    }
     if (filtros.tempoEmpresa !== "todos") {
       filtered = filtered.filter(c => {
         const tempo = calcularTempoEmpresa(c.admissao);
@@ -181,6 +195,8 @@ export default function ListaColaboradores() {
       lideranca: [],
       turno: [],
       sabadoTrabalho: [],
+      horarioAlmoco: [],
+      horarioCafe: [],
       tempoEmpresa: "todos"
     });
   };
@@ -471,6 +487,28 @@ export default function ListaColaboradores() {
                 selected={filtros.turno}
                 onChange={(values) => setFiltros(prev => ({ ...prev, turno: values }))}
                 placeholder="Todos os turnos"
+              />
+            </div>
+
+            {/* Horário Almoço */}
+            <div className="space-y-2">
+              <Label>Horário Almoço</Label>
+              <MultiSelect
+                options={opcoesFiltros.horariosAlmoco}
+                selected={filtros.horarioAlmoco}
+                onChange={(values) => setFiltros(prev => ({ ...prev, horarioAlmoco: values }))}
+                placeholder="Todos os horários"
+              />
+            </div>
+
+            {/* Horário Café */}
+            <div className="space-y-2">
+              <Label>Horário Café</Label>
+              <MultiSelect
+                options={opcoesFiltros.horariosCafe}
+                selected={filtros.horarioCafe}
+                onChange={(values) => setFiltros(prev => ({ ...prev, horarioCafe: values }))}
+                placeholder="Todos os horários"
               />
             </div>
 
