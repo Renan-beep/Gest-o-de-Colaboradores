@@ -98,10 +98,53 @@ export default function Chamada() {
         console.log('Status do canal de colaboradores:', status)
       })
 
+    // Configurar listener para atualizações em tempo real na tabela chamadas
+    // Isso garante sincronização quando múltiplos usuários editam simultaneamente
+    const chamadasChannel = supabase
+      .channel('chamadas-realtime-sync')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Escuta INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'chamadas'
+        },
+        (payload) => {
+          console.log('📡 Chamada atualizada por outro usuário:', payload)
+          
+          // Atualizar estado local com a mudança recebida
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            const newRecord = payload.new as { colaborador_id: string; data: string; status: string }
+            
+            // Só atualiza se for da data selecionada
+            if (newRecord.data === selectedDate) {
+              setChamadas(prev => ({
+                ...prev,
+                [newRecord.colaborador_id]: newRecord.status
+              }))
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const oldRecord = payload.old as { colaborador_id: string; data: string }
+            
+            if (oldRecord.data === selectedDate) {
+              setChamadas(prev => {
+                const updated = { ...prev }
+                delete updated[oldRecord.colaborador_id]
+                return updated
+              })
+            }
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Status do canal de chamadas:', status)
+      })
+
     return () => {
       supabase.removeChannel(colaboradoresChannel)
+      supabase.removeChannel(chamadasChannel)
     }
-  }, [])
+  }, [selectedDate])
 
   // Não é mais necessário - lógica foi movida para fetchDatesWithPendencies
   const registrarQuantitativosAntigos = async () => {
@@ -382,8 +425,10 @@ export default function Chamada() {
     }))
   }
 
-  const handleSaveChamada = async () => {
+  const handleSaveChamada = async (_event?: React.MouseEvent, retryCount = 0) => {
+    const MAX_RETRIES = 3
     const totalChamadas = Object.keys(chamadas).length
+    
     if (totalChamadas === 0) {
       toast({
         title: "Atenção",
@@ -405,9 +450,11 @@ export default function Chamada() {
         updated_at: new Date().toISOString()
       }))
 
+      console.log(`💾 Salvando ${totalChamadas} chamadas para ${selectedDate}...`)
+
       // Usar upsert com onConflict para garantir atomicidade
       // O índice único em (colaborador_id, data) garante que não haverá duplicatas
-      const { error: upsertError, count } = await supabase
+      const { error: upsertError } = await supabase
         .from('chamadas')
         .upsert(chamadasToUpsert, {
           onConflict: 'colaborador_id,data',
@@ -419,6 +466,8 @@ export default function Chamada() {
         throw upsertError
       }
 
+      console.log(`✅ ${totalChamadas} chamadas salvas com sucesso`)
+
       toast({
         title: "Sucesso",
         description: `Chamada salva para ${totalChamadas} colaborador(es)`,
@@ -429,12 +478,34 @@ export default function Chamada() {
     } catch (error: any) {
       console.error('Erro ao salvar chamada:', error)
       
+      // Retry automático para erros de rede ou timeout
+      const isNetworkError = !error.code || error.message?.includes('network') || error.message?.includes('timeout') || error.message?.includes('fetch')
+      
+      if (isNetworkError && retryCount < MAX_RETRIES) {
+        console.log(`🔄 Tentando novamente (${retryCount + 1}/${MAX_RETRIES})...`)
+        
+        toast({
+          title: "Reconectando...",
+          description: `Tentativa ${retryCount + 1} de ${MAX_RETRIES}`,
+        })
+        
+        // Aguardar antes de tentar novamente (backoff exponencial)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000))
+        
+        setSaving(false)
+        return handleSaveChamada(undefined, retryCount + 1)
+      }
+      
       // Mensagem de erro mais específica
       let errorMessage = error.message
       if (error.code === '23505') {
-        errorMessage = 'Conflito de dados detectado. Por favor, atualize a página e tente novamente.'
+        errorMessage = 'Conflito de dados detectado. A página será atualizada automaticamente.'
+        // Recarregar dados em caso de conflito
+        await fetchChamadasDoDia()
       } else if (error.code === '23503') {
         errorMessage = 'Colaborador não encontrado. Verifique se o colaborador ainda está ativo.'
+      } else if (isNetworkError) {
+        errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.'
       }
       
       toast({
