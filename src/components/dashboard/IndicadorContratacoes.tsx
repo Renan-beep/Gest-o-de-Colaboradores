@@ -248,7 +248,7 @@ export default function IndicadorContratacoes() {
           </div>
         ) : (
           <div className="space-y-4">
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer key={`chart-${anoSelecionado}`} width="100%" height={300}>
               <BarChart 
                 data={dadosContratacoes} 
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
