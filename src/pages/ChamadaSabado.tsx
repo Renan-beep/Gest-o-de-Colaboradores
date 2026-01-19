@@ -37,6 +37,7 @@ export default function ChamadaSabado() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [filterLideranca, setFilterLideranca] = useState("todos")
+  const [filterStatus, setFilterStatus] = useState("todos")
 
   useEffect(() => {
     fetchColaboradores()
@@ -298,6 +299,15 @@ export default function ChamadaSabado() {
       filtered = filtered.filter(col => col.lideranca === filterLideranca)
     }
 
+    // Filtrar por status de previsão
+    if (filterStatus === "vira") {
+      filtered = filtered.filter(col => previsoes[col.id] === true)
+    } else if (filterStatus === "nao_vira") {
+      filtered = filtered.filter(col => previsoes[col.id] === false)
+    } else if (filterStatus === "pendente") {
+      filtered = filtered.filter(col => previsoes[col.id] === undefined)
+    }
+
     return filtered
   }
 
@@ -348,7 +358,7 @@ export default function ChamadaSabado() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Selecione o Sábado</label>
               <Popover>
@@ -392,6 +402,21 @@ export default function ChamadaSabado() {
                   {liderancas.map(lideranca => (
                     <SelectItem key={lideranca} value={lideranca}>{lideranca}</SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Filtrar por Status</label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os status</SelectItem>
+                  <SelectItem value="vira">Virá no Sábado</SelectItem>
+                  <SelectItem value="nao_vira">Não Virá</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
