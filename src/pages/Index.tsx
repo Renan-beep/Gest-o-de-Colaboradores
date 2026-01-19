@@ -270,7 +270,7 @@ const Index = () => {
     color: "text-orange-600",
     bgColor: "bg-orange-100"
   }];
-  return <div className="space-y-8 animate-fade-in">
+  return <div className="space-y-6 md:space-y-8 animate-fade-in">
       {/* Modern Header with Gradient */}
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-hero rounded-2xl opacity-10"></div>
@@ -278,7 +278,7 @@ const Index = () => {
       </div>
 
       {/* Enhanced Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         <StatCard 
           title="Total de Colaboradores" 
           value={loading ? '...' : (stats.totalColaboradores + stats.afastados)} 
@@ -336,11 +336,11 @@ const Index = () => {
               <div className="w-32 h-24 bg-muted animate-pulse rounded-lg" />
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               {/* Homens */}
-              <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl p-4 text-center border border-blue-200 dark:border-blue-800">
-                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.masculino}</div>
-                <div className="text-sm text-muted-foreground mt-1">Homens</div>
+              <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl p-3 md:p-4 text-center border border-blue-200 dark:border-blue-800">
+                <div className="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.masculino}</div>
+                <div className="text-xs md:text-sm text-muted-foreground mt-1">Homens</div>
                 <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
                   {stats.totalColaboradores > 0 
                     ? `${((stats.masculino / stats.totalColaboradores) * 100).toFixed(1)}%` 
@@ -349,9 +349,9 @@ const Index = () => {
               </div>
               
               {/* Mulheres */}
-              <div className="bg-pink-50 dark:bg-pink-950/30 rounded-xl p-4 text-center border border-pink-200 dark:border-pink-800">
-                <div className="text-3xl font-bold text-pink-600 dark:text-pink-400">{stats.feminino}</div>
-                <div className="text-sm text-muted-foreground mt-1">Mulheres</div>
+              <div className="bg-pink-50 dark:bg-pink-950/30 rounded-xl p-3 md:p-4 text-center border border-pink-200 dark:border-pink-800">
+                <div className="text-2xl md:text-3xl font-bold text-pink-600 dark:text-pink-400">{stats.feminino}</div>
+                <div className="text-xs md:text-sm text-muted-foreground mt-1">Mulheres</div>
                 <div className="text-xs text-pink-600 dark:text-pink-400 font-medium mt-1">
                   {stats.totalColaboradores > 0 
                     ? `${((stats.feminino / stats.totalColaboradores) * 100).toFixed(1)}%` 
@@ -395,13 +395,13 @@ const Index = () => {
 
         {/* Indicadores em Grid Moderno */}
         <div>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <span className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-white" />
+            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center gap-2 md:gap-3">
+              <span className="w-7 h-7 md:w-8 md:h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
               </span>
               Indicadores Detalhados
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Por Setor */}
               <Card className="glass-card card-hover">
                 <CardHeader>

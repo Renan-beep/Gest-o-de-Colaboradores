@@ -690,18 +690,18 @@ export default function Chamada() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <UserCheck className="w-8 h-8 text-primary" />
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
+          <UserCheck className="w-6 h-6 md:w-8 md:h-8 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold">Controle de Chamadas</h1>
-            <p className="text-muted-foreground">Gerencie a presença dos colaboradores</p>
+            <h1 className="text-xl md:text-2xl font-bold">Controle de Chamadas</h1>
+            <p className="text-sm text-muted-foreground hidden md:block">Gerencie a presença dos colaboradores</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {/* Controle de Domingo Específico */}
-          <Card className="shadow-sm">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
+          {/* Controle de Domingo Específico - Hidden on mobile */}
+          <Card className="shadow-sm hidden lg:block">
             <CardContent className="p-3">
               <div className="flex flex-col gap-2">
                 <Label className="text-sm font-medium">Domingo Especial</Label>
@@ -766,28 +766,31 @@ export default function Chamada() {
             size="sm"
             onClick={handleAtualizarLista}
             disabled={loading}
+            className="text-xs md:text-sm"
           >
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Atualizar Lista
+            <RotateCcw className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">Atualizar Lista</span>
           </Button>
         </div>
       </div>
 
       <Tabs defaultValue={new URLSearchParams(window.location.search).get('tab') === 'banco' ? 'banco-chamadas' : 'chamada-diaria'} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="chamada-diaria" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="chamada-diaria" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
             <UserCheck className="w-4 h-4" />
-            Chamada Diária
+            <span className="hidden sm:inline">Chamada Diária</span>
+            <span className="sm:hidden">Chamada</span>
           </TabsTrigger>
-          <TabsTrigger value="banco-chamadas" className="flex items-center gap-2">
+          <TabsTrigger value="banco-chamadas" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
             <Database className="w-4 h-4" />
-            Banco de Chamadas
+            <span className="hidden sm:inline">Banco de Chamadas</span>
+            <span className="sm:hidden">Histórico</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="chamada-diaria" className="mt-6 space-y-6">
+        <TabsContent value="chamada-diaria" className="mt-4 md:mt-6 space-y-4 md:space-y-6">
           {/* Gráfico de Pendências e Datas com Pendências */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4">
         {/* Gráfico de Pendências por Líder */}
         <div className="lg:col-span-1">
           <GraficoPendenciasLideres 
@@ -953,19 +956,19 @@ export default function Chamada() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 md:gap-4">
             {statusOptions.map(option => {
               const IconComponent = option.icon
               return (
-                <div key={option.value} className="text-center p-4 border rounded-lg">
-                  <div className={`w-12 h-12 mx-auto rounded-lg flex items-center justify-center mb-2 ${
+                <div key={option.value} className="text-center p-2 md:p-4 border rounded-lg">
+                  <div className={`w-8 h-8 md:w-12 md:h-12 mx-auto rounded-lg flex items-center justify-center mb-1 md:mb-2 ${
                     option.value === 'presente' ? 'bg-green-100' :
                     option.value === 'falta' ? 'bg-red-100' :
                     option.value === 'folga' ? 'bg-orange-100' :
                     option.value === 'atestado' ? 'bg-pink-100' :
                     'bg-purple-100'
                   }`}>
-                    <IconComponent className={`w-6 h-6 ${
+                    <IconComponent className={`w-4 h-4 md:w-6 md:h-6 ${
                       option.value === 'presente' ? 'text-green-600' :
                       option.value === 'falta' ? 'text-red-600' :
                       option.value === 'folga' ? 'text-orange-600' :
@@ -973,8 +976,8 @@ export default function Chamada() {
                       'text-purple-600'
                     }`} />
                   </div>
-                  <div className="text-2xl font-bold mb-1">{statusCounts[option.value]}</div>
-                  <div className="text-sm text-muted-foreground">{option.label}</div>
+                  <div className="text-lg md:text-2xl font-bold mb-0.5 md:mb-1">{statusCounts[option.value]}</div>
+                  <div className="text-xs md:text-sm text-muted-foreground">{option.label}</div>
                 </div>
               )
             })}
