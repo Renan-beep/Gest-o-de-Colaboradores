@@ -346,24 +346,7 @@ export function ChatContainer() {
 
   return (
     <>
-      {/* Botão flutuante do chat */}
-      {!isOpen && (
-        <Button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-3 right-16 md:bottom-4 md:right-20 z-50 rounded-full w-12 h-12 md:w-14 md:h-14 shadow-lg"
-          size="icon"
-        >
-          <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
-          {totalNaoLidas > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center p-0 text-xs"
-            >
-              {totalNaoLidas > 9 ? '9+' : totalNaoLidas}
-            </Badge>
-          )}
-        </Button>
-      )}
+      {/* Botão flutuante removido - chat integrado ao OnlineUsers */}
 
       {/* Container do Chat */}
       {isOpen && (
