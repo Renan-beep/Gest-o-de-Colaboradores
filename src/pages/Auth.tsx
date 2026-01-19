@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { updateRenanToManager } from '@/utils/updateUserRole';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Building2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 export default function Auth() {
   const {
     user,
@@ -29,6 +30,27 @@ export default function Auth() {
   const [userType, setUserType] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+
+  // Buscar logo da empresa
+  useEffect(() => {
+    const fetchCompanyLogo = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('company_logo_url')
+        .not('company_logo_url', 'is', null)
+        .limit(1)
+        .single();
+      
+      if (data?.company_logo_url) {
+        const { data: urlData } = supabase.storage
+          .from('company-logos')
+          .getPublicUrl(data.company_logo_url);
+        setCompanyLogo(urlData.publicUrl);
+      }
+    };
+    fetchCompanyLogo();
+  }, []);
 
   // Função para alterar o Renan para gerente
   const handleUpdateRenanRole = async () => {
@@ -169,11 +191,17 @@ export default function Auth() {
       <Card className="w-full max-w-md glass-card shadow-strong animate-fade-in relative z-10">
         <CardHeader className="text-center pb-8">
           <div className="flex items-center justify-center mb-6">
-            <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-glow">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">HR</span>
+            {companyLogo ? (
+              <img 
+                src={companyLogo} 
+                alt="Logo da Empresa" 
+                className="w-20 h-20 object-contain rounded-2xl"
+              />
+            ) : (
+              <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-glow">
+                <Building2 className="w-8 h-8 text-white" />
               </div>
-            </div>
+            )}
           </div>
           <CardTitle className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">Gestão de Colaboradores</CardTitle>
           <CardDescription className="text-lg">
