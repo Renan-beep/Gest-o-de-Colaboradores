@@ -89,6 +89,7 @@ export default function ListaColaboradores() {
     sabadoTrabalho: [] as string[],
     horarioAlmoco: [] as string[],
     horarioCafe: [] as string[],
+    sexo: [] as string[],
     tempoEmpresa: "todos"
   });
 
@@ -267,6 +268,9 @@ export default function ListaColaboradores() {
     if (filtros.horarioCafe.length > 0) {
       filtered = filtered.filter(c => filtros.horarioCafe.includes(c.horario_cafe));
     }
+    if (filtros.sexo.length > 0) {
+      filtered = filtered.filter(c => filtros.sexo.includes(c.sexo));
+    }
     if (filtros.tempoEmpresa !== "todos") {
       filtered = filtered.filter(c => {
         const tempo = calcularTempoEmpresa(c.admissao);
@@ -320,6 +324,7 @@ export default function ListaColaboradores() {
       sabadoTrabalho: [],
       horarioAlmoco: [],
       horarioCafe: [],
+      sexo: [],
       tempoEmpresa: "todos"
     });
   };
@@ -717,6 +722,17 @@ export default function ListaColaboradores() {
                     selected={filtros.horarioCafe}
                     onChange={(values) => setFiltros(prev => ({ ...prev, horarioCafe: values }))}
                     placeholder="Todos os horários"
+                  />
+                </div>
+
+                {/* Sexo */}
+                <div className="space-y-2">
+                  <Label>Sexo</Label>
+                  <MultiSelect
+                    options={["Masculino", "Feminino"]}
+                    selected={filtros.sexo}
+                    onChange={(values) => setFiltros(prev => ({ ...prev, sexo: values }))}
+                    placeholder="Todos"
                   />
                 </div>
 
