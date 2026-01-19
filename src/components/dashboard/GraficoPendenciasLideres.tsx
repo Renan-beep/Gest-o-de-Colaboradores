@@ -144,7 +144,7 @@ export function GraficoPendenciasLideres({ selectedDate, colaboradores, moviment
         </div>
       ) : (
         <div className="flex-1 min-h-[200px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer key={`chart-${titulo}`} width="100%" height="100%">
             <BarChart data={dados} layout="vertical" margin={{ top: 5, right: 40, bottom: 5, left: 70 }}>
               <XAxis type="number" hide />
               <YAxis 
