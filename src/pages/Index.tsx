@@ -149,8 +149,8 @@ const Index = () => {
           porHorarioCafe[colaborador.horario_cafe] = (porHorarioCafe[colaborador.horario_cafe] || 0) + 1;
         }
 
-        // Por sexo (apenas ativos)
-        if (colaborador.sexo && colaborador.status?.toLowerCase() === 'ativo') {
+        // Por sexo (todos os colaboradores ativos e afastados)
+        if (colaborador.sexo && colaborador.status?.toLowerCase() !== 'demitido') {
           porSexo[colaborador.sexo] = (porSexo[colaborador.sexo] || 0) + 1;
         }
       });
@@ -327,7 +327,7 @@ const Index = () => {
             <Users className="w-5 h-5 text-primary" />
             Distribuição por Gênero
           </CardTitle>
-          <CardDescription>Quantitativo de colaboradores ativos por sexo</CardDescription>
+          <CardDescription>Quantitativo de colaboradores por sexo</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -342,8 +342,8 @@ const Index = () => {
                 <div className="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.masculino}</div>
                 <div className="text-xs md:text-sm text-muted-foreground mt-1">Homens</div>
                 <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
-                  {stats.totalColaboradores > 0 
-                    ? `${((stats.masculino / stats.totalColaboradores) * 100).toFixed(1)}%` 
+                  {(stats.masculino + stats.feminino) > 0 
+                    ? `${((stats.masculino / (stats.masculino + stats.feminino)) * 100).toFixed(1)}%` 
                     : '0%'}
                 </div>
               </div>
@@ -353,23 +353,23 @@ const Index = () => {
                 <div className="text-2xl md:text-3xl font-bold text-pink-600 dark:text-pink-400">{stats.feminino}</div>
                 <div className="text-xs md:text-sm text-muted-foreground mt-1">Mulheres</div>
                 <div className="text-xs text-pink-600 dark:text-pink-400 font-medium mt-1">
-                  {stats.totalColaboradores > 0 
-                    ? `${((stats.feminino / stats.totalColaboradores) * 100).toFixed(1)}%` 
+                  {(stats.masculino + stats.feminino) > 0 
+                    ? `${((stats.feminino / (stats.masculino + stats.feminino)) * 100).toFixed(1)}%` 
                     : '0%'}
                 </div>
               </div>
 
               {/* Barra de proporção */}
               <div className="col-span-2 flex flex-col justify-center">
-                <div className="text-xs text-muted-foreground mb-2">Proporção do total de ativos</div>
+                <div className="text-xs text-muted-foreground mb-2">Proporção do total</div>
                 <div className="h-4 rounded-full overflow-hidden bg-muted flex">
                   <div 
                     className="bg-blue-500 h-full transition-all duration-500"
-                    style={{ width: stats.totalColaboradores > 0 ? `${(stats.masculino / stats.totalColaboradores) * 100}%` : '50%' }}
+                    style={{ width: (stats.masculino + stats.feminino) > 0 ? `${(stats.masculino / (stats.masculino + stats.feminino)) * 100}%` : '50%' }}
                   />
                   <div 
                     className="bg-pink-500 h-full transition-all duration-500"
-                    style={{ width: stats.totalColaboradores > 0 ? `${(stats.feminino / stats.totalColaboradores) * 100}%` : '50%' }}
+                    style={{ width: (stats.masculino + stats.feminino) > 0 ? `${(stats.feminino / (stats.masculino + stats.feminino)) * 100}%` : '50%' }}
                   />
                 </div>
                 <div className="flex justify-between text-xs mt-1">
