@@ -229,7 +229,15 @@ export type Database = {
           tipo_demissao?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_demissoes_colaborador"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       equipes: {
         Row: {
