@@ -60,6 +60,7 @@ export function ChatContainer() {
   const [showCreateGroup, setShowCreateGroup] = useState(false)
   const [totalNaoLidas, setTotalNaoLidas] = useState(0)
   const [allProfiles, setAllProfiles] = useState<any[]>([])
+  const [showSidebarMobile, setShowSidebarMobile] = useState(true)
 
   // Buscar todos os perfis para o modal de criar grupo
   useEffect(() => {
@@ -349,10 +350,10 @@ export function ChatContainer() {
       {!isOpen && (
         <Button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-20 z-50 rounded-full w-14 h-14 shadow-lg"
+          className="fixed bottom-3 right-16 md:bottom-4 md:right-20 z-50 rounded-full w-12 h-12 md:w-14 md:h-14 shadow-lg"
           size="icon"
         >
-          <MessageCircle className="w-6 h-6" />
+          <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
           {totalNaoLidas > 0 && (
             <Badge 
               variant="destructive" 
@@ -370,15 +371,26 @@ export function ChatContainer() {
           className={cn(
             "fixed z-50 bg-background border rounded-lg shadow-2xl transition-all duration-300",
             isMinimized
-              ? "bottom-4 right-20 w-80 h-12"
-              : "bottom-4 right-20 w-[700px] h-[500px]"
+              ? "bottom-3 right-16 md:bottom-4 md:right-20 w-64 md:w-80 h-12"
+              : "bottom-0 left-0 right-0 top-0 md:bottom-4 md:right-20 md:left-auto md:top-auto md:w-[700px] md:h-[500px] md:rounded-lg rounded-none"
           )}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-3 border-b bg-primary text-primary-foreground rounded-t-lg">
+          <div className="flex items-center justify-between p-2 md:p-3 border-b bg-primary text-primary-foreground md:rounded-t-lg">
             <div className="flex items-center gap-2">
+              {/* Botão voltar em mobile quando está em conversa */}
+              {!showSidebarMobile && conversaAtiva && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-primary-foreground hover:bg-primary-foreground/20 md:hidden"
+                  onClick={() => setShowSidebarMobile(true)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
               <MessageCircle className="w-5 h-5" />
-              <span className="font-medium">Chat</span>
+              <span className="font-medium text-sm md:text-base">Chat</span>
               {totalNaoLidas > 0 && (
                 <Badge variant="secondary" className="text-xs">
                   {totalNaoLidas}
@@ -389,7 +401,7 @@ export function ChatContainer() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-primary-foreground hover:bg-primary-foreground/20"
+                className="h-7 w-7 text-primary-foreground hover:bg-primary-foreground/20 hidden md:flex"
                 onClick={() => setIsMinimized(!isMinimized)}
               >
                 {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
@@ -407,23 +419,41 @@ export function ChatContainer() {
 
           {/* Conteúdo */}
           {!isMinimized && (
-            <div className="flex h-[calc(100%-48px)]">
-              <ChatSidebar
-                conversas={conversas}
-                conversaAtiva={conversaAtiva}
-                onSelectConversa={setConversaAtiva}
-                onlineUsers={onlineUsers}
-                onStartPrivateChat={handleStartPrivateChat}
-                onCreateGroup={() => setShowCreateGroup(true)}
-                currentUserId={user.id}
-                isUserOnline={isUserOnline}
-                allProfiles={allProfiles}
-              />
-              <ChatWindow
-                conversa={conversaAtiva}
-                currentUserId={user.id}
-                isUserOnline={isUserOnline}
-              />
+            <div className="flex h-[calc(100%-48px)] md:h-[calc(100%-48px)]">
+              {/* Sidebar - visível em desktop sempre, em mobile apenas quando showSidebarMobile */}
+              <div className={cn(
+                "md:block",
+                showSidebarMobile ? "block w-full md:w-auto" : "hidden"
+              )}>
+                <ChatSidebar
+                  conversas={conversas}
+                  conversaAtiva={conversaAtiva}
+                  onSelectConversa={(conversa) => {
+                    setConversaAtiva(conversa)
+                    setShowSidebarMobile(false)
+                  }}
+                  onlineUsers={onlineUsers}
+                  onStartPrivateChat={(userId) => {
+                    handleStartPrivateChat(userId)
+                    setShowSidebarMobile(false)
+                  }}
+                  onCreateGroup={() => setShowCreateGroup(true)}
+                  currentUserId={user.id}
+                  isUserOnline={isUserOnline}
+                  allProfiles={allProfiles}
+                />
+              </div>
+              {/* Window - visível em desktop sempre, em mobile apenas quando !showSidebarMobile */}
+              <div className={cn(
+                "flex-1 md:flex",
+                !showSidebarMobile ? "flex w-full" : "hidden md:flex"
+              )}>
+                <ChatWindow
+                  conversa={conversaAtiva}
+                  currentUserId={user.id}
+                  isUserOnline={isUserOnline}
+                />
+              </div>
             </div>
           )}
         </div>

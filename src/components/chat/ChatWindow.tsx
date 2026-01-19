@@ -237,9 +237,9 @@ export function ChatWindow({ conversa, currentUserId, isUserOnline }: ChatWindow
   const messageGroups = groupMessagesByDate(mensagens)
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col w-full">
       {/* Header da conversa */}
-      <div className="p-3 border-b bg-card flex items-center gap-3">
+      <div className="p-2 md:p-3 border-b bg-card flex items-center gap-2 md:gap-3">
         <div className="relative">
           <Avatar className="w-9 h-9">
             <AvatarFallback className={cn(
@@ -347,7 +347,7 @@ export function ChatWindow({ conversa, currentUserId, isUserOnline }: ChatWindow
       </ScrollArea>
 
       {/* Input de mensagem */}
-      <div className="p-3 border-t bg-card">
+      <div className="p-2 md:p-3 border-t bg-card">
         <div className="flex gap-2">
           <Input
             ref={inputRef}
@@ -356,7 +356,7 @@ export function ChatWindow({ conversa, currentUserId, isUserOnline }: ChatWindow
             onChange={(e) => setNovaMensagem(e.target.value)}
             onKeyDown={handleKeyPress}
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 text-sm md:text-base"
           />
           <Button 
             onClick={handleSendMessage} 

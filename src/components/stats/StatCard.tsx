@@ -51,14 +51,14 @@ export function StatCard({
   if (loading) {
     return (
       <Card className={cn(styles.card, "animate-pulse", className)}>
-        <CardContent className="p-6">
+        <CardContent className="p-3 md:p-6">
           <div className="flex items-center justify-between">
-            <div className="space-y-3 flex-1">
-              <div className="h-4 bg-muted rounded w-24" />
-              <div className="h-8 bg-muted rounded w-16" />
-              <div className="h-3 bg-muted rounded w-32" />
+            <div className="space-y-2 md:space-y-3 flex-1">
+              <div className="h-3 md:h-4 bg-muted rounded w-16 md:w-24" />
+              <div className="h-6 md:h-8 bg-muted rounded w-12 md:w-16" />
+              <div className="h-2 md:h-3 bg-muted rounded w-20 md:w-32" />
             </div>
-            <div className="h-12 w-12 bg-muted rounded-xl" />
+            <div className="h-10 w-10 md:h-12 md:w-12 bg-muted rounded-xl" />
           </div>
         </CardContent>
       </Card>
@@ -67,26 +67,26 @@ export function StatCard({
 
   return (
     <Card className={cn(styles.card, "transition-all duration-300", className)}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-3xl font-bold tracking-tight">{value}</p>
+      <CardContent className="p-3 md:p-6">
+        <div className="flex items-center justify-between gap-2">
+          <div className="space-y-0.5 md:space-y-1 min-w-0 flex-1">
+            <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">{title}</p>
+            <p className="text-xl md:text-3xl font-bold tracking-tight">{value}</p>
             {subtitle && (
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
+              <p className="text-[10px] md:text-xs text-muted-foreground truncate">{subtitle}</p>
             )}
             {trend && (
               <div className={cn(
-                "flex items-center gap-1 text-xs font-medium",
+                "flex items-center gap-1 text-[10px] md:text-xs font-medium",
                 trend.value >= 0 ? "text-success" : "text-error"
               )}>
                 <span>{trend.value >= 0 ? "↑" : "↓"} {Math.abs(trend.value)}%</span>
-                <span className="text-muted-foreground">{trend.label}</span>
+                <span className="text-muted-foreground hidden sm:inline">{trend.label}</span>
               </div>
             )}
           </div>
-          <div className={cn("p-3 rounded-xl", styles.icon)}>
-            <Icon className="h-6 w-6" />
+          <div className={cn("p-2 md:p-3 rounded-xl shrink-0", styles.icon)}>
+            <Icon className="h-5 w-5 md:h-6 md:w-6" />
           </div>
         </div>
       </CardContent>

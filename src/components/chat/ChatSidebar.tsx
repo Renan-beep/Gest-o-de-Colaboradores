@@ -79,7 +79,7 @@ export function ChatSidebar({
   })
 
   return (
-    <div className="w-64 border-r flex flex-col bg-muted/30">
+    <div className="w-full md:w-64 border-r flex flex-col bg-muted/30 h-full">
       {/* Busca */}
       <div className="p-2 border-b">
         <div className="relative">

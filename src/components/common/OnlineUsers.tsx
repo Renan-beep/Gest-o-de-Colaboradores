@@ -115,8 +115,8 @@ export function OnlineUsers() {
   return (
     <div 
       className={cn(
-        "fixed bottom-4 right-4 z-50 transition-all duration-300",
-        isExpanded ? "w-64" : "w-auto"
+        "fixed bottom-3 right-3 md:bottom-4 md:right-4 z-50 transition-all duration-300",
+        isExpanded ? "w-56 md:w-64" : "w-auto"
       )}
     >
       <div 
@@ -128,11 +128,11 @@ export function OnlineUsers() {
         {/* Header - sempre visível */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center gap-2 p-3 hover:bg-muted/50 transition-colors"
+          className="w-full flex items-center gap-2 p-2 md:p-3 hover:bg-muted/50 transition-colors"
         >
           <div className="relative">
-            <Users className="w-5 h-5 text-primary" />
-            <Circle className="w-2.5 h-2.5 fill-green-500 text-green-500 absolute -top-0.5 -right-0.5" />
+            <Users className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+            <Circle className="w-2 h-2 md:w-2.5 md:h-2.5 fill-green-500 text-green-500 absolute -top-0.5 -right-0.5" />
           </div>
           
           {!isExpanded ? (

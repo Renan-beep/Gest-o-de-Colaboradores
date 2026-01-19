@@ -154,7 +154,7 @@ export default function Auth() {
         </div>
       </div>;
   }
-  return <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+  return <div className="min-h-screen flex items-center justify-center p-3 md:p-4 relative overflow-hidden">
       {/* Background with gradient and animated elements */}
       <div className="absolute inset-0 bg-gradient-surface">
         <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-primary rounded-full mix-blend-multiply filter blur-xl opacity-20 floating"></div>
