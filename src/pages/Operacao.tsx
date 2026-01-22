@@ -100,19 +100,14 @@ const ForkliftIcon = ({ className }: { className?: string }) => (
 // Componente do nome do colaborador
 const ColaboradorBadge = ({ 
   colaborador,
-  setorNome,
 }: { 
   colaborador: ColaboradorComStatus;
-  setorNome: string;
 }) => {
   const primeiroNome = colaborador.colaborador.split(' ')[0];
   const badgeClass = getStatusStyle(colaborador.statusChamada);
   const statusAbrev = !colaborador.presente && colaborador.statusChamada 
     ? formatStatus(colaborador.statusChamada).substring(0, 3).toUpperCase()
     : null;
-  
-  const isEmpilhadeira = setorNome.toLowerCase().includes('empilhadeira') || 
-                          colaborador.cargo?.toLowerCase().includes('empilhadeira');
 
   return (
     <Tooltip>
@@ -120,9 +115,6 @@ const ColaboradorBadge = ({
         <span 
           className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border cursor-pointer transition-all hover:scale-105 hover:shadow-sm ${badgeClass}`}
         >
-          {isEmpilhadeira && (
-            <ForkliftIcon className="w-3 h-3 shrink-0" />
-          )}
           {primeiroNome}
           {statusAbrev && (
             <span className="font-bold text-[10px] opacity-90">
@@ -149,6 +141,7 @@ const ColaboradorBadge = ({
 const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) => {
   const ratio = setor.totalColaboradores / maxTotal;
   const presencaRatio = setor.totalPresentes / setor.totalColaboradores;
+  const isEmpilhadeira = setor.nome.toLowerCase().includes('empilhadeira');
   
   let sizeClass = "col-span-1 row-span-1";
   let minHeight = "180px";
@@ -184,7 +177,10 @@ const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) 
     >
       <CardHeader className="pb-1 pt-3 px-3">
         <CardTitle className="text-sm font-semibold flex items-center justify-between">
-          <span className="truncate">{setor.nome}</span>
+          <span className="flex items-center gap-1.5 truncate">
+            {isEmpilhadeira && <ForkliftIcon className="w-4 h-4 shrink-0" />}
+            {setor.nome}
+          </span>
           <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${
             presencaRatio >= 0.8 
               ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
@@ -203,7 +199,6 @@ const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) 
             <ColaboradorBadge 
               key={colab.id} 
               colaborador={colab}
-              setorNome={setor.nome}
             />
           ))}
         </div>
