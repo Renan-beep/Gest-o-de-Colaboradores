@@ -77,17 +77,42 @@ const getStatusStyle = (status: string | null): string => {
   }
 };
 
+// Ícone de empilhadeira SVG
+const ForkliftIcon = ({ className }: { className?: string }) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M5 17h2a2 2 0 0 0 2-2V5H5v12z" />
+    <path d="M2 17h1" />
+    <path d="M9 17h6" />
+    <path d="M19 17h3v-6l-3-4h-4v10" />
+    <circle cx="7" cy="17" r="2" />
+    <circle cx="17" cy="17" r="2" />
+  </svg>
+);
+
 // Componente do nome do colaborador
 const ColaboradorBadge = ({ 
-  colaborador, 
+  colaborador,
+  setorNome,
 }: { 
-  colaborador: ColaboradorComStatus; 
+  colaborador: ColaboradorComStatus;
+  setorNome: string;
 }) => {
   const primeiroNome = colaborador.colaborador.split(' ')[0];
   const badgeClass = getStatusStyle(colaborador.statusChamada);
   const statusAbrev = !colaborador.presente && colaborador.statusChamada 
     ? formatStatus(colaborador.statusChamada).substring(0, 3).toUpperCase()
     : null;
+  
+  const isEmpilhadeira = setorNome.toLowerCase().includes('empilhadeira') || 
+                          colaborador.cargo?.toLowerCase().includes('empilhadeira');
 
   return (
     <Tooltip>
@@ -95,6 +120,9 @@ const ColaboradorBadge = ({
         <span 
           className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border cursor-pointer transition-all hover:scale-105 hover:shadow-sm ${badgeClass}`}
         >
+          {isEmpilhadeira && (
+            <ForkliftIcon className="w-3 h-3 shrink-0" />
+          )}
           {primeiroNome}
           {statusAbrev && (
             <span className="font-bold text-[10px] opacity-90">
@@ -174,7 +202,8 @@ const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) 
           {setor.colaboradores.map((colab) => (
             <ColaboradorBadge 
               key={colab.id} 
-              colaborador={colab} 
+              colaborador={colab}
+              setorNome={setor.nome}
             />
           ))}
         </div>
