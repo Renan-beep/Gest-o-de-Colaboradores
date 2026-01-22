@@ -519,12 +519,50 @@ const SolicitacaoMovimentacao = () => {
     });
   }, [solicitacoes, selectedDate, selectedEncarregado]);
 
-  // Paginação
-  const totalPages = Math.ceil(solicitacoesFiltradas.length / ITEMS_PER_PAGE);
-  const solicitacoesPaginadas = useMemo(() => {
+  // Agrupar solicitações por colaborador e data
+  interface SolicitacaoAgrupada {
+    colaborador_id: string;
+    colaborador_nome: string;
+    colaborador_matricula: string;
+    data: string;
+    solicitante_nome: string;
+    solicitante_id: string;
+    solicitacoes: SolicitacaoAlteracao[];
+  }
+
+  const solicitacoesAgrupadas = useMemo(() => {
+    const grupos: Record<string, SolicitacaoAgrupada> = {};
+    
+    solicitacoesFiltradas.forEach(solicitacao => {
+      const dataStr = new Date(solicitacao.created_at).toISOString().split('T')[0];
+      const chave = `${solicitacao.colaborador_id}-${dataStr}`;
+      
+      if (!grupos[chave]) {
+        grupos[chave] = {
+          colaborador_id: solicitacao.colaborador_id,
+          colaborador_nome: solicitacao.colaborador?.colaborador || '',
+          colaborador_matricula: solicitacao.colaborador?.matricula || '',
+          data: solicitacao.created_at,
+          solicitante_nome: solicitacao.solicitante_nome || 'Não identificado',
+          solicitante_id: solicitacao.solicitante_id,
+          solicitacoes: []
+        };
+      }
+      
+      grupos[chave].solicitacoes.push(solicitacao);
+    });
+    
+    return Object.values(grupos).sort((a, b) => 
+      new Date(b.data).getTime() - new Date(a.data).getTime()
+    );
+  }, [solicitacoesFiltradas]);
+
+  // Paginação baseada nos grupos
+  const totalPages = Math.ceil(solicitacoesAgrupadas.length / ITEMS_PER_PAGE);
+  const gruposPaginados = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return solicitacoesFiltradas.slice(start, start + ITEMS_PER_PAGE);
-  }, [solicitacoesFiltradas, currentPage]);
+    return solicitacoesAgrupadas.slice(start, start + ITEMS_PER_PAGE);
+  }, [solicitacoesAgrupadas, currentPage]);
 
   // Reset da página quando filtros mudam
   useEffect(() => {
@@ -906,106 +944,132 @@ const SolicitacaoMovimentacao = () => {
       </div>
 
       <div className="grid gap-4">
-        {solicitacoesPaginadas.map((solicitacao) => {
-          // Extrair informações da justificativa
-          const justificativa = solicitacao.justificativa || '';
-          const campoMatch = justificativa.match(/Campo: (.+)/);
-          const valorAtualMatch = justificativa.match(/Valor Atual: (.+)/);
-          const novoValorMatch = justificativa.match(/Novo Valor: (.+)/);
+        {gruposPaginados.map((grupo) => {
+          const todasPendentes = grupo.solicitacoes.every(s => s.status === 'pendente');
+          const todasAprovadas = grupo.solicitacoes.every(s => s.status === 'aprovada');
+          const todasRejeitadas = grupo.solicitacoes.every(s => s.status === 'rejeitada');
           
-          const campo = campoMatch ? campoMatch[1] : '';
-          const valorAtual = valorAtualMatch ? valorAtualMatch[1] : '';
-          const novoValor = novoValorMatch ? novoValorMatch[1] : '';
-          const justificativaLimpa = justificativa.split('\n\nCampo:')[0];
+          const statusGeral = todasAprovadas ? 'aprovada' : todasRejeitadas ? 'rejeitada' : todasPendentes ? 'pendente' : 'misto';
 
           return (
-            <Card key={solicitacao.id}>
+            <Card key={`${grupo.colaborador_id}-${grupo.data}`}>
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Edit3 className="h-5 w-5" />
-                      {solicitacao.colaborador?.colaborador}
+                      {grupo.colaborador_nome}
+                      {grupo.solicitacoes.length > 1 && (
+                        <Badge variant="secondary" className="ml-2">
+                          {grupo.solicitacoes.length} alterações
+                        </Badge>
+                      )}
                     </CardTitle>
                      <CardDescription>
-                       Matrícula: {solicitacao.colaborador?.matricula} • 
-                       Criado em: {new Date(solicitacao.created_at).toLocaleDateString('pt-BR')} •
-                       Solicitante: {solicitacao.solicitante_nome}
+                       Matrícula: {grupo.colaborador_matricula} • 
+                       Criado em: {new Date(grupo.data).toLocaleDateString('pt-BR')} •
+                       Solicitante: {grupo.solicitante_nome}
                      </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
-                    {getStatusIcon(solicitacao.status)}
-                    <Badge className={getStatusColor(solicitacao.status)}>
-                      {solicitacao.status}
-                    </Badge>
+                    {statusGeral === 'misto' ? (
+                      <>
+                        <Clock className="h-4 w-4 text-warning" />
+                        <Badge className="bg-muted text-muted-foreground">misto</Badge>
+                      </>
+                    ) : (
+                      <>
+                        {getStatusIcon(statusGeral)}
+                        <Badge className={getStatusColor(statusGeral)}>
+                          {statusGeral}
+                        </Badge>
+                      </>
+                    )}
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {campo && (
-                  <div className="p-4 bg-muted/30 rounded-lg">
-                    <div className="text-sm font-medium mb-2">Alteração Solicitada:</div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-sm text-muted-foreground">Campo:</span>
-                        <p className="font-medium">{getCampoLabel(campo)}</p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div>
-                          <span className="text-sm text-muted-foreground">De:</span>
-                          <p className="font-medium">{valorAtual || 'Não definido'}</p>
+                {grupo.solicitacoes.map((solicitacao, idx) => {
+                  // Extrair informações da justificativa
+                  const justificativa = solicitacao.justificativa || '';
+                  const campoMatch = justificativa.match(/Campo: (.+)/);
+                  const valorAtualMatch = justificativa.match(/Valor Atual: (.+)/);
+                  const novoValorMatch = justificativa.match(/Novo Valor: (.+)/);
+                  
+                  const campo = campoMatch ? campoMatch[1] : '';
+                  const valorAtual = valorAtualMatch ? valorAtualMatch[1] : '';
+                  const novoValor = novoValorMatch ? novoValorMatch[1] : '';
+
+                  return (
+                    <div key={solicitacao.id} className={cn(
+                      "p-4 bg-muted/30 rounded-lg",
+                      idx > 0 && "border-t border-border/50"
+                    )}>
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          {grupo.solicitacoes.length > 1 && (
+                            <div className="flex items-center gap-1">
+                              {getStatusIcon(solicitacao.status)}
+                              <Badge variant="outline" className={cn("text-xs", getStatusColor(solicitacao.status))}>
+                                {solicitacao.status}
+                              </Badge>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-sm text-muted-foreground">Campo:</span>
+                            <p className="font-medium">{getCampoLabel(campo)}</p>
+                          </div>
                         </div>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <span className="text-sm text-muted-foreground">Para:</span>
-                          <p className="font-medium text-primary">{novoValor}</p>
+                        <div className="flex items-center gap-4">
+                          <div>
+                            <span className="text-sm text-muted-foreground">De:</span>
+                            <p className="font-medium">{valorAtual || 'Não definido'}</p>
+                          </div>
+                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                          <div>
+                            <span className="text-sm text-muted-foreground">Para:</span>
+                            <p className="font-medium text-primary">{novoValor}</p>
+                          </div>
                         </div>
+                        {isGerencia && solicitacao.status === 'pendente' && (
+                          <div className="flex space-x-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleStatusChange(solicitacao.id, 'aprovada')}
+                              className="bg-success hover:bg-success/90 text-success-foreground"
+                            >
+                              <CheckCircle className="mr-1 h-3 w-3" />
+                              Aprovar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                const observacao = prompt('Observação para rejeição (opcional):');
+                                handleStatusChange(solicitacao.id, 'rejeitada', observacao || undefined);
+                              }}
+                            >
+                              <XCircle className="mr-1 h-3 w-3" />
+                              Rejeitar
+                            </Button>
+                          </div>
+                        )}
                       </div>
+                      {solicitacao.observacoes_gerencia && (
+                        <div className="mt-2 pt-2 border-t border-border/30">
+                          <span className="text-xs font-medium text-muted-foreground">Observação:</span>
+                          <p className="text-sm text-muted-foreground">{solicitacao.observacoes_gerencia}</p>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
-                
-                <div>
-                  <span className="font-medium">Justificativa:</span>
-                  <p className="mt-1 text-sm text-muted-foreground">{justificativaLimpa}</p>
-                </div>
-
-                {solicitacao.observacoes_gerencia && (
-                  <div>
-                    <span className="font-medium">Observações da Gerência:</span>
-                    <p className="mt-1 text-sm text-muted-foreground">{solicitacao.observacoes_gerencia}</p>
-                  </div>
-                )}
-
-                {isGerencia && solicitacao.status === 'pendente' && (
-                  <div className="flex space-x-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handleStatusChange(solicitacao.id, 'aprovada')}
-                      className="bg-success hover:bg-success/90 text-success-foreground"
-                    >
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Aprovar e Aplicar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => {
-                        const observacao = prompt('Observação para rejeição (opcional):');
-                        handleStatusChange(solicitacao.id, 'rejeitada', observacao || undefined);
-                      }}
-                    >
-                      <XCircle className="mr-2 h-4 w-4" />
-                      Rejeitar
-                    </Button>
-                  </div>
-                )}
+                  );
+                })}
               </CardContent>
             </Card>
           );
         })}
 
-        {solicitacoesFiltradas.length === 0 && (
+        {solicitacoesAgrupadas.length === 0 && (
           <Card>
             <CardContent className="text-center py-8">
               <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
@@ -1025,7 +1089,7 @@ const SolicitacaoMovimentacao = () => {
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-4">
           <p className="text-sm text-muted-foreground">
-            Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, solicitacoesFiltradas.length)} de {solicitacoesFiltradas.length} solicitações
+            Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, solicitacoesAgrupadas.length)} de {solicitacoesAgrupadas.length} grupos
           </p>
           <div className="flex items-center gap-2">
             <Button
