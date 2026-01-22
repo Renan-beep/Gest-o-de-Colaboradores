@@ -24,28 +24,57 @@ interface Chamada {
   status: string;
 }
 
-interface SetorData {
-  nome: string;
-  colaboradores: Colaborador[];
-  total: number;
+interface ColaboradorComStatus extends Colaborador {
+  presente: boolean;
+  statusChamada: string | null;
 }
 
+interface SetorData {
+  nome: string;
+  colaboradores: ColaboradorComStatus[];
+  totalPresentes: number;
+  totalColaboradores: number;
+}
+
+
+// Formatar status para exibição
+const formatStatus = (status: string | null): string => {
+  if (!status) return "Sem registro";
+  const statusMap: Record<string, string> = {
+    'falta': 'Falta',
+    'ferias': 'Férias',
+    'atestado': 'Atestado',
+    'afastado': 'Afastado',
+    'folga': 'Folga',
+    'presente': 'Presente',
+  };
+  return statusMap[status.toLowerCase()] || status;
+};
 
 // Componente do nome do colaborador
 const ColaboradorBadge = ({ 
   colaborador, 
 }: { 
-  colaborador: Colaborador; 
+  colaborador: ColaboradorComStatus; 
 }) => {
   const primeiroNome = colaborador.colaborador.split(' ')[0];
+  
+  const badgeClass = colaborador.presente
+    ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700"
+    : "bg-muted/50 text-muted-foreground/70 border-border/50";
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span 
-          className="inline-block px-2 py-0.5 text-xs font-medium rounded-full border cursor-pointer transition-all hover:scale-105 hover:shadow-sm bg-muted text-muted-foreground border-border"
+          className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full border cursor-pointer transition-all hover:scale-105 hover:shadow-sm ${badgeClass}`}
         >
           {primeiroNome}
+          {!colaborador.presente && colaborador.statusChamada && (
+            <span className="ml-1 opacity-70">
+              ({formatStatus(colaborador.statusChamada).substring(0, 3)})
+            </span>
+          )}
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" className="bg-popover border border-border shadow-lg">
@@ -53,6 +82,9 @@ const ColaboradorBadge = ({
           <p className="font-semibold">{colaborador.colaborador}</p>
           <p className="text-muted-foreground text-xs">{colaborador.cargo}</p>
           <p className="text-muted-foreground text-xs">Mat: {colaborador.matricula}</p>
+          <p className={`text-xs mt-1 font-medium ${colaborador.presente ? 'text-green-600' : 'text-muted-foreground'}`}>
+            Status: {formatStatus(colaborador.statusChamada)}
+          </p>
         </div>
       </TooltipContent>
     </Tooltip>
@@ -61,7 +93,8 @@ const ColaboradorBadge = ({
 
 // Componente do quadro do setor
 const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) => {
-  const ratio = setor.total / maxTotal;
+  const ratio = setor.totalColaboradores / maxTotal;
+  const presencaRatio = setor.totalPresentes / setor.totalColaboradores;
   
   let sizeClass = "col-span-1 row-span-1";
   let minHeight = "180px";
@@ -98,9 +131,15 @@ const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) 
       <CardHeader className="pb-1 pt-3 px-3">
         <CardTitle className="text-sm font-semibold flex items-center justify-between">
           <span className="truncate">{setor.nome}</span>
-          <span className="bg-primary/20 text-primary px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+          <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${
+            presencaRatio >= 0.8 
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+              : presencaRatio >= 0.5 
+                ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+          }`}>
             <Users className="w-3 h-3" />
-            {setor.total}
+            {setor.totalPresentes}/{setor.totalColaboradores}
           </span>
         </CardTitle>
       </CardHeader>
@@ -195,43 +234,61 @@ export default function Operacao() {
     }
   };
 
-  // Filtrar apenas colaboradores presentes (status em minúsculo no banco)
-  const colaboradoresPresentes = useMemo(() => {
-    const presentesIds = new Set(
-      chamadas
-        .filter(c => c.status.toLowerCase() === 'presente')
-        .map(c => c.colaborador_id)
-    );
-    
-    return colaboradores.filter(c => presentesIds.has(c.id));
-  }, [colaboradores, chamadas]);
+  // Mapear status das chamadas por colaborador_id
+  const chamadasMap = useMemo(() => {
+    const map = new Map<string, string>();
+    chamadas.forEach(c => map.set(c.colaborador_id, c.status));
+    return map;
+  }, [chamadas]);
 
-  // Agrupar colaboradores presentes por setor
+  // Agrupar TODOS os colaboradores por setor com status
   const setoresData = useMemo<SetorData[]>(() => {
-    const setorMap = new Map<string, Colaborador[]>();
+    const setorMap = new Map<string, ColaboradorComStatus[]>();
     
-    colaboradoresPresentes.forEach(colab => {
+    colaboradores.forEach(colab => {
       if (colab.setor) {
+        const statusChamada = chamadasMap.get(colab.id) || null;
+        const presente = statusChamada?.toLowerCase() === 'presente';
+        
+        const colabComStatus: ColaboradorComStatus = {
+          ...colab,
+          presente,
+          statusChamada
+        };
+        
         const existing = setorMap.get(colab.setor) || [];
-        existing.push(colab);
+        existing.push(colabComStatus);
         setorMap.set(colab.setor, existing);
       }
     });
 
     return Array.from(setorMap.entries())
-      .map(([nome, colaboradores]) => ({
-        nome,
-        colaboradores,
-        total: colaboradores.length
-      }))
-      .sort((a, b) => b.total - a.total);
-  }, [colaboradoresPresentes]);
+      .map(([nome, colaboradores]) => {
+        // Ordenar: presentes primeiro, depois por nome
+        const sorted = colaboradores.sort((a, b) => {
+          if (a.presente && !b.presente) return -1;
+          if (!a.presente && b.presente) return 1;
+          return a.colaborador.localeCompare(b.colaborador);
+        });
+        
+        return {
+          nome,
+          colaboradores: sorted,
+          totalPresentes: colaboradores.filter(c => c.presente).length,
+          totalColaboradores: colaboradores.length
+        };
+      })
+      .sort((a, b) => b.totalColaboradores - a.totalColaboradores);
+  }, [colaboradores, chamadasMap]);
 
   const maxTotal = useMemo(() => {
-    return Math.max(...setoresData.map(s => s.total), 1);
+    return Math.max(...setoresData.map(s => s.totalColaboradores), 1);
   }, [setoresData]);
 
-  const totalPresentes = colaboradoresPresentes.length;
+  const totalPresentes = useMemo(() => {
+    return setoresData.reduce((acc, s) => acc + s.totalPresentes, 0);
+  }, [setoresData]);
+
   const totalAtivos = colaboradores.length;
 
   if (loading) {
@@ -292,35 +349,38 @@ export default function Operacao() {
       </div>
 
       {/* Legenda */}
-      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full border bg-muted text-muted-foreground border-border">
+          <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full border bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700">
             Nome
           </span>
-          <span>= 1 Colaborador presente</span>
+          <span>= Presente</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full border bg-muted/50 text-muted-foreground/70 border-border/50">
+            Nome (Sta)
+          </span>
+          <span>= Ausente</span>
         </div>
         <span className="text-border">|</span>
         <span>Passe o mouse para ver detalhes</span>
       </div>
 
-      {/* Mensagem se não houver presentes */}
-      {totalPresentes === 0 && (
+      {/* Mensagem se não houver colaboradores */}
+      {setoresData.length === 0 && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <AlertCircle className="w-12 h-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhum colaborador presente</h3>
+            <h3 className="text-lg font-semibold mb-2">Nenhum colaborador cadastrado</h3>
             <p className="text-muted-foreground max-w-md">
-              {isToday 
-                ? "Ainda não há registros de presença para hoje. Acesse o Controle de Presença para registrar."
-                : `Não há registros de presença para ${format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}.`
-              }
+              Não há colaboradores ativos com setor definido.
             </p>
           </CardContent>
         </Card>
       )}
 
       {/* Grid de Setores */}
-      {totalPresentes > 0 && (
+      {setoresData.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 auto-rows-min">
           {setoresData.map((setor) => (
             <SetorCard 
