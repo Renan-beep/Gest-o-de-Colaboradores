@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTurnover } from "@/hooks/useTurnover";
 import { Users, UserX, Clock, TrendingUp, Building2, Sparkles, UserPlus, UserCheck, BarChart3, ChevronRight } from "lucide-react";
 import { StatCard } from "@/components/stats/StatCard";
 import HistoricoDemissoes from "@/components/dashboard/HistoricoDemissoes";
@@ -31,10 +32,10 @@ const Index = () => {
   const [stats, setStats] = useState({
     totalColaboradores: 0,
     afastados: 0,
-    turnoverRate: 0,
     masculino: 0,
     feminino: 0
   });
+  const { turnoverData, loading: turnoverLoading } = useTurnover();
   const [indicators, setIndicators] = useState({
     porSetor: {} as Record<string, number>,
     porTurno: {} as Record<string, number>,
@@ -155,31 +156,6 @@ const Index = () => {
         }
       });
 
-      // Calcular turnover do ano atual (mesma fórmula do TurnoverIndicator)
-      const anoAtual = new Date().getFullYear();
-      const { data: demissoes, error: demissoesError } = await supabase
-        .from('demissoes')
-        .select('data_demissao')
-        .gte('data_demissao', `${anoAtual}-01-01`)
-        .lte('data_demissao', `${anoAtual}-12-31`);
-      
-      if (demissoesError) throw demissoesError;
-
-      const admissoesAno = colaboradores?.filter(c => {
-        if (!c.admissao) return false;
-        const ano = new Date(c.admissao + 'T12:00:00').getFullYear();
-        return ano === anoAtual;
-      }).length || 0;
-      
-      const demissoesAno = demissoes?.length || 0;
-      
-      // Base de colaboradores no início do ano = ativos atuais - admissões do ano + demissões do ano
-      const colaboradoresBaseInicio = totalColaboradores - admissoesAno + demissoesAno;
-      // Média de colaboradores = base início + (admissões / 2) - (demissões / 2)
-      const mediaColaboradores = colaboradoresBaseInicio + (admissoesAno / 2) - (demissoesAno / 2);
-      // Turnover = (Demissões / Média de colaboradores) * 100
-      const turnoverRate = mediaColaboradores > 0 ? ((demissoesAno / mediaColaboradores) * 100) : 0;
-
       // Calcular estatísticas de gênero
       const masculino = porSexo['Masculino'] || 0;
       const feminino = porSexo['Feminino'] || 0;
@@ -187,7 +163,6 @@ const Index = () => {
       setStats({
         totalColaboradores,
         afastados,
-        turnoverRate,
         masculino,
         feminino
       });
@@ -315,12 +290,12 @@ const Index = () => {
         />
         
         <StatCard 
-          title="Turnover Anual" 
-          value={loading ? '...' : `${stats.turnoverRate.toFixed(1)}%`} 
+          title="Turnover" 
+          value={(loading || turnoverLoading) ? '...' : `${turnoverData?.turnover ?? 0}%`} 
           subtitle={`Taxa de rotatividade ${new Date().getFullYear()}`}
           icon={TrendingUp} 
-          variant={stats.turnoverRate > 10 ? "error" : stats.turnoverRate > 5 ? "warning" : "success"} 
-          loading={loading} 
+          variant={(turnoverData?.turnover ?? 0) > 10 ? "error" : (turnoverData?.turnover ?? 0) > 5 ? "warning" : "success"} 
+          loading={loading || turnoverLoading} 
           className="animate-slide-in" 
         />
       </div>
