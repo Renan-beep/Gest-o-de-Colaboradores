@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { Save, UserPlus, Settings } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
@@ -33,7 +34,8 @@ export default function Cadastro() {
     sabado_horario: "",
     horario_almoco: "",
     horario_cafe: "",
-    admissao: ""
+    admissao: "",
+    rapdo: false
   })
 
   // Hook para filtros interdependentes baseados nos colaboradores existentes
@@ -60,7 +62,7 @@ export default function Cadastro() {
       setFormData(prev => {
         const newData = { ...prev }
         camposParaLimpar.forEach(campo => {
-          newData[campo as keyof typeof formData] = ""
+          (newData as Record<string, string | boolean>)[campo] = ""
         })
         return newData
       })
@@ -124,7 +126,8 @@ export default function Cadastro() {
             sabado_horario: formData.sabado_horario || null,
             horario_almoco: formData.horario_almoco || null,
             horario_cafe: formData.horario_cafe || null,
-            admissao: formData.admissao || null
+            admissao: formData.admissao || null,
+            rapdo: formData.rapdo
           }
         ])
 
@@ -157,7 +160,8 @@ export default function Cadastro() {
         sabado_horario: "",
         horario_almoco: "",
         horario_cafe: "",
-        admissao: ""
+        admissao: "",
+        rapdo: false
       })
     } catch (error) {
       toast({
@@ -287,6 +291,21 @@ export default function Cadastro() {
                     <SelectItem value="Afastado">Afastado</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* RAPDO */}
+              <div className="space-y-2">
+                <Label htmlFor="rapdo">RAPDO</Label>
+                <div className="flex items-center space-x-3 h-10">
+                  <Switch
+                    id="rapdo"
+                    checked={formData.rapdo}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, rapdo: checked }))}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {formData.rapdo ? "Ativado" : "Desativado"}
+                  </span>
+                </div>
               </div>
 
               {/* Setor - Campo principal */}
@@ -515,7 +534,8 @@ export default function Cadastro() {
                   sabado_horario: "",
                   horario_almoco: "",
                   horario_cafe: "",
-                  admissao: ""
+                  admissao: "",
+                  rapdo: false
                 })}
               >
                 Limpar Formulário

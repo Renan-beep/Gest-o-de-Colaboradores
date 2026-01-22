@@ -21,7 +21,8 @@ interface FormData {
   sabado_horario: string
   horario_almoco: string
   horario_cafe: string
-  [key: string]: string
+  rapdo?: boolean
+  [key: string]: string | boolean | undefined
 }
 
 const CAMPOS_INTERDEPENDENTES = [
