@@ -30,17 +30,6 @@ interface SetorData {
   total: number;
 }
 
-// Cores para os badges baseadas no seed
-const badgeColors = [
-  "bg-blue-100 text-blue-800 border-blue-200",
-  "bg-green-100 text-green-800 border-green-200",
-  "bg-purple-100 text-purple-800 border-purple-200",
-  "bg-amber-100 text-amber-800 border-amber-200",
-  "bg-rose-100 text-rose-800 border-rose-200",
-  "bg-pink-100 text-pink-800 border-pink-200",
-  "bg-cyan-100 text-cyan-800 border-cyan-200",
-  "bg-orange-100 text-orange-800 border-orange-200",
-];
 
 // Componente do nome do colaborador
 const ColaboradorBadge = ({ 
@@ -48,18 +37,13 @@ const ColaboradorBadge = ({
 }: { 
   colaborador: Colaborador; 
 }) => {
-  const seed = colaborador.id.charCodeAt(0) + colaborador.id.charCodeAt(1);
-  const colorIndex = seed % badgeColors.length;
-  const colorClass = badgeColors[colorIndex];
-  
-  // Pegar primeiro nome
   const primeiroNome = colaborador.colaborador.split(' ')[0];
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span 
-          className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full border cursor-pointer transition-all hover:scale-105 hover:shadow-sm ${colorClass}`}
+          className="inline-block px-2 py-0.5 text-xs font-medium rounded-full border cursor-pointer transition-all hover:scale-105 hover:shadow-sm bg-muted text-muted-foreground border-border"
         >
           {primeiroNome}
         </span>
@@ -310,7 +294,7 @@ export default function Operacao() {
       {/* Legenda */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full border bg-blue-100 text-blue-800 border-blue-200">
+          <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full border bg-muted text-muted-foreground border-border">
             Nome
           </span>
           <span>= 1 Colaborador presente</span>
