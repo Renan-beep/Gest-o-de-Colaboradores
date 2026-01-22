@@ -333,11 +333,5 @@ export default function Auth() {
         </CardContent>
       </Card>
       
-      {/* Botão temporário para alterar o Renan para gerente */}
-      <div className="fixed bottom-4 right-4">
-        <Button onClick={handleUpdateRenanRole} variant="outline" size="sm">
-          Alterar Renan para Gerente
-        </Button>
-      </div>
     </div>;
 }
