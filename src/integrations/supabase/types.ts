@@ -139,6 +139,42 @@ export type Database = {
         }
         Relationships: []
       }
+      configuracao_campos_cadastro: {
+        Row: {
+          ativo: boolean
+          campo_filho: string
+          campo_pai: string
+          created_at: string
+          criado_por: string | null
+          id: string
+          updated_at: string
+          valor_pai: string
+          valores_permitidos: string[]
+        }
+        Insert: {
+          ativo?: boolean
+          campo_filho: string
+          campo_pai: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          updated_at?: string
+          valor_pai: string
+          valores_permitidos: string[]
+        }
+        Update: {
+          ativo?: boolean
+          campo_filho?: string
+          campo_pai?: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          updated_at?: string
+          valor_pai?: string
+          valores_permitidos?: string[]
+        }
+        Relationships: []
+      }
       conversas: {
         Row: {
           created_at: string
