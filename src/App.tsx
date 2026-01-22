@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Cadastro from "./pages/Cadastro";
 import Chamada from "./pages/Chamada";
 import ChamadaSabado from "./pages/ChamadaSabado";
+import Operacao from "./pages/Operacao";
 import Indicadores from "./pages/Indicadores";
 import ConfiguracoesConta from "./pages/ConfiguracoesConta";
 
@@ -72,6 +73,13 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <ChamadaSabado />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/operacao" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Operacao />
                   </AppLayout>
                 </ProtectedRoute>
               } />
