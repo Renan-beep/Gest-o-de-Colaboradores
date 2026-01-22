@@ -14,9 +14,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 interface ConfiguracaoCamposModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onRulesChanged?: () => void
 }
 
-export function ConfiguracaoCamposModal({ open, onOpenChange }: ConfiguracaoCamposModalProps) {
+export function ConfiguracaoCamposModal({ open, onOpenChange, onRulesChanged }: ConfiguracaoCamposModalProps) {
   const { 
     configuracoes, 
     loading, 
@@ -60,12 +61,17 @@ export function ConfiguracaoCamposModal({ open, onOpenChange }: ConfiguracaoCamp
         campo_filho: "",
         valores_permitidos: []
       })
+      // Notifica o componente pai que as regras mudaram
+      onRulesChanged?.()
     }
     setSaving(false)
   }
 
   const handleExcluirRegra = async (id: string) => {
-    await excluirConfiguracao(id)
+    const success = await excluirConfiguracao(id)
+    if (success) {
+      onRulesChanged?.()
+    }
   }
 
   const toggleValorPermitido = (valor: string) => {

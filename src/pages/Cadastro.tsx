@@ -16,7 +16,7 @@ export default function Cadastro() {
   const { isAdmin, isGerencia } = useAuth()
   const [loading, setLoading] = useState(false)
   const [configModalOpen, setConfigModalOpen] = useState(false)
-  const { getValoresFiltrados, isCampoBloqueado, configuracoes } = useConfiguracaoCampos()
+  const { getValoresFiltrados, isCampoBloqueado, configuracoes, refetch: refetchConfiguracoes } = useConfiguracaoCampos()
   
   const [formData, setFormData] = useState({
     matricula: "",
@@ -207,7 +207,8 @@ export default function Cadastro() {
 
       <ConfiguracaoCamposModal 
         open={configModalOpen} 
-        onOpenChange={setConfigModalOpen} 
+        onOpenChange={setConfigModalOpen}
+        onRulesChanged={refetchConfiguracoes}
       />
 
       <Card className="shadow-card">
