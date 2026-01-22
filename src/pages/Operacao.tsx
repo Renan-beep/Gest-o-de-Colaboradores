@@ -236,11 +236,11 @@ export default function Operacao() {
     }
   };
 
-  // Filtrar apenas colaboradores presentes
+  // Filtrar apenas colaboradores presentes (status em minúsculo no banco)
   const colaboradoresPresentes = useMemo(() => {
     const presentesIds = new Set(
       chamadas
-        .filter(c => c.status === 'Presente')
+        .filter(c => c.status.toLowerCase() === 'presente')
         .map(c => c.colaborador_id)
     );
     
