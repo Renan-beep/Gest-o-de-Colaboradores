@@ -51,6 +51,29 @@ const formatStatus = (status: string | null): string => {
   return statusMap[status.toLowerCase()] || status;
 };
 
+// Cores por status
+const getStatusStyle = (status: string | null): string => {
+  if (!status) return "bg-gray-200 text-gray-600 border-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600";
+  
+  const statusLower = status.toLowerCase();
+  switch (statusLower) {
+    case 'presente':
+      return "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/40 dark:text-green-400 dark:border-green-700";
+    case 'falta':
+      return "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/40 dark:text-red-400 dark:border-red-700";
+    case 'atestado':
+      return "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/40 dark:text-blue-400 dark:border-blue-700";
+    case 'ferias':
+      return "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/40 dark:text-purple-400 dark:border-purple-700";
+    case 'afastado':
+      return "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/40 dark:text-orange-400 dark:border-orange-700";
+    case 'folga':
+      return "bg-cyan-100 text-cyan-700 border-cyan-300 dark:bg-cyan-900/40 dark:text-cyan-400 dark:border-cyan-700";
+    default:
+      return "bg-gray-200 text-gray-600 border-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600";
+  }
+};
+
 // Componente do nome do colaborador
 const ColaboradorBadge = ({ 
   colaborador, 
@@ -58,21 +81,21 @@ const ColaboradorBadge = ({
   colaborador: ColaboradorComStatus; 
 }) => {
   const primeiroNome = colaborador.colaborador.split(' ')[0];
-  
-  const badgeClass = colaborador.presente
-    ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700"
-    : "bg-muted/50 text-muted-foreground/70 border-border/50";
+  const badgeClass = getStatusStyle(colaborador.statusChamada);
+  const statusAbrev = !colaborador.presente && colaborador.statusChamada 
+    ? formatStatus(colaborador.statusChamada).substring(0, 3).toUpperCase()
+    : null;
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span 
-          className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full border cursor-pointer transition-all hover:scale-105 hover:shadow-sm ${badgeClass}`}
+          className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border cursor-pointer transition-all hover:scale-105 hover:shadow-sm ${badgeClass}`}
         >
           {primeiroNome}
-          {!colaborador.presente && colaborador.statusChamada && (
-            <span className="ml-1 opacity-70">
-              ({formatStatus(colaborador.statusChamada).substring(0, 3)})
+          {statusAbrev && (
+            <span className="font-bold text-[10px] opacity-90">
+              • {statusAbrev}
             </span>
           )}
         </span>
@@ -349,21 +372,36 @@ export default function Operacao() {
       </div>
 
       {/* Legenda */}
-      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full border bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700">
-            Nome
-          </span>
-          <span>= Presente</span>
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <span className="font-medium">Legenda:</span>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+          <span>Presente</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full border bg-muted/50 text-muted-foreground/70 border-border/50">
-            Nome (Sta)
-          </span>
-          <span>= Ausente</span>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span>
+          <span>Falta</span>
         </div>
-        <span className="text-border">|</span>
-        <span>Passe o mouse para ver detalhes</span>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-full bg-blue-500"></span>
+          <span>Atestado</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-full bg-purple-500"></span>
+          <span>Férias</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-full bg-orange-500"></span>
+          <span>Afastado</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-full bg-cyan-500"></span>
+          <span>Folga</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-full bg-gray-400"></span>
+          <span>Sem registro</span>
+        </div>
       </div>
 
       {/* Mensagem se não houver colaboradores */}
