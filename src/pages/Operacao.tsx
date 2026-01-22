@@ -39,27 +39,21 @@ const StickmanTopView = ({
   colaborador: Colaborador; 
   index: number;
 }) => {
-  // Calcular posição aleatória mas estável baseada no index
+  // Cor baseada no id para ser consistente
   const seed = colaborador.id.charCodeAt(0) + colaborador.id.charCodeAt(1);
-  const randomX = (seed % 75) + 12; // 12-87%
-  const randomY = ((seed * 7) % 65) + 18; // 18-83%
-  
-  // Cor baseada no seed
   const colorIndex = seed % personColors.length;
   const colors = personColors[colorIndex];
   
   // Variação na animação baseada no index
-  const animationDelay = (index * 0.2) % 4;
-  const animationDuration = 3 + (seed % 2);
+  const animationDelay = (index * 0.15) % 3;
+  const animationDuration = 2.5 + (seed % 1.5);
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <div
-          className="absolute cursor-pointer transition-all hover:scale-[1.8] hover:z-50 z-10"
+          className="cursor-pointer transition-all hover:scale-150 hover:z-50"
           style={{
-            left: `${randomX}%`,
-            top: `${randomY}%`,
             animation: `float ${animationDuration}s ease-in-out ${animationDelay}s infinite`,
           }}
         >
@@ -144,10 +138,10 @@ const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) 
 
   return (
     <Card 
-      className={`${sizeClass} relative overflow-hidden bg-gradient-to-br ${getBgGradient()} border-2 border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg group`}
+      className={`${sizeClass} flex flex-col overflow-hidden bg-gradient-to-br ${getBgGradient()} border-2 border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg group`}
       style={{ minHeight }}
     >
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-1 pt-3 px-3">
         <CardTitle className="text-sm font-semibold flex items-center justify-between">
           <span className="truncate">{setor.nome}</span>
           <span className="bg-primary/20 text-primary px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
@@ -156,9 +150,9 @@ const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) 
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="relative h-full pb-4">
-        {/* Área dos stickmen */}
-        <div className="relative w-full h-full min-h-[100px]">
+      <CardContent className="relative flex-1 pb-4 pt-0">
+        {/* Área dos stickmen - Grid organizado */}
+        <div className="flex flex-wrap gap-1 items-start content-start p-1">
           {setor.colaboradores.map((colab, index) => (
             <StickmanTopView 
               key={colab.id} 
