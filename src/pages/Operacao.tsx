@@ -19,52 +19,85 @@ interface SetorData {
   total: number;
 }
 
-// Componente do Stickman animado (vista de cima)
+// Cores para os bonequinhos baseadas no seed
+const personColors = [
+  { body: "#3B82F6", head: "#60A5FA" }, // Azul
+  { body: "#10B981", head: "#34D399" }, // Verde
+  { body: "#8B5CF6", head: "#A78BFA" }, // Roxo
+  { body: "#F59E0B", head: "#FBBF24" }, // Amarelo
+  { body: "#EF4444", head: "#F87171" }, // Vermelho
+  { body: "#EC4899", head: "#F472B6" }, // Rosa
+  { body: "#06B6D4", head: "#22D3EE" }, // Ciano
+  { body: "#F97316", head: "#FB923C" }, // Laranja
+];
+
+// Componente do Stickman animado (vista de cima) - Design moderno
 const StickmanTopView = ({ 
   colaborador, 
   index,
-  totalInSetor
 }: { 
   colaborador: Colaborador; 
   index: number;
-  totalInSetor: number;
 }) => {
   // Calcular posição aleatória mas estável baseada no index
   const seed = colaborador.id.charCodeAt(0) + colaborador.id.charCodeAt(1);
-  const randomX = (seed % 80) + 10; // 10-90%
-  const randomY = ((seed * 7) % 70) + 15; // 15-85%
+  const randomX = (seed % 75) + 12; // 12-87%
+  const randomY = ((seed * 7) % 65) + 18; // 18-83%
+  
+  // Cor baseada no seed
+  const colorIndex = seed % personColors.length;
+  const colors = personColors[colorIndex];
   
   // Variação na animação baseada no index
-  const animationDelay = (index * 0.3) % 3;
-  const animationDuration = 2 + (seed % 2);
+  const animationDelay = (index * 0.2) % 4;
+  const animationDuration = 3 + (seed % 2);
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <div
-          className="absolute cursor-pointer transition-transform hover:scale-150 z-10"
+          className="absolute cursor-pointer transition-all hover:scale-[1.8] hover:z-50 z-10"
           style={{
             left: `${randomX}%`,
             top: `${randomY}%`,
-            animation: `sway ${animationDuration}s ease-in-out ${animationDelay}s infinite`,
+            animation: `float ${animationDuration}s ease-in-out ${animationDelay}s infinite`,
           }}
         >
-          {/* Stickman vista de cima - cabeça + braços */}
-          <svg width="16" height="16" viewBox="0 0 24 24" className="drop-shadow-sm">
-            {/* Cabeça (círculo central) */}
-            <circle cx="12" cy="12" r="4" fill="hsl(var(--foreground))" />
-            {/* Braço esquerdo */}
-            <line x1="8" y1="12" x2="2" y2="8" stroke="hsl(var(--foreground))" strokeWidth="2" strokeLinecap="round" />
-            {/* Braço direito */}
-            <line x1="16" y1="12" x2="22" y2="8" stroke="hsl(var(--foreground))" strokeWidth="2" strokeLinecap="round" />
-            {/* Perna esquerda */}
-            <line x1="10" y1="15" x2="6" y2="22" stroke="hsl(var(--foreground))" strokeWidth="2" strokeLinecap="round" />
-            {/* Perna direita */}
-            <line x1="14" y1="15" x2="18" y2="22" stroke="hsl(var(--foreground))" strokeWidth="2" strokeLinecap="round" />
+          {/* Bonequinho estilo avatar/emoji moderno */}
+          <svg width="20" height="20" viewBox="0 0 32 32" className="drop-shadow-md">
+            {/* Sombra suave */}
+            <ellipse cx="16" cy="28" rx="6" ry="2" fill="rgba(0,0,0,0.15)" />
+            
+            {/* Corpo (formato de gota invertida) */}
+            <path 
+              d="M16 14 C10 14, 8 20, 8 24 C8 27, 11 28, 16 28 C21 28, 24 27, 24 24 C24 20, 22 14, 16 14Z" 
+              fill={colors.body}
+            />
+            
+            {/* Cabeça */}
+            <circle cx="16" cy="10" r="7" fill={colors.head} />
+            
+            {/* Rosto - olhos */}
+            <circle cx="13" cy="9" r="1.5" fill="white" />
+            <circle cx="19" cy="9" r="1.5" fill="white" />
+            <circle cx="13.5" cy="9.3" r="0.8" fill="#1e293b" />
+            <circle cx="19.5" cy="9.3" r="0.8" fill="#1e293b" />
+            
+            {/* Sorriso */}
+            <path 
+              d="M13 12.5 Q16 15, 19 12.5" 
+              fill="none" 
+              stroke="#1e293b" 
+              strokeWidth="1" 
+              strokeLinecap="round"
+            />
+            
+            {/* Brilho na cabeça */}
+            <circle cx="12" cy="7" r="1.5" fill="rgba(255,255,255,0.4)" />
           </svg>
         </div>
       </TooltipTrigger>
-      <TooltipContent side="top" className="bg-popover border border-border">
+      <TooltipContent side="top" className="bg-popover border border-border shadow-lg">
         <div className="text-sm">
           <p className="font-semibold">{colaborador.colaborador}</p>
           <p className="text-muted-foreground text-xs">{colaborador.cargo}</p>
@@ -131,7 +164,6 @@ const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) 
               key={colab.id} 
               colaborador={colab} 
               index={index}
-              totalInSetor={setor.total}
             />
           ))}
         </div>
@@ -242,12 +274,15 @@ export default function Operacao() {
       {/* Legenda */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" className="drop-shadow-sm">
-            <circle cx="12" cy="12" r="4" fill="hsl(var(--foreground))" />
-            <line x1="8" y1="12" x2="2" y2="8" stroke="hsl(var(--foreground))" strokeWidth="2" strokeLinecap="round" />
-            <line x1="16" y1="12" x2="22" y2="8" stroke="hsl(var(--foreground))" strokeWidth="2" strokeLinecap="round" />
-            <line x1="10" y1="15" x2="6" y2="22" stroke="hsl(var(--foreground))" strokeWidth="2" strokeLinecap="round" />
-            <line x1="14" y1="15" x2="18" y2="22" stroke="hsl(var(--foreground))" strokeWidth="2" strokeLinecap="round" />
+          <svg width="20" height="20" viewBox="0 0 32 32" className="drop-shadow-md">
+            <ellipse cx="16" cy="28" rx="6" ry="2" fill="rgba(0,0,0,0.15)" />
+            <path d="M16 14 C10 14, 8 20, 8 24 C8 27, 11 28, 16 28 C21 28, 24 27, 24 24 C24 20, 22 14, 16 14Z" fill="#3B82F6" />
+            <circle cx="16" cy="10" r="7" fill="#60A5FA" />
+            <circle cx="13" cy="9" r="1.5" fill="white" />
+            <circle cx="19" cy="9" r="1.5" fill="white" />
+            <circle cx="13.5" cy="9.3" r="0.8" fill="#1e293b" />
+            <circle cx="19.5" cy="9.3" r="0.8" fill="#1e293b" />
+            <path d="M13 12.5 Q16 15, 19 12.5" fill="none" stroke="#1e293b" strokeWidth="1" strokeLinecap="round" />
           </svg>
           <span>= 1 Colaborador</span>
         </div>
@@ -268,18 +303,12 @@ export default function Operacao() {
 
       {/* CSS para animação */}
       <style>{`
-        @keyframes sway {
+        @keyframes float {
           0%, 100% {
-            transform: translate(0, 0) rotate(0deg);
-          }
-          25% {
-            transform: translate(2px, 1px) rotate(2deg);
+            transform: translateY(0px);
           }
           50% {
-            transform: translate(0, 2px) rotate(0deg);
-          }
-          75% {
-            transform: translate(-2px, 1px) rotate(-2deg);
+            transform: translateY(-4px);
           }
         }
       `}</style>
