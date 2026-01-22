@@ -30,63 +30,39 @@ interface SetorData {
   total: number;
 }
 
-// Cores para os bonequinhos baseadas no seed
-const personColors = [
-  { body: "#3B82F6", head: "#60A5FA" }, // Azul
-  { body: "#10B981", head: "#34D399" }, // Verde
-  { body: "#8B5CF6", head: "#A78BFA" }, // Roxo
-  { body: "#F59E0B", head: "#FBBF24" }, // Amarelo
-  { body: "#EF4444", head: "#F87171" }, // Vermelho
-  { body: "#EC4899", head: "#F472B6" }, // Rosa
-  { body: "#06B6D4", head: "#22D3EE" }, // Ciano
-  { body: "#F97316", head: "#FB923C" }, // Laranja
+// Cores para os badges baseadas no seed
+const badgeColors = [
+  "bg-blue-100 text-blue-800 border-blue-200",
+  "bg-green-100 text-green-800 border-green-200",
+  "bg-purple-100 text-purple-800 border-purple-200",
+  "bg-amber-100 text-amber-800 border-amber-200",
+  "bg-rose-100 text-rose-800 border-rose-200",
+  "bg-pink-100 text-pink-800 border-pink-200",
+  "bg-cyan-100 text-cyan-800 border-cyan-200",
+  "bg-orange-100 text-orange-800 border-orange-200",
 ];
 
-// Componente do Stickman animado - Design moderno
-const StickmanTopView = ({ 
+// Componente do nome do colaborador
+const ColaboradorBadge = ({ 
   colaborador, 
-  index,
 }: { 
   colaborador: Colaborador; 
-  index: number;
 }) => {
   const seed = colaborador.id.charCodeAt(0) + colaborador.id.charCodeAt(1);
-  const colorIndex = seed % personColors.length;
-  const colors = personColors[colorIndex];
+  const colorIndex = seed % badgeColors.length;
+  const colorClass = badgeColors[colorIndex];
   
-  const animationDelay = (index * 0.15) % 3;
-  const animationDuration = 2.5 + (seed % 1.5);
+  // Pegar primeiro nome
+  const primeiroNome = colaborador.colaborador.split(' ')[0];
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div
-          className="cursor-pointer transition-all hover:scale-150 hover:z-50"
-          style={{
-            animation: `float ${animationDuration}s ease-in-out ${animationDelay}s infinite`,
-          }}
+        <span 
+          className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full border cursor-pointer transition-all hover:scale-105 hover:shadow-sm ${colorClass}`}
         >
-          <svg width="20" height="20" viewBox="0 0 32 32" className="drop-shadow-md">
-            <ellipse cx="16" cy="28" rx="6" ry="2" fill="rgba(0,0,0,0.15)" />
-            <path 
-              d="M16 14 C10 14, 8 20, 8 24 C8 27, 11 28, 16 28 C21 28, 24 27, 24 24 C24 20, 22 14, 16 14Z" 
-              fill={colors.body}
-            />
-            <circle cx="16" cy="10" r="7" fill={colors.head} />
-            <circle cx="13" cy="9" r="1.5" fill="white" />
-            <circle cx="19" cy="9" r="1.5" fill="white" />
-            <circle cx="13.5" cy="9.3" r="0.8" fill="#1e293b" />
-            <circle cx="19.5" cy="9.3" r="0.8" fill="#1e293b" />
-            <path 
-              d="M13 12.5 Q16 15, 19 12.5" 
-              fill="none" 
-              stroke="#1e293b" 
-              strokeWidth="1" 
-              strokeLinecap="round"
-            />
-            <circle cx="12" cy="7" r="1.5" fill="rgba(255,255,255,0.4)" />
-          </svg>
-        </div>
+          {primeiroNome}
+        </span>
       </TooltipTrigger>
       <TooltipContent side="top" className="bg-popover border border-border shadow-lg">
         <div className="text-sm">
@@ -145,12 +121,11 @@ const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) 
         </CardTitle>
       </CardHeader>
       <CardContent className="relative flex-1 pb-4 pt-0">
-        <div className="flex flex-wrap gap-1 items-start content-start p-1">
-          {setor.colaboradores.map((colab, index) => (
-            <StickmanTopView 
+        <div className="flex flex-wrap gap-1.5 items-start content-start p-2">
+          {setor.colaboradores.map((colab) => (
+            <ColaboradorBadge 
               key={colab.id} 
               colaborador={colab} 
-              index={index}
             />
           ))}
         </div>
@@ -335,16 +310,9 @@ export default function Operacao() {
       {/* Legenda */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          <svg width="20" height="20" viewBox="0 0 32 32" className="drop-shadow-md">
-            <ellipse cx="16" cy="28" rx="6" ry="2" fill="rgba(0,0,0,0.15)" />
-            <path d="M16 14 C10 14, 8 20, 8 24 C8 27, 11 28, 16 28 C21 28, 24 27, 24 24 C24 20, 22 14, 16 14Z" fill="#3B82F6" />
-            <circle cx="16" cy="10" r="7" fill="#60A5FA" />
-            <circle cx="13" cy="9" r="1.5" fill="white" />
-            <circle cx="19" cy="9" r="1.5" fill="white" />
-            <circle cx="13.5" cy="9.3" r="0.8" fill="#1e293b" />
-            <circle cx="19.5" cy="9.3" r="0.8" fill="#1e293b" />
-            <path d="M13 12.5 Q16 15, 19 12.5" fill="none" stroke="#1e293b" strokeWidth="1" strokeLinecap="round" />
-          </svg>
+          <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full border bg-blue-100 text-blue-800 border-blue-200">
+            Nome
+          </span>
           <span>= 1 Colaborador presente</span>
         </div>
         <span className="text-border">|</span>
@@ -380,17 +348,6 @@ export default function Operacao() {
         </div>
       )}
 
-      {/* CSS para animação */}
-      <style>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-4px);
-          }
-        }
-      `}</style>
     </div>
   );
 }
