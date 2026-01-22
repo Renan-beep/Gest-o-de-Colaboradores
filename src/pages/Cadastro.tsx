@@ -1,17 +1,23 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { Save, UserPlus } from "lucide-react"
+import { Save, UserPlus, Settings } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
+import { useConfiguracaoCampos, CAMPOS_CADASTRO } from "@/hooks/useConfiguracaoCampos"
+import { ConfiguracaoCamposModal } from "@/components/cadastro/ConfiguracaoCamposModal"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function Cadastro() {
   const { toast } = useToast()
+  const { isAdmin, isGerencia } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [configModalOpen, setConfigModalOpen] = useState(false)
+  const { getValoresFiltrados, isCampoBloqueado, configuracoes } = useConfiguracaoCampos()
+  
   const [formData, setFormData] = useState({
     matricula: "",
     colaborador: "",
@@ -28,6 +34,36 @@ export default function Cadastro() {
     horario_cafe: "",
     admissao: ""
   })
+
+  // Limpa campos filhos quando o campo pai muda
+  useEffect(() => {
+    const camposParaLimpar: string[] = []
+    
+    configuracoes.forEach(config => {
+      if (formData[config.campo_pai as keyof typeof formData] !== config.valor_pai) {
+        // Se o valor do campo pai não corresponde, verifica se o valor do campo filho é válido
+        const valoresPermitidos = getValoresFiltrados(config.campo_filho, formData)
+        const valorAtual = formData[config.campo_filho as keyof typeof formData]
+        
+        if (valorAtual && !valoresPermitidos.includes(valorAtual)) {
+          camposParaLimpar.push(config.campo_filho)
+        }
+      }
+    })
+    
+    if (camposParaLimpar.length > 0) {
+      setFormData(prev => {
+        const newData = { ...prev }
+        camposParaLimpar.forEach(campo => {
+          newData[campo as keyof typeof formData] = ""
+        })
+        return newData
+      })
+    }
+  }, [formData.setor, formData.turno, configuracoes])
+
+  // Verifica se usuário pode configurar (admin ou gerência)
+  const podeConfigurar = isAdmin || isGerencia
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -136,15 +172,43 @@ export default function Cadastro() {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  // Função helper para obter valores de um campo
+  const getOpcoesParaCampo = (campo: string): string[] => {
+    return getValoresFiltrados(campo, formData)
+  }
+
+  // Função helper para verificar se campo está bloqueado
+  const campoEstaBloqueado = (campo: string): boolean => {
+    return isCampoBloqueado(campo, formData)
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <UserPlus className="w-8 h-8 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Cadastro de Colaboradores</h1>
-          <p className="text-muted-foreground">Adicione novos colaboradores ao sistema</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <UserPlus className="w-8 h-8 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold">Cadastro de Colaboradores</h1>
+            <p className="text-muted-foreground">Adicione novos colaboradores ao sistema</p>
+          </div>
         </div>
+        
+        {podeConfigurar && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setConfigModalOpen(true)}
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Configurar Campos
+          </Button>
+        )}
       </div>
+
+      <ConfiguracaoCamposModal 
+        open={configModalOpen} 
+        onOpenChange={setConfigModalOpen} 
+      />
 
       <Card className="shadow-card">
         <CardHeader>
@@ -210,20 +274,18 @@ export default function Cadastro() {
               {/* Cargo */}
               <div className="space-y-2">
                 <Label htmlFor="cargo">Cargo *</Label>
-                <Select value={formData.cargo} onValueChange={(value) => handleChange("cargo", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o cargo" />
+                <Select 
+                  value={formData.cargo} 
+                  onValueChange={(value) => handleChange("cargo", value)}
+                  disabled={campoEstaBloqueado("cargo")}
+                >
+                  <SelectTrigger className={campoEstaBloqueado("cargo") ? "opacity-50" : ""}>
+                    <SelectValue placeholder={campoEstaBloqueado("cargo") ? "Selecione o campo pai primeiro" : "Selecione o cargo"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Analista de Logística Sr">Analista de Logística Sr</SelectItem>
-                    <SelectItem value="Assistente de Estoque Jr">Assistente de Estoque Jr</SelectItem>
-                    <SelectItem value="Assistente de Estoque Pl">Assistente de Estoque Pl</SelectItem>
-                    <SelectItem value="Coordenador de Logística">Coordenador de Logística</SelectItem>
-                    <SelectItem value="Encarregado de Estoque">Encarregado de Estoque</SelectItem>
-                    <SelectItem value="Operador de Empilhadeira Jr">Operador de Empilhadeira Jr</SelectItem>
-                    <SelectItem value="Operador de Empilhadeira Pl">Operador de Empilhadeira Pl</SelectItem>
-                    <SelectItem value="Repositor de Estoque">Repositor de Estoque</SelectItem>
-                    <SelectItem value="Supervisor de Estoque">Supervisor de Estoque</SelectItem>
+                    {getOpcoesParaCampo("cargo").map(valor => (
+                      <SelectItem key={valor} value={valor}>{valor}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -261,18 +323,18 @@ export default function Cadastro() {
               {/* Subsetor */}
               <div className="space-y-2">
                 <Label htmlFor="subsetor">Subsetor (opcional)</Label>
-                <Select value={formData.subsetor} onValueChange={(value) => handleChange("subsetor", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o subsetor" />
+                <Select 
+                  value={formData.subsetor} 
+                  onValueChange={(value) => handleChange("subsetor", value)}
+                  disabled={campoEstaBloqueado("subsetor")}
+                >
+                  <SelectTrigger className={campoEstaBloqueado("subsetor") ? "opacity-50" : ""}>
+                    <SelectValue placeholder={campoEstaBloqueado("subsetor") ? "Selecione o campo pai primeiro" : "Selecione o subsetor"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Estado">Estado</SelectItem>
-                    <SelectItem value="Gaiola/Retorno estoque">Gaiola/Retorno estoque</SelectItem>
-                    <SelectItem value="RAPDO">RAPDO</SelectItem>
-                    <SelectItem value="Ressuprimento">Ressuprimento</SelectItem>
-                    <SelectItem value="Transferências">Transferências</SelectItem>
-                    <SelectItem value="Transferências/Vendas">Transferências/Vendas</SelectItem>
-                    <SelectItem value="Transportadora">Transportadora</SelectItem>
+                    {getOpcoesParaCampo("subsetor").map(valor => (
+                      <SelectItem key={valor} value={valor}>{valor}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -280,19 +342,18 @@ export default function Cadastro() {
               {/* Liderança */}
               <div className="space-y-2">
                 <Label htmlFor="lideranca">Liderança *</Label>
-                <Select value={formData.lideranca} onValueChange={(value) => handleChange("lideranca", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a liderança" />
+                <Select 
+                  value={formData.lideranca} 
+                  onValueChange={(value) => handleChange("lideranca", value)}
+                  disabled={campoEstaBloqueado("lideranca")}
+                >
+                  <SelectTrigger className={campoEstaBloqueado("lideranca") ? "opacity-50" : ""}>
+                    <SelectValue placeholder={campoEstaBloqueado("lideranca") ? "Selecione o campo pai primeiro" : "Selecione a liderança"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Alexson de Moura Dettmann">Alexson de Moura Dettmann</SelectItem>
-                    <SelectItem value="Almir Ribeiro de Queiroz">Almir Ribeiro de Queiroz</SelectItem>
-                    <SelectItem value="Arivaldo Arlindo da Silva">Arivaldo Arlindo da Silva</SelectItem>
-                    <SelectItem value="Bruno Martins Euzebio">Bruno Martins Euzebio</SelectItem>
-                    <SelectItem value="Carlos Eduardo Cavalcantes da Silva">Carlos Eduardo Cavalcantes da Silva</SelectItem>
-                    <SelectItem value="Davisson da Costa Rebuli">Davisson da Costa Rebuli</SelectItem>
-                    <SelectItem value="Josimar Santos Silva">Josimar Santos Silva</SelectItem>
-                    <SelectItem value="Klaine Xavier da Silva Martins">Klaine Xavier da Silva Martins</SelectItem>
+                    {getOpcoesParaCampo("lideranca").map(valor => (
+                      <SelectItem key={valor} value={valor}>{valor}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -300,21 +361,18 @@ export default function Cadastro() {
               {/* Turno */}
               <div className="space-y-2">
                 <Label htmlFor="turno">Turno *</Label>
-                <Select value={formData.turno} onValueChange={(value) => handleChange("turno", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o turno" />
+                <Select 
+                  value={formData.turno} 
+                  onValueChange={(value) => handleChange("turno", value)}
+                  disabled={campoEstaBloqueado("turno")}
+                >
+                  <SelectTrigger className={campoEstaBloqueado("turno") ? "opacity-50" : ""}>
+                    <SelectValue placeholder={campoEstaBloqueado("turno") ? "Selecione o campo pai primeiro" : "Selecione o turno"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="06:00 - 15:15">06:00 - 15:15</SelectItem>
-                    <SelectItem value="06:00 - 16:03">06:00 - 16:03</SelectItem>
-                    <SelectItem value="07:00 - 17:03">07:00 - 17:03</SelectItem>
-                    <SelectItem value="08:00 - 17:15">08:00 - 17:15</SelectItem>
-                    <SelectItem value="08:00 - 18:03">08:00 - 18:03</SelectItem>
-                    <SelectItem value="10:00 - 20:03">10:00 - 20:03</SelectItem>
-                    <SelectItem value="10:45 - 20:03">10:45 - 20:03</SelectItem>
-                    <SelectItem value="12:00 - 22:03">12:00 - 22:03</SelectItem>
-                    <SelectItem value="12:45 - 22:00">12:45 - 22:00</SelectItem>
-                    <SelectItem value="22:00 - 06:52">22:00 - 06:52</SelectItem>
+                    {getOpcoesParaCampo("turno").map(valor => (
+                      <SelectItem key={valor} value={valor}>{valor}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -337,14 +395,18 @@ export default function Cadastro() {
               {formData.sabado_trabalho === "Sim" && (
                 <div className="space-y-2">
                   <Label htmlFor="sabado_horario">Sábado *</Label>
-                  <Select value={formData.sabado_horario} onValueChange={(value) => handleChange("sabado_horario", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o horário" />
+                  <Select 
+                    value={formData.sabado_horario} 
+                    onValueChange={(value) => handleChange("sabado_horario", value)}
+                    disabled={campoEstaBloqueado("sabado_horario")}
+                  >
+                    <SelectTrigger className={campoEstaBloqueado("sabado_horario") ? "opacity-50" : ""}>
+                      <SelectValue placeholder={campoEstaBloqueado("sabado_horario") ? "Selecione o campo pai primeiro" : "Selecione o horário"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="08:00 - 12:00">08:00 - 12:00</SelectItem>
-                      <SelectItem value="10:00 - 14:00">10:00 - 14:00</SelectItem>
-                      <SelectItem value="12:00 - 16:00">12:00 - 16:00</SelectItem>
+                      {getOpcoesParaCampo("sabado_horario").map(valor => (
+                        <SelectItem key={valor} value={valor}>{valor}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -353,17 +415,18 @@ export default function Cadastro() {
               {/* Horário Almoço */}
               <div className="space-y-2">
                 <Label htmlFor="horario_almoco">Horário almoço *</Label>
-                <Select value={formData.horario_almoco} onValueChange={(value) => handleChange("horario_almoco", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o horário" />
+                <Select 
+                  value={formData.horario_almoco} 
+                  onValueChange={(value) => handleChange("horario_almoco", value)}
+                  disabled={campoEstaBloqueado("horario_almoco")}
+                >
+                  <SelectTrigger className={campoEstaBloqueado("horario_almoco") ? "opacity-50" : ""}>
+                    <SelectValue placeholder={campoEstaBloqueado("horario_almoco") ? "Selecione o campo pai primeiro" : "Selecione o horário"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="01:30 - 02:45">01:30 - 02:45</SelectItem>
-                    <SelectItem value="11:00 - 12:15">11:00 - 12:15</SelectItem>
-                    <SelectItem value="11:45 - 13:00">11:45 - 13:00</SelectItem>
-                    <SelectItem value="12:15 - 13:30">12:15 - 13:30</SelectItem>
-                    <SelectItem value="13:00 - 14:15">13:00 - 14:15</SelectItem>
-                    <SelectItem value="14:45 - 16:00">14:45 - 16:00</SelectItem>
+                    {getOpcoesParaCampo("horario_almoco").map(valor => (
+                      <SelectItem key={valor} value={valor}>{valor}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -371,17 +434,18 @@ export default function Cadastro() {
               {/* Horário Café */}
               <div className="space-y-2">
                 <Label htmlFor="horario_cafe">Horário café *</Label>
-                <Select value={formData.horario_cafe} onValueChange={(value) => handleChange("horario_cafe", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o horário" />
+                <Select 
+                  value={formData.horario_cafe} 
+                  onValueChange={(value) => handleChange("horario_cafe", value)}
+                  disabled={campoEstaBloqueado("horario_cafe")}
+                >
+                  <SelectTrigger className={campoEstaBloqueado("horario_cafe") ? "opacity-50" : ""}>
+                    <SelectValue placeholder={campoEstaBloqueado("horario_cafe") ? "Selecione o campo pai primeiro" : "Selecione o horário"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="05:00 - 05:10">05:00 - 05:10</SelectItem>
-                    <SelectItem value="15:00 - 15:10">15:00 - 15:10</SelectItem>
-                    <SelectItem value="15:15 - 15:25">15:15 - 15:25</SelectItem>
-                    <SelectItem value="15:30 - 15:40">15:30 - 15:40</SelectItem>
-                    <SelectItem value="17:00 - 17:10">17:00 - 17:10</SelectItem>
-                    <SelectItem value="19:00 - 19:10">19:00 - 19:10</SelectItem>
+                    {getOpcoesParaCampo("horario_cafe").map(valor => (
+                      <SelectItem key={valor} value={valor}>{valor}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
