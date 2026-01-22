@@ -2,8 +2,14 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Factory } from "lucide-react";
+import { Users, Factory, CalendarDays, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
 
 interface Colaborador {
   id: string;
@@ -11,6 +17,11 @@ interface Colaborador {
   setor: string;
   cargo: string;
   matricula: string;
+}
+
+interface Chamada {
+  colaborador_id: string;
+  status: string;
 }
 
 interface SetorData {
@@ -31,7 +42,7 @@ const personColors = [
   { body: "#F97316", head: "#FB923C" }, // Laranja
 ];
 
-// Componente do Stickman animado (vista de cima) - Design moderno
+// Componente do Stickman animado - Design moderno
 const StickmanTopView = ({ 
   colaborador, 
   index,
@@ -39,12 +50,10 @@ const StickmanTopView = ({
   colaborador: Colaborador; 
   index: number;
 }) => {
-  // Cor baseada no id para ser consistente
   const seed = colaborador.id.charCodeAt(0) + colaborador.id.charCodeAt(1);
   const colorIndex = seed % personColors.length;
   const colors = personColors[colorIndex];
   
-  // Variação na animação baseada no index
   const animationDelay = (index * 0.15) % 3;
   const animationDuration = 2.5 + (seed % 1.5);
 
@@ -57,27 +66,17 @@ const StickmanTopView = ({
             animation: `float ${animationDuration}s ease-in-out ${animationDelay}s infinite`,
           }}
         >
-          {/* Bonequinho estilo avatar/emoji moderno */}
           <svg width="20" height="20" viewBox="0 0 32 32" className="drop-shadow-md">
-            {/* Sombra suave */}
             <ellipse cx="16" cy="28" rx="6" ry="2" fill="rgba(0,0,0,0.15)" />
-            
-            {/* Corpo (formato de gota invertida) */}
             <path 
               d="M16 14 C10 14, 8 20, 8 24 C8 27, 11 28, 16 28 C21 28, 24 27, 24 24 C24 20, 22 14, 16 14Z" 
               fill={colors.body}
             />
-            
-            {/* Cabeça */}
             <circle cx="16" cy="10" r="7" fill={colors.head} />
-            
-            {/* Rosto - olhos */}
             <circle cx="13" cy="9" r="1.5" fill="white" />
             <circle cx="19" cy="9" r="1.5" fill="white" />
             <circle cx="13.5" cy="9.3" r="0.8" fill="#1e293b" />
             <circle cx="19.5" cy="9.3" r="0.8" fill="#1e293b" />
-            
-            {/* Sorriso */}
             <path 
               d="M13 12.5 Q16 15, 19 12.5" 
               fill="none" 
@@ -85,8 +84,6 @@ const StickmanTopView = ({
               strokeWidth="1" 
               strokeLinecap="round"
             />
-            
-            {/* Brilho na cabeça */}
             <circle cx="12" cy="7" r="1.5" fill="rgba(255,255,255,0.4)" />
           </svg>
         </div>
@@ -104,10 +101,8 @@ const StickmanTopView = ({
 
 // Componente do quadro do setor
 const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) => {
-  // Calcular tamanho relativo baseado na quantidade de colaboradores
   const ratio = setor.total / maxTotal;
   
-  // Definir classes de tamanho baseadas no ratio
   let sizeClass = "col-span-1 row-span-1";
   let minHeight = "180px";
   
@@ -128,7 +123,6 @@ const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) 
     minHeight = "160px";
   }
 
-  // Cores baseadas no tamanho do setor
   const getBgGradient = () => {
     if (ratio >= 0.7) return "from-primary/20 to-primary/5";
     if (ratio >= 0.4) return "from-accent/20 to-accent/5";
@@ -151,7 +145,6 @@ const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) 
         </CardTitle>
       </CardHeader>
       <CardContent className="relative flex-1 pb-4 pt-0">
-        {/* Área dos stickmen - Grid organizado */}
         <div className="flex flex-wrap gap-1 items-start content-start p-1">
           {setor.colaboradores.map((colab, index) => (
             <StickmanTopView 
@@ -163,7 +156,6 @@ const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) 
         </div>
       </CardContent>
       
-      {/* Efeito de hover */}
       <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
     </Card>
   );
@@ -171,13 +163,30 @@ const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) 
 
 export default function Operacao() {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
+  const [chamadas, setChamadas] = useState<Chamada[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+  const isToday = format(new Date(), 'yyyy-MM-dd') === formattedDate;
 
   useEffect(() => {
-    fetchColaboradores();
+    fetchData();
 
-    // Realtime subscription
-    const channel = supabase
+    // Realtime subscription para chamadas
+    const chamadasChannel = supabase
+      .channel('operacao-chamadas')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'chamadas'
+      }, () => {
+        fetchChamadas();
+      })
+      .subscribe();
+
+    // Realtime para colaboradores
+    const colaboradoresChannel = supabase
       .channel('operacao-colaboradores')
       .on('postgres_changes', {
         event: '*',
@@ -189,9 +198,20 @@ export default function Operacao() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(chamadasChannel);
+      supabase.removeChannel(colaboradoresChannel);
     };
   }, []);
+
+  useEffect(() => {
+    fetchChamadas();
+  }, [selectedDate]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    await Promise.all([fetchColaboradores(), fetchChamadas()]);
+    setLoading(false);
+  };
 
   const fetchColaboradores = async () => {
     const { data, error } = await supabase
@@ -203,14 +223,35 @@ export default function Operacao() {
     if (!error && data) {
       setColaboradores(data);
     }
-    setLoading(false);
   };
 
-  // Agrupar colaboradores por setor
+  const fetchChamadas = async () => {
+    const { data, error } = await supabase
+      .from('chamadas')
+      .select('colaborador_id, status')
+      .eq('data', formattedDate);
+
+    if (!error && data) {
+      setChamadas(data);
+    }
+  };
+
+  // Filtrar apenas colaboradores presentes
+  const colaboradoresPresentes = useMemo(() => {
+    const presentesIds = new Set(
+      chamadas
+        .filter(c => c.status === 'Presente')
+        .map(c => c.colaborador_id)
+    );
+    
+    return colaboradores.filter(c => presentesIds.has(c.id));
+  }, [colaboradores, chamadas]);
+
+  // Agrupar colaboradores presentes por setor
   const setoresData = useMemo<SetorData[]>(() => {
     const setorMap = new Map<string, Colaborador[]>();
     
-    colaboradores.forEach(colab => {
+    colaboradoresPresentes.forEach(colab => {
       if (colab.setor) {
         const existing = setorMap.get(colab.setor) || [];
         existing.push(colab);
@@ -225,15 +266,14 @@ export default function Operacao() {
         total: colaboradores.length
       }))
       .sort((a, b) => b.total - a.total);
-  }, [colaboradores]);
+  }, [colaboradoresPresentes]);
 
   const maxTotal = useMemo(() => {
     return Math.max(...setoresData.map(s => s.total), 1);
   }, [setoresData]);
 
-  const totalColaboradores = useMemo(() => {
-    return colaboradores.length;
-  }, [colaboradores]);
+  const totalPresentes = colaboradoresPresentes.length;
+  const totalAtivos = colaboradores.length;
 
   if (loading) {
     return (
@@ -246,21 +286,48 @@ export default function Operacao() {
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Factory className="w-8 h-8 text-primary" />
           <div>
             <h1 className="text-2xl font-bold">Mapa da Operação</h1>
             <p className="text-muted-foreground">
-              Visualização em tempo real dos colaboradores por setor
+              Colaboradores presentes por setor
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">
-          <Users className="w-5 h-5 text-primary" />
-          <div>
-            <p className="text-xs text-muted-foreground">Total na Operação</p>
-            <p className="text-xl font-bold text-primary">{totalColaboradores}</p>
+        
+        <div className="flex items-center gap-3">
+          {/* Seletor de Data */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <CalendarDays className="w-4 h-4" />
+                {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
+                {isToday && <Badge variant="secondary" className="ml-1 text-xs">Hoje</Badge>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                locale={ptBR}
+                disabled={(date) => date > new Date()}
+              />
+            </PopoverContent>
+          </Popover>
+
+          {/* Contador */}
+          <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">
+            <Users className="w-5 h-5 text-primary" />
+            <div>
+              <p className="text-xs text-muted-foreground">Presentes</p>
+              <p className="text-xl font-bold text-primary">
+                {totalPresentes}
+                <span className="text-sm font-normal text-muted-foreground">/{totalAtivos}</span>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -278,22 +345,40 @@ export default function Operacao() {
             <circle cx="19.5" cy="9.3" r="0.8" fill="#1e293b" />
             <path d="M13 12.5 Q16 15, 19 12.5" fill="none" stroke="#1e293b" strokeWidth="1" strokeLinecap="round" />
           </svg>
-          <span>= 1 Colaborador</span>
+          <span>= 1 Colaborador presente</span>
         </div>
         <span className="text-border">|</span>
-        <span>Passe o mouse sobre um colaborador para ver detalhes</span>
+        <span>Passe o mouse para ver detalhes</span>
       </div>
 
-      {/* Grid de Setores (Treemap-style) */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 auto-rows-min">
-        {setoresData.map((setor) => (
-          <SetorCard 
-            key={setor.nome} 
-            setor={setor} 
-            maxTotal={maxTotal}
-          />
-        ))}
-      </div>
+      {/* Mensagem se não houver presentes */}
+      {totalPresentes === 0 && (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <AlertCircle className="w-12 h-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhum colaborador presente</h3>
+            <p className="text-muted-foreground max-w-md">
+              {isToday 
+                ? "Ainda não há registros de presença para hoje. Acesse o Controle de Presença para registrar."
+                : `Não há registros de presença para ${format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}.`
+              }
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Grid de Setores */}
+      {totalPresentes > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 auto-rows-min">
+          {setoresData.map((setor) => (
+            <SetorCard 
+              key={setor.nome} 
+              setor={setor} 
+              maxTotal={maxTotal}
+            />
+          ))}
+        </div>
+      )}
 
       {/* CSS para animação */}
       <style>{`
