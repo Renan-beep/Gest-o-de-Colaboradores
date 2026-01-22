@@ -141,7 +141,6 @@ const ColaboradorBadge = ({
 const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) => {
   const ratio = setor.totalColaboradores / maxTotal;
   const presencaRatio = setor.totalPresentes / setor.totalColaboradores;
-  const isEmpilhadeira = setor.nome.toLowerCase().includes('empilhadeira');
   
   let sizeClass = "col-span-1 row-span-1";
   let minHeight = "180px";
@@ -177,10 +176,7 @@ const SetorCard = ({ setor, maxTotal }: { setor: SetorData; maxTotal: number }) 
     >
       <CardHeader className="pb-1 pt-3 px-3">
         <CardTitle className="text-sm font-semibold flex items-center justify-between">
-          <span className="flex items-center gap-1.5 truncate">
-            {isEmpilhadeira && <ForkliftIcon className="w-4 h-4 shrink-0" />}
-            {setor.nome}
-          </span>
+          <span className="truncate">{setor.nome}</span>
           <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${
             presencaRatio >= 0.8 
               ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
