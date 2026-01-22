@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -8,11 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, FileText, CheckCircle, XCircle, Clock, Edit3, ArrowRight, Search, Check } from 'lucide-react';
+import { Plus, FileText, CheckCircle, XCircle, Clock, Edit3, ArrowRight, Search, Check, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface Colaborador {
   id: string;
@@ -162,9 +165,12 @@ const SolicitacaoMovimentacao = () => {
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
   const [selectedSetor, setSelectedSetor] = useState('');
   const [comboboxOpen, setComboboxOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [selectedEncarregado, setSelectedEncarregado] = useState('');
   const [solicitantes, setSolicitantes] = useState<{id: string, nome: string}[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
 
   const [formData, setFormData] = useState({
     colaborador_id: '',
@@ -452,22 +458,22 @@ const SolicitacaoMovimentacao = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'aprovada':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'rejeitada':
-        return <XCircle className="h-4 w-4 text-red-600" />;
+        return <XCircle className="h-4 w-4 text-destructive" />;
       default:
-        return <Clock className="h-4 w-4 text-yellow-600" />;
+        return <Clock className="h-4 w-4 text-warning" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'aprovada':
-        return 'bg-green-100 text-green-800';
+        return 'bg-success/10 text-success';
       case 'rejeitada':
-        return 'bg-red-100 text-red-800';
+        return 'bg-destructive/10 text-destructive';
       default:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-warning/10 text-warning';
     }
   };
 
@@ -485,21 +491,45 @@ const SolicitacaoMovimentacao = () => {
   // Obter lista única de setores
   const setoresUnicos = [...new Set(colaboradores.map(c => c.setor).filter(Boolean))].sort();
 
-  // Obter datas únicas das solicitações
-  const datasUnicas = [...new Set(solicitacoes.map(s => 
-    new Date(s.created_at).toLocaleDateString('pt-BR')
-  ))].sort();
+  // Obter datas únicas das solicitações (para marcar no calendário)
+  const datasComSolicitacoes = useMemo(() => {
+    const datas = new Set<string>();
+    solicitacoes.forEach(s => {
+      const dateStr = new Date(s.created_at).toISOString().split('T')[0];
+      datas.add(dateStr);
+    });
+    return datas;
+  }, [solicitacoes]);
 
   // Filtrar solicitações baseado nos filtros
-  const solicitacoesFiltradas = solicitacoes.filter(solicitacao => {
-    const matchesDate = selectedDate === '' || selectedDate === 'todas' || 
-      new Date(solicitacao.created_at).toLocaleDateString('pt-BR') === selectedDate;
-    
-    const matchesEncarregado = selectedEncarregado === '' || selectedEncarregado === 'todos' || 
-      solicitacao.solicitante_id === selectedEncarregado;
-    
-    return matchesDate && matchesEncarregado;
-  });
+  const solicitacoesFiltradas = useMemo(() => {
+    return solicitacoes.filter(solicitacao => {
+      // Filtro por data
+      let matchesDate = true;
+      if (selectedDate) {
+        const solicitacaoDate = new Date(solicitacao.created_at).toISOString().split('T')[0];
+        const filterDate = selectedDate.toISOString().split('T')[0];
+        matchesDate = solicitacaoDate === filterDate;
+      }
+      
+      const matchesEncarregado = selectedEncarregado === '' || selectedEncarregado === 'todos' || 
+        solicitacao.solicitante_id === selectedEncarregado;
+      
+      return matchesDate && matchesEncarregado;
+    });
+  }, [solicitacoes, selectedDate, selectedEncarregado]);
+
+  // Paginação
+  const totalPages = Math.ceil(solicitacoesFiltradas.length / ITEMS_PER_PAGE);
+  const solicitacoesPaginadas = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return solicitacoesFiltradas.slice(start, start + ITEMS_PER_PAGE);
+  }, [solicitacoesFiltradas, currentPage]);
+
+  // Reset da página quando filtros mudam
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedDate, selectedEncarregado]);
 
   if (loading || authLoading) {
     return (
@@ -801,19 +831,60 @@ const SolicitacaoMovimentacao = () => {
       <div className="flex flex-wrap gap-4 p-4 bg-muted/30 rounded-lg">
         <div className="space-y-2 min-w-[200px]">
           <Label htmlFor="date-filter">Filtrar por Data</Label>
-          <Select value={selectedDate} onValueChange={setSelectedDate}>
-            <SelectTrigger>
-              <SelectValue placeholder="Todas as datas" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas as datas</SelectItem>
-              {datasUnicas.map((data) => (
-                <SelectItem key={data} value={data}>
-                  {data}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !selectedDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? format(selectedDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar data"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => {
+                  setSelectedDate(date);
+                  setCalendarOpen(false);
+                }}
+                locale={ptBR}
+                modifiers={{
+                  hasSolicitacao: (date) => {
+                    const dateStr = date.toISOString().split('T')[0];
+                    return datasComSolicitacoes.has(dateStr);
+                  }
+                }}
+                modifiersStyles={{
+                  hasSolicitacao: {
+                    fontWeight: 'bold',
+                    backgroundColor: 'hsl(var(--primary) / 0.15)',
+                    borderRadius: '50%'
+                  }
+                }}
+              />
+              <div className="p-2 border-t flex justify-between items-center">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-primary/15"></span>
+                  Dias com solicitações
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => {
+                    setSelectedDate(undefined);
+                    setCalendarOpen(false);
+                  }}
+                >
+                  Limpar
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-2 min-w-[200px]">
@@ -835,7 +906,7 @@ const SolicitacaoMovimentacao = () => {
       </div>
 
       <div className="grid gap-4">
-        {solicitacoesFiltradas.map((solicitacao) => {
+        {solicitacoesPaginadas.map((solicitacao) => {
           // Extrair informações da justificativa
           const justificativa = solicitacao.justificativa || '';
           const campoMatch = justificativa.match(/Campo: (.+)/);
@@ -911,7 +982,7 @@ const SolicitacaoMovimentacao = () => {
                     <Button
                       size="sm"
                       onClick={() => handleStatusChange(solicitacao.id, 'aprovada')}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-success hover:bg-success/90 text-success-foreground"
                     >
                       <CheckCircle className="mr-2 h-4 w-4" />
                       Aprovar e Aplicar
@@ -940,12 +1011,57 @@ const SolicitacaoMovimentacao = () => {
               <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">Nenhuma solicitação encontrada</h3>
               <p className="text-muted-foreground">
-                {!isGerencia ? 'Crie sua primeira solicitação de alteração.' : 'Aguardando novas solicitações.'}
+                {selectedDate 
+                  ? `Nenhuma solicitação para ${format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}. Clique no calendário para ver outros dias.`
+                  : (!isGerencia ? 'Crie sua primeira solicitação de alteração.' : 'Aguardando novas solicitações.')
+                }
               </p>
             </CardContent>
           </Card>
         )}
       </div>
+
+      {/* Paginação */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-4">
+          <p className="text-sm text-muted-foreground">
+            Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, solicitacoesFiltradas.length)} de {solicitacoesFiltradas.length} solicitações
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </Button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  className="w-8 h-8 p-0"
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Próximo
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
