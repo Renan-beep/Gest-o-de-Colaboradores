@@ -763,16 +763,6 @@ export default function ListaColaboradores() {
                   Limpar Filtros
                 </Button>
                 
-                <div className="flex items-center gap-2">
-                  <Checkbox 
-                    id="exportarComDemitidos"
-                    checked={exportarComDemitidos}
-                    onCheckedChange={(checked) => setExportarComDemitidos(checked === true)}
-                  />
-                  <Label htmlFor="exportarComDemitidos" className="text-sm cursor-pointer">
-                    Com demitidos
-                  </Label>
-                </div>
                 
                 <Button variant="default" onClick={exportarParaExcel}>
                   <Download className="w-4 h-4 mr-2" />
