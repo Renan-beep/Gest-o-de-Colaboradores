@@ -537,7 +537,7 @@ export default function ChamadaSabado() {
             ))}
           </div>
           
-          <div className="flex gap-4 pt-6 border-t">
+          <div className="flex gap-4 pt-4 border-t -mt-2">
             <Button 
               onClick={handleSavePrevisoes} 
               className="flex-1 sm:flex-none"
