@@ -388,6 +388,36 @@ export type Database = {
           },
         ]
       }
+      opcoes_campos_cadastro: {
+        Row: {
+          ativo: boolean
+          campo: string
+          created_at: string
+          id: string
+          ordem: number | null
+          updated_at: string
+          valor: string
+        }
+        Insert: {
+          ativo?: boolean
+          campo: string
+          created_at?: string
+          id?: string
+          ordem?: number | null
+          updated_at?: string
+          valor: string
+        }
+        Update: {
+          ativo?: boolean
+          campo?: string
+          created_at?: string
+          id?: string
+          ordem?: number | null
+          updated_at?: string
+          valor?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
