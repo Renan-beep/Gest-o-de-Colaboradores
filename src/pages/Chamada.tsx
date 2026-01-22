@@ -40,7 +40,10 @@ interface Colaborador {
   matricula: string
   colaborador: string
   setor: string
+  subsetor: string
   lideranca: string
+  turno: string
+  sexo: string
   sabado_trabalho: string
   status: string
   admissao: string | null
@@ -62,6 +65,9 @@ export default function Chamada() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [filterLideranca, setFilterLideranca] = useState<string[]>([])
+  const [filterTurno, setFilterTurno] = useState<string[]>([])
+  const [filterSexo, setFilterSexo] = useState<string[]>([])
+  const [filterSubsetor, setFilterSubsetor] = useState<string[]>([])
   const [datesWithPendencies, setDatesWithPendencies] = useState<string[]>([])
   const [loadingPendencies, setLoadingPendencies] = useState(false)
   const [primeiraDataChamada, setPrimeiraDataChamada] = useState<Date | null>(null)
@@ -215,7 +221,7 @@ export default function Chamada() {
     try {
       const { data, error } = await supabase
         .from('colaboradores')
-        .select('id, matricula, colaborador, setor, lideranca, sabado_trabalho, status, admissao')
+        .select('id, matricula, colaborador, setor, subsetor, lideranca, turno, sexo, sabado_trabalho, status, admissao')
         .order('colaborador')
 
       if (error) {
@@ -658,6 +664,21 @@ export default function Chamada() {
       })
     }
 
+    // Filtrar por turno
+    if (filterTurno.length > 0) {
+      filtered = filtered.filter(col => filterTurno.includes(col.turno))
+    }
+
+    // Filtrar por sexo
+    if (filterSexo.length > 0) {
+      filtered = filtered.filter(col => filterSexo.includes(col.sexo))
+    }
+
+    // Filtrar por subsetor
+    if (filterSubsetor.length > 0) {
+      filtered = filtered.filter(col => filterSubsetor.includes(col.subsetor))
+    }
+
     return filtered
   }
 
@@ -675,6 +696,8 @@ export default function Chamada() {
   const pendingColaboradores = getPendingColaboradores()
   const filteredColaboradores = getFilteredColaboradores()
   const liderancas = [...new Set(colaboradores.map(c => c.lideranca).filter(l => l && l.trim() !== ''))]
+  const turnos = [...new Set(colaboradores.map(c => c.turno).filter(t => t && t.trim() !== ''))]
+  const subsetores = [...new Set(colaboradores.map(c => c.subsetor).filter(s => s && s.trim() !== ''))]
 
   if (loading) {
     return (
@@ -820,7 +843,7 @@ export default function Chamada() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Selecione a Data</Label>
               <Popover>
@@ -901,6 +924,36 @@ export default function Chamada() {
                 selected={filterLideranca}
                 onChange={setFilterLideranca}
                 placeholder="Todas as lideranças"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Filtrar por Turno</Label>
+              <MultiSelect
+                options={turnos}
+                selected={filterTurno}
+                onChange={setFilterTurno}
+                placeholder="Todos os turnos"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Filtrar por Sexo</Label>
+              <MultiSelect
+                options={["Masculino", "Feminino"]}
+                selected={filterSexo}
+                onChange={setFilterSexo}
+                placeholder="Todos"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Filtrar por Subsetor</Label>
+              <MultiSelect
+                options={subsetores}
+                selected={filterSubsetor}
+                onChange={setFilterSubsetor}
+                placeholder="Todos os subsetores"
               />
             </div>
           </div>
