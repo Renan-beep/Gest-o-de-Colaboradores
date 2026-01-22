@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface Colaborador {
   id: string;
@@ -17,6 +19,7 @@ interface Colaborador {
   setor: string;
   cargo: string;
   matricula: string;
+  turno: string | null;
 }
 
 interface Chamada {
@@ -187,6 +190,8 @@ export default function Operacao() {
   const [chamadas, setChamadas] = useState<Chamada[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [semNoturno, setSemNoturno] = useState(false);
+  const [somentePresentes, setSomentePresentes] = useState(false);
 
   const formattedDate = format(selectedDate, 'yyyy-MM-dd');
   const isToday = format(new Date(), 'yyyy-MM-dd') === formattedDate;
@@ -237,7 +242,7 @@ export default function Operacao() {
   const fetchColaboradores = async () => {
     const { data, error } = await supabase
       .from('colaboradores')
-      .select('id, colaborador, setor, cargo, matricula')
+      .select('id, colaborador, setor, cargo, matricula, turno')
       .eq('status', 'Ativo')
       .order('setor');
 
@@ -264,14 +269,23 @@ export default function Operacao() {
     return map;
   }, [chamadas]);
 
-  // Agrupar TODOS os colaboradores por setor com status
+  // Filtrar colaboradores base (sem noturno se ativado)
+  const colaboradoresFiltrados = useMemo(() => {
+    if (!semNoturno) return colaboradores;
+    return colaboradores.filter(c => c.turno !== '22:00 - 06:52');
+  }, [colaboradores, semNoturno]);
+
+  // Agrupar colaboradores por setor com status
   const setoresData = useMemo<SetorData[]>(() => {
     const setorMap = new Map<string, ColaboradorComStatus[]>();
     
-    colaboradores.forEach(colab => {
+    colaboradoresFiltrados.forEach(colab => {
       if (colab.setor) {
         const statusChamada = chamadasMap.get(colab.id) || null;
         const presente = statusChamada?.toLowerCase() === 'presente';
+        
+        // Se "Somente Presentes" está ativado, só adiciona presentes
+        if (somentePresentes && !presente) return;
         
         const colabComStatus: ColaboradorComStatus = {
           ...colab,
@@ -294,15 +308,23 @@ export default function Operacao() {
           return a.colaborador.localeCompare(b.colaborador);
         });
         
+        // Para o total, consideramos todos os colaboradores do setor (filtrados por noturno se aplicável)
+        const todosDoSetor = colaboradoresFiltrados.filter(c => c.setor === nome);
+        const presentesDoSetor = todosDoSetor.filter(c => {
+          const status = chamadasMap.get(c.id);
+          return status?.toLowerCase() === 'presente';
+        });
+        
         return {
           nome,
           colaboradores: sorted,
-          totalPresentes: colaboradores.filter(c => c.presente).length,
-          totalColaboradores: colaboradores.length
+          totalPresentes: presentesDoSetor.length,
+          totalColaboradores: todosDoSetor.length
         };
       })
+      .filter(s => s.colaboradores.length > 0) // Remove setores vazios quando só presentes
       .sort((a, b) => b.totalColaboradores - a.totalColaboradores);
-  }, [colaboradores, chamadasMap]);
+  }, [colaboradoresFiltrados, chamadasMap, somentePresentes]);
 
   const maxTotal = useMemo(() => {
     return Math.max(...setoresData.map(s => s.totalColaboradores), 1);
@@ -312,7 +334,7 @@ export default function Operacao() {
     return setoresData.reduce((acc, s) => acc + s.totalPresentes, 0);
   }, [setoresData]);
 
-  const totalAtivos = colaboradores.length;
+  const totalAtivos = colaboradoresFiltrados.length;
 
   if (loading) {
     return (
@@ -368,6 +390,41 @@ export default function Operacao() {
               </p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Filtros Toggle */}
+      <div className="flex flex-wrap items-center gap-6 p-3 bg-muted/30 rounded-lg border border-border">
+        <div className="flex items-center gap-2">
+          <Switch
+            id="sem-noturno"
+            checked={semNoturno}
+            onCheckedChange={setSemNoturno}
+          />
+          <Label htmlFor="sem-noturno" className="text-sm cursor-pointer">
+            Sem o Noturno
+          </Label>
+          {semNoturno && (
+            <Badge variant="secondary" className="text-xs">
+              Excluindo 22:00 - 06:52
+            </Badge>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Switch
+            id="somente-presentes"
+            checked={somentePresentes}
+            onCheckedChange={setSomentePresentes}
+          />
+          <Label htmlFor="somente-presentes" className="text-sm cursor-pointer">
+            Somente os Presentes
+          </Label>
+          {somentePresentes && (
+            <Badge variant="secondary" className="text-xs">
+              Ocultando ausentes
+            </Badge>
+          )}
         </div>
       </div>
 
