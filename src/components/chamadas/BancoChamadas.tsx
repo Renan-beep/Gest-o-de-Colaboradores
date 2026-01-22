@@ -19,13 +19,15 @@ import {
   Coffee,
   Database,
   Filter,
-  RotateCcw
+  RotateCcw,
+  BarChart3
 } from "lucide-react"
 import { format, parseISO } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, Tooltip } from 'recharts'
 
 interface Colaborador {
   id: string
@@ -74,6 +76,7 @@ export function BancoChamadas() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterLideranca, setFilterLideranca] = useState("todos")
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  const [selectedStatus, setSelectedStatus] = useState("presente")
   
 
   useEffect(() => {
@@ -193,6 +196,34 @@ export function BancoChamadas() {
       total: acc.total + item.totais.total
     }), { presente: 0, folga: 0, falta: 0, atestado: 0, ferias: 0, vira_sabado: 0, total: 0 })
   }, [colaboradoresComChamadas])
+
+  // Dados do gráfico por status selecionado
+  const dadosGraficoStatus = useMemo(() => {
+    const statusKey = selectedStatus as keyof typeof colaboradoresComChamadas[0]['totais']
+    
+    return colaboradoresComChamadas
+      .filter(item => item.totais[statusKey] > 0)
+      .map(item => ({
+        nome: item.colaborador.colaborador.split(' ').slice(0, 2).join(' '),
+        nomeCompleto: item.colaborador.colaborador,
+        valor: item.totais[statusKey]
+      }))
+      .sort((a, b) => b.valor - a.valor)
+      .slice(0, 10)
+  }, [colaboradoresComChamadas, selectedStatus])
+
+  // Cor do gráfico baseada no status
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      presente: 'hsl(152, 69%, 40%)',
+      folga: 'hsl(217, 91%, 60%)',
+      falta: 'hsl(0, 72%, 51%)',
+      atestado: 'hsl(38, 92%, 50%)',
+      ferias: 'hsl(271, 81%, 56%)',
+      vira_sabado: 'hsl(187, 85%, 43%)'
+    }
+    return colors[status] || 'hsl(var(--primary))'
+  }
 
   const handleClearFilters = () => {
     setSearchTerm("")
@@ -408,6 +439,82 @@ export function BancoChamadas() {
               </TableBody>
             </Table>
           </ScrollArea>
+        </CardContent>
+      </Card>
+
+      {/* Gráfico por Status */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Top 10 Colaboradores por Status
+            </CardTitle>
+            <div className="flex flex-wrap gap-2">
+              {statusOptions.map(option => (
+                <Button
+                  key={option.value}
+                  variant={selectedStatus === option.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedStatus(option.value)}
+                  className={cn(
+                    "text-xs",
+                    selectedStatus === option.value && option.color
+                  )}
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {dadosGraficoStatus.length === 0 ? (
+            <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+              Nenhum colaborador com "{statusOptions.find(s => s.value === selectedStatus)?.label}" registrado
+            </div>
+          ) : (
+            <div className="h-[350px]">
+              <ResponsiveContainer key={`chart-${selectedStatus}`} width="100%" height="100%">
+                <BarChart 
+                  data={dadosGraficoStatus} 
+                  layout="vertical" 
+                  margin={{ top: 10, right: 50, bottom: 10, left: 100 }}
+                >
+                  <XAxis type="number" hide />
+                  <YAxis 
+                    type="category" 
+                    dataKey="nome" 
+                    width={90}
+                    tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload
+                        return (
+                          <div className="bg-popover border rounded-lg p-2 shadow-lg">
+                            <p className="font-medium text-sm">{data.nomeCompleto}</p>
+                            <p className="text-muted-foreground text-xs">
+                              {statusOptions.find(s => s.value === selectedStatus)?.label}: {data.valor}
+                            </p>
+                          </div>
+                        )
+                      }
+                      return null
+                    }}
+                  />
+                  <Bar dataKey="valor" radius={[0, 4, 4, 0]} fill={getStatusColor(selectedStatus)}>
+                    <LabelList 
+                      dataKey="valor" 
+                      position="right" 
+                      style={{ fontSize: '12px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }}
+                    />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
