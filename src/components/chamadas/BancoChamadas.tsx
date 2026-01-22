@@ -77,6 +77,8 @@ export function BancoChamadas() {
   const [filterLideranca, setFilterLideranca] = useState("todos")
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedStatus, setSelectedStatus] = useState("presente")
+  const [selectedYear, setSelectedYear] = useState<string>("todos")
+  const [selectedMonth, setSelectedMonth] = useState<string>("todos")
   
 
   useEffect(() => {
@@ -197,20 +199,67 @@ export function BancoChamadas() {
     }), { presente: 0, folga: 0, falta: 0, atestado: 0, ferias: 0, vira_sabado: 0, total: 0 })
   }, [colaboradoresComChamadas])
 
-  // Dados do gráfico por status selecionado
+  // Anos e meses disponíveis nas chamadas
+  const anosDisponiveis = useMemo(() => {
+    const anos = new Set<string>()
+    chamadas.forEach(c => {
+      const ano = c.data.split('-')[0]
+      anos.add(ano)
+    })
+    return Array.from(anos).sort((a, b) => b.localeCompare(a))
+  }, [chamadas])
+
+  const mesesDisponiveis = useMemo(() => {
+    if (selectedYear === "todos") return []
+    const meses = new Set<string>()
+    chamadas.forEach(c => {
+      const [ano, mes] = c.data.split('-')
+      if (ano === selectedYear) {
+        meses.add(mes)
+      }
+    })
+    return Array.from(meses).sort((a, b) => a.localeCompare(b))
+  }, [chamadas, selectedYear])
+
+  const getNomeMes = (mes: string) => {
+    const meses: Record<string, string> = {
+      '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
+      '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
+      '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
+    }
+    return meses[mes] || mes
+  }
+
+  // Dados do gráfico por status selecionado com filtro de ano/mês
   const dadosGraficoStatus = useMemo(() => {
-    const statusKey = selectedStatus as keyof typeof colaboradoresComChamadas[0]['totais']
+    // Filtrar chamadas por ano/mês
+    let chamadasFiltradas = chamadas
+    if (selectedYear !== "todos") {
+      chamadasFiltradas = chamadasFiltradas.filter(c => c.data.startsWith(selectedYear))
+      if (selectedMonth !== "todos") {
+        chamadasFiltradas = chamadasFiltradas.filter(c => c.data.split('-')[1] === selectedMonth)
+      }
+    }
+
+    // Calcular totais por colaborador com chamadas filtradas
+    const totaisPorColaborador = colaboradoresFiltrados.map(colaborador => {
+      const colabChamadas = chamadasFiltradas.filter(c => c.colaborador_id === colaborador.id)
+      return {
+        colaborador,
+        valor: colabChamadas.filter(c => c.status === selectedStatus).length
+      }
+    })
     
-    return colaboradoresComChamadas
-      .filter(item => item.totais[statusKey] > 0)
+    return totaisPorColaborador
+      .filter(item => item.valor > 0)
       .map(item => ({
         nome: item.colaborador.colaborador.split(' ').slice(0, 2).join(' '),
         nomeCompleto: item.colaborador.colaborador,
-        valor: item.totais[statusKey]
+        valor: item.valor
       }))
       .sort((a, b) => b.valor - a.valor)
       .slice(0, 10)
-  }, [colaboradoresComChamadas, selectedStatus])
+  }, [chamadas, colaboradoresFiltrados, selectedStatus, selectedYear, selectedMonth])
 
   // Cor do gráfico baseada no status
   const getStatusColor = (status: string) => {
@@ -444,7 +493,7 @@ export function BancoChamadas() {
 
       {/* Gráfico por Status */}
       <Card>
-        <CardHeader>
+        <CardHeader className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5" />
@@ -466,6 +515,61 @@ export function BancoChamadas() {
                 </Button>
               ))}
             </div>
+          </div>
+          
+          {/* Filtro por Ano e Mês */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm whitespace-nowrap">Ano:</Label>
+              <Select 
+                value={selectedYear} 
+                onValueChange={(value) => {
+                  setSelectedYear(value)
+                  setSelectedMonth("todos")
+                }}
+              >
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  {anosDisponiveis.map(ano => (
+                    <SelectItem key={ano} value={ano}>{ano}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {selectedYear !== "todos" && mesesDisponiveis.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Label className="text-sm whitespace-nowrap">Mês:</Label>
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos do Ano</SelectItem>
+                    {mesesDisponiveis.map(mes => (
+                      <SelectItem key={mes} value={mes}>{getNomeMes(mes)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
+            {(selectedYear !== "todos" || selectedMonth !== "todos") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedYear("todos")
+                  setSelectedMonth("todos")
+                }}
+              >
+                <RotateCcw className="w-3 h-3 mr-1" />
+                Limpar período
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
