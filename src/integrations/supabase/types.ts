@@ -90,6 +90,7 @@ export type Database = {
           id: string
           lideranca: string | null
           matricula: string
+          rapdo: boolean
           sabado_horario: string | null
           sabado_trabalho: string | null
           setor: string | null
@@ -109,6 +110,7 @@ export type Database = {
           id?: string
           lideranca?: string | null
           matricula: string
+          rapdo?: boolean
           sabado_horario?: string | null
           sabado_trabalho?: string | null
           setor?: string | null
@@ -128,6 +130,7 @@ export type Database = {
           id?: string
           lideranca?: string | null
           matricula?: string
+          rapdo?: boolean
           sabado_horario?: string | null
           sabado_trabalho?: string | null
           setor?: string | null
