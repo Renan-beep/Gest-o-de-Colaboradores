@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -224,6 +224,68 @@ export default function ListaColaboradores() {
       console.error('Erro ao buscar demitidos:', error);
     }
   };
+
+  // Opções de filtros dinâmicas baseadas nos outros filtros selecionados
+  const opcoesFiltrosDinamicos = useMemo(() => {
+    // Função helper para filtrar colaboradores baseado em todos os filtros EXCETO o filtro atual
+    const getColaboradoresFiltrados = (excluirFiltro: string) => {
+      let filtered = colaboradores;
+
+      if (excluirFiltro !== 'status' && filtros.status.length > 0) {
+        filtered = filtered.filter(c => filtros.status.includes(c.status));
+      }
+      if (excluirFiltro !== 'cargo' && filtros.cargo.length > 0) {
+        filtered = filtered.filter(c => filtros.cargo.includes(c.cargo));
+      }
+      if (excluirFiltro !== 'setor' && filtros.setor.length > 0) {
+        filtered = filtered.filter(c => filtros.setor.includes(c.setor));
+      }
+      if (excluirFiltro !== 'subsetor' && filtros.subsetor.length > 0) {
+        filtered = filtered.filter(c => filtros.subsetor.includes(c.subsetor));
+      }
+      if (excluirFiltro !== 'lideranca' && filtros.lideranca.length > 0) {
+        filtered = filtered.filter(c => filtros.lideranca.includes(c.lideranca));
+      }
+      if (excluirFiltro !== 'turno' && filtros.turno.length > 0) {
+        filtered = filtered.filter(c => filtros.turno.includes(c.turno));
+      }
+      if (excluirFiltro !== 'sabadoTrabalho' && filtros.sabadoTrabalho.length > 0) {
+        filtered = filtered.filter(c => filtros.sabadoTrabalho.includes(c.sabado_trabalho));
+      }
+      if (excluirFiltro !== 'horarioAlmoco' && filtros.horarioAlmoco.length > 0) {
+        filtered = filtered.filter(c => filtros.horarioAlmoco.includes(c.horario_almoco));
+      }
+      if (excluirFiltro !== 'horarioCafe' && filtros.horarioCafe.length > 0) {
+        filtered = filtered.filter(c => filtros.horarioCafe.includes(c.horario_cafe));
+      }
+      if (excluirFiltro !== 'sexo' && filtros.sexo.length > 0) {
+        filtered = filtered.filter(c => filtros.sexo.includes(c.sexo));
+      }
+
+      return filtered;
+    };
+
+    // Extrair opções únicas de cada campo baseado nos colaboradores filtrados
+    const cargosDisponiveis = [...new Set(getColaboradoresFiltrados('cargo').map(c => c.cargo).filter(c => c && c.trim() !== ''))].sort();
+    const setoresDisponiveis = [...new Set(getColaboradoresFiltrados('setor').map(c => c.setor).filter(s => s && s.trim() !== ''))].sort();
+    const subsetoresDisponiveis = [...new Set(getColaboradoresFiltrados('subsetor').map(c => c.subsetor).filter(s => s && s.trim() !== ''))].sort();
+    const liderancasDisponiveis = [...new Set(getColaboradoresFiltrados('lideranca').map(c => c.lideranca).filter(l => l && l.trim() !== ''))].sort();
+    const turnosDisponiveis = [...new Set(getColaboradoresFiltrados('turno').map(c => c.turno).filter(t => t && t.trim() !== ''))].sort();
+    const horariosAlmocoDisponiveis = [...new Set(getColaboradoresFiltrados('horarioAlmoco').map(c => c.horario_almoco).filter(h => h && h.trim() !== ''))].sort();
+    const horariosCafeDisponiveis = [...new Set(getColaboradoresFiltrados('horarioCafe').map(c => c.horario_cafe).filter(h => h && h.trim() !== ''))].sort();
+    const sexosDisponiveis = [...new Set(getColaboradoresFiltrados('sexo').map(c => c.sexo).filter(s => s && s.trim() !== ''))].sort();
+
+    return {
+      cargos: cargosDisponiveis,
+      setores: setoresDisponiveis,
+      subsetores: subsetoresDisponiveis,
+      liderancas: liderancasDisponiveis,
+      turnos: turnosDisponiveis,
+      horariosAlmoco: horariosAlmocoDisponiveis,
+      horariosCafe: horariosCafeDisponiveis,
+      sexos: sexosDisponiveis
+    };
+  }, [colaboradores, filtros]);
 
   const aplicarFiltros = () => {
     let filtered = colaboradores;
@@ -650,9 +712,9 @@ export default function ListaColaboradores() {
 
                 {/* Cargo */}
                 <div className="space-y-2">
-                  <Label>Cargo</Label>
+                  <Label>Cargo {opcoesFiltrosDinamicos.cargos.length < opcoesFiltros.cargos.length && <span className="text-xs text-muted-foreground">({opcoesFiltrosDinamicos.cargos.length})</span>}</Label>
                   <MultiSelect
-                    options={opcoesFiltros.cargos}
+                    options={opcoesFiltrosDinamicos.cargos}
                     selected={filtros.cargo}
                     onChange={(values) => setFiltros(prev => ({ ...prev, cargo: values }))}
                     placeholder="Todos os cargos"
@@ -661,9 +723,9 @@ export default function ListaColaboradores() {
 
                 {/* Setor */}
                 <div className="space-y-2">
-                  <Label>Setor</Label>
+                  <Label>Setor {opcoesFiltrosDinamicos.setores.length < opcoesFiltros.setores.length && <span className="text-xs text-muted-foreground">({opcoesFiltrosDinamicos.setores.length})</span>}</Label>
                   <MultiSelect
-                    options={opcoesFiltros.setores}
+                    options={opcoesFiltrosDinamicos.setores}
                     selected={filtros.setor}
                     onChange={(values) => setFiltros(prev => ({ ...prev, setor: values }))}
                     placeholder="Todos os setores"
@@ -672,9 +734,9 @@ export default function ListaColaboradores() {
 
                 {/* Subsetor */}
                 <div className="space-y-2">
-                  <Label>Subsetor</Label>
+                  <Label>Subsetor {opcoesFiltrosDinamicos.subsetores.length < opcoesFiltros.subsetores.length && <span className="text-xs text-muted-foreground">({opcoesFiltrosDinamicos.subsetores.length})</span>}</Label>
                   <MultiSelect
-                    options={opcoesFiltros.subsetores}
+                    options={opcoesFiltrosDinamicos.subsetores}
                     selected={filtros.subsetor}
                     onChange={(values) => setFiltros(prev => ({ ...prev, subsetor: values }))}
                     placeholder="Todos os subsetores"
@@ -683,9 +745,9 @@ export default function ListaColaboradores() {
 
                 {/* Liderança */}
                 <div className="space-y-2">
-                  <Label>Liderança</Label>
+                  <Label>Liderança {opcoesFiltrosDinamicos.liderancas.length < opcoesFiltros.liderancas.length && <span className="text-xs text-muted-foreground">({opcoesFiltrosDinamicos.liderancas.length})</span>}</Label>
                   <MultiSelect
-                    options={opcoesFiltros.liderancas}
+                    options={opcoesFiltrosDinamicos.liderancas}
                     selected={filtros.lideranca}
                     onChange={(values) => setFiltros(prev => ({ ...prev, lideranca: values }))}
                     placeholder="Todas as lideranças"
@@ -694,9 +756,9 @@ export default function ListaColaboradores() {
 
                 {/* Turno */}
                 <div className="space-y-2">
-                  <Label>Turno</Label>
+                  <Label>Turno {opcoesFiltrosDinamicos.turnos.length < opcoesFiltros.turnos.length && <span className="text-xs text-muted-foreground">({opcoesFiltrosDinamicos.turnos.length})</span>}</Label>
                   <MultiSelect
-                    options={opcoesFiltros.turnos}
+                    options={opcoesFiltrosDinamicos.turnos}
                     selected={filtros.turno}
                     onChange={(values) => setFiltros(prev => ({ ...prev, turno: values }))}
                     placeholder="Todos os turnos"
@@ -705,9 +767,9 @@ export default function ListaColaboradores() {
 
                 {/* Horário Almoço */}
                 <div className="space-y-2">
-                  <Label>Horário Almoço</Label>
+                  <Label>Horário Almoço {opcoesFiltrosDinamicos.horariosAlmoco.length < opcoesFiltros.horariosAlmoco.length && <span className="text-xs text-muted-foreground">({opcoesFiltrosDinamicos.horariosAlmoco.length})</span>}</Label>
                   <MultiSelect
-                    options={opcoesFiltros.horariosAlmoco}
+                    options={opcoesFiltrosDinamicos.horariosAlmoco}
                     selected={filtros.horarioAlmoco}
                     onChange={(values) => setFiltros(prev => ({ ...prev, horarioAlmoco: values }))}
                     placeholder="Todos os horários"
@@ -716,9 +778,9 @@ export default function ListaColaboradores() {
 
                 {/* Horário Café */}
                 <div className="space-y-2">
-                  <Label>Horário Café</Label>
+                  <Label>Horário Café {opcoesFiltrosDinamicos.horariosCafe.length < opcoesFiltros.horariosCafe.length && <span className="text-xs text-muted-foreground">({opcoesFiltrosDinamicos.horariosCafe.length})</span>}</Label>
                   <MultiSelect
-                    options={opcoesFiltros.horariosCafe}
+                    options={opcoesFiltrosDinamicos.horariosCafe}
                     selected={filtros.horarioCafe}
                     onChange={(values) => setFiltros(prev => ({ ...prev, horarioCafe: values }))}
                     placeholder="Todos os horários"
@@ -727,9 +789,9 @@ export default function ListaColaboradores() {
 
                 {/* Sexo */}
                 <div className="space-y-2">
-                  <Label>Sexo</Label>
+                  <Label>Sexo {opcoesFiltrosDinamicos.sexos.length < 2 && <span className="text-xs text-muted-foreground">({opcoesFiltrosDinamicos.sexos.length})</span>}</Label>
                   <MultiSelect
-                    options={["Masculino", "Feminino"]}
+                    options={opcoesFiltrosDinamicos.sexos.length > 0 ? opcoesFiltrosDinamicos.sexos : ["Masculino", "Feminino"]}
                     selected={filtros.sexo}
                     onChange={(values) => setFiltros(prev => ({ ...prev, sexo: values }))}
                     placeholder="Todos"
