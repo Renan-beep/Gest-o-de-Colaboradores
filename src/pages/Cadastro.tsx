@@ -32,11 +32,35 @@ export default function Cadastro() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Validação básica
-    if (!formData.matricula || !formData.colaborador) {
+    // Validação - todos os campos obrigatórios exceto subsetor
+    const camposObrigatorios = [
+      { campo: 'matricula', nome: 'Matrícula' },
+      { campo: 'colaborador', nome: 'Nome do Colaborador' },
+      { campo: 'sexo', nome: 'Sexo' },
+      { campo: 'status', nome: 'Status' },
+      { campo: 'cargo', nome: 'Cargo' },
+      { campo: 'setor', nome: 'Setor' },
+      { campo: 'lideranca', nome: 'Liderança' },
+      { campo: 'turno', nome: 'Turno' },
+      { campo: 'sabado_trabalho', nome: 'Sábado trabalho' },
+      { campo: 'horario_almoco', nome: 'Horário almoço' },
+      { campo: 'horario_cafe', nome: 'Horário café' },
+      { campo: 'admissao', nome: 'Admissão' },
+    ]
+
+    // Adiciona validação do horário de sábado se trabalha aos sábados
+    if (formData.sabado_trabalho === "Sim") {
+      camposObrigatorios.push({ campo: 'sabado_horario', nome: 'Horário de sábado' })
+    }
+
+    const camposFaltando = camposObrigatorios.filter(
+      ({ campo }) => !formData[campo as keyof typeof formData]
+    )
+
+    if (camposFaltando.length > 0) {
       toast({
         title: "Erro",
-        description: "Matrícula e nome do colaborador são obrigatórios",
+        description: `Preencha os campos obrigatórios: ${camposFaltando.map(c => c.nome).join(', ')}`,
         variant: "destructive"
       })
       return
@@ -157,7 +181,7 @@ export default function Cadastro() {
 
               {/* Sexo */}
               <div className="space-y-2">
-                <Label htmlFor="sexo">Sexo</Label>
+                <Label htmlFor="sexo">Sexo *</Label>
                 <Select value={formData.sexo} onValueChange={(value) => handleChange("sexo", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o sexo" />
@@ -171,7 +195,7 @@ export default function Cadastro() {
 
               {/* Status */}
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">Status *</Label>
                 <Select value={formData.status} onValueChange={(value) => handleChange("status", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o status" />
@@ -185,7 +209,7 @@ export default function Cadastro() {
 
               {/* Cargo */}
               <div className="space-y-2">
-                <Label htmlFor="cargo">Cargo</Label>
+                <Label htmlFor="cargo">Cargo *</Label>
                 <Select value={formData.cargo} onValueChange={(value) => handleChange("cargo", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o cargo" />
@@ -206,7 +230,7 @@ export default function Cadastro() {
 
               {/* Setor */}
               <div className="space-y-2">
-                <Label htmlFor="setor">Setor</Label>
+                <Label htmlFor="setor">Setor *</Label>
                 <Select value={formData.setor} onValueChange={(value) => handleChange("setor", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o setor" />
@@ -255,7 +279,7 @@ export default function Cadastro() {
 
               {/* Liderança */}
               <div className="space-y-2">
-                <Label htmlFor="lideranca">Liderança</Label>
+                <Label htmlFor="lideranca">Liderança *</Label>
                 <Select value={formData.lideranca} onValueChange={(value) => handleChange("lideranca", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a liderança" />
@@ -275,7 +299,7 @@ export default function Cadastro() {
 
               {/* Turno */}
               <div className="space-y-2">
-                <Label htmlFor="turno">Turno</Label>
+                <Label htmlFor="turno">Turno *</Label>
                 <Select value={formData.turno} onValueChange={(value) => handleChange("turno", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o turno" />
@@ -297,7 +321,7 @@ export default function Cadastro() {
 
               {/* Sábado Trabalho */}
               <div className="space-y-2">
-                <Label htmlFor="sabado_trabalho">Sábado trabalho</Label>
+                <Label htmlFor="sabado_trabalho">Sábado trabalho *</Label>
                 <Select value={formData.sabado_trabalho} onValueChange={(value) => handleChange("sabado_trabalho", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione" />
@@ -312,7 +336,7 @@ export default function Cadastro() {
               {/* Sábado Horário - só aparece se trabalha sábado */}
               {formData.sabado_trabalho === "Sim" && (
                 <div className="space-y-2">
-                  <Label htmlFor="sabado_horario">Sábado</Label>
+                  <Label htmlFor="sabado_horario">Sábado *</Label>
                   <Select value={formData.sabado_horario} onValueChange={(value) => handleChange("sabado_horario", value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o horário" />
@@ -328,7 +352,7 @@ export default function Cadastro() {
 
               {/* Horário Almoço */}
               <div className="space-y-2">
-                <Label htmlFor="horario_almoco">Horário almoço</Label>
+                <Label htmlFor="horario_almoco">Horário almoço *</Label>
                 <Select value={formData.horario_almoco} onValueChange={(value) => handleChange("horario_almoco", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o horário" />
@@ -346,7 +370,7 @@ export default function Cadastro() {
 
               {/* Horário Café */}
               <div className="space-y-2">
-                <Label htmlFor="horario_cafe">Horário café</Label>
+                <Label htmlFor="horario_cafe">Horário café *</Label>
                 <Select value={formData.horario_cafe} onValueChange={(value) => handleChange("horario_cafe", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o horário" />
@@ -364,7 +388,7 @@ export default function Cadastro() {
 
               {/* Data de Admissão */}
               <div className="space-y-2">
-                <Label htmlFor="admissao">Admissão</Label>
+                <Label htmlFor="admissao">Admissão *</Label>
                 <Input
                   id="admissao"
                   type="date"
