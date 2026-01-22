@@ -501,16 +501,15 @@ const SolicitacaoMovimentacao = () => {
     return datas;
   }, [solicitacoes]);
 
-  // Filtrar solicitações baseado nos filtros
+  // Filtrar solicitações baseado nos filtros (sempre filtra por data selecionada)
   const solicitacoesFiltradas = useMemo(() => {
+    const filterDate = selectedDate 
+      ? selectedDate.toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0];
+    
     return solicitacoes.filter(solicitacao => {
-      // Filtro por data
-      let matchesDate = true;
-      if (selectedDate) {
-        const solicitacaoDate = new Date(solicitacao.created_at).toISOString().split('T')[0];
-        const filterDate = selectedDate.toISOString().split('T')[0];
-        matchesDate = solicitacaoDate === filterDate;
-      }
+      const solicitacaoDate = new Date(solicitacao.created_at).toISOString().split('T')[0];
+      const matchesDate = solicitacaoDate === filterDate;
       
       const matchesEncarregado = selectedEncarregado === '' || selectedEncarregado === 'todos' || 
         solicitacao.solicitante_id === selectedEncarregado;
