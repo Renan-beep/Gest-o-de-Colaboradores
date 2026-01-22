@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { MultiSelect } from "@/components/ui/multi-select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { 
@@ -60,7 +61,7 @@ export default function Chamada() {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [filterLideranca, setFilterLideranca] = useState("todos")
+  const [filterLideranca, setFilterLideranca] = useState<string[]>([])
   const [datesWithPendencies, setDatesWithPendencies] = useState<string[]>([])
   const [loadingPendencies, setLoadingPendencies] = useState(false)
   const [primeiraDataChamada, setPrimeiraDataChamada] = useState<Date | null>(null)
@@ -632,13 +633,13 @@ export default function Chamada() {
       return selectedDateObj >= dataMinima
     })
 
-    // Filtrar por liderança considerando movimentações
-    if (filterLideranca !== "todos") {
+    // Filtrar por liderança considerando movimentações (agora com multi-seleção)
+    if (filterLideranca.length > 0) {
       filtered = filtered.filter(col => {
         const colMovimentacoes = movimentacoes.filter(m => m.colaborador_id === col.id && m.lideranca_destino)
         
         if (colMovimentacoes.length === 0) {
-          return col.lideranca === filterLideranca
+          return filterLideranca.includes(col.lideranca)
         }
 
         // Ordenar movimentações por data
@@ -647,13 +648,13 @@ export default function Chamada() {
         // Encontrar a liderança válida para a data selecionada
         for (const mov of movsOrdenadas) {
           if (mov.data_inicio <= selectedDate) {
-            return mov.lideranca_destino === filterLideranca
+            return filterLideranca.includes(mov.lideranca_destino || '')
           }
         }
 
         // Se nenhuma movimentação é anterior à data selecionada, usar liderança de origem da mais antiga
         const movMaisAntiga = movsOrdenadas[movsOrdenadas.length - 1]
-        return movMaisAntiga.lideranca_origem === filterLideranca || col.lideranca === filterLideranca
+        return filterLideranca.includes(movMaisAntiga.lideranca_origem || '') || filterLideranca.includes(col.lideranca)
       })
     }
 
@@ -895,17 +896,12 @@ export default function Chamada() {
             
             <div className="space-y-2">
               <Label>Filtrar por Liderança</Label>
-              <Select value={filterLideranca} onValueChange={setFilterLideranca}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todas as lideranças" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todas as lideranças</SelectItem>
-                  {liderancas.map(lideranca => (
-                    <SelectItem key={lideranca} value={lideranca}>{lideranca}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={liderancas}
+                selected={filterLideranca}
+                onChange={setFilterLideranca}
+                placeholder="Todas as lideranças"
+              />
             </div>
           </div>
 
