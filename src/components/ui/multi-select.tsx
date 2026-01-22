@@ -67,7 +67,7 @@ export function MultiSelect({ options, selected, onChange, placeholder = "Seleci
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[220px] p-0 z-50 bg-popover" align="start">
+      <PopoverContent className="w-auto min-w-[180px] max-w-[320px] p-0 z-50 bg-popover" align="start">
         <div className="max-h-64 overflow-auto">
           <div className="p-2 border-b sticky top-0 bg-background">
             <Button
