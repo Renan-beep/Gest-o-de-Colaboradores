@@ -42,7 +42,7 @@ export function GraficoPendenciasLideres({ selectedDate, colaboradores, moviment
     return movMaisAntiga.lideranca_origem || liderancaAtual
   }
 
-  // Dados do gráfico MENSAL
+  // Dados do gráfico MENSAL - conta datas com pendências por líder (cada data incompleta = 1)
   const dadosGraficoMensal = useMemo(() => {
     const [year, month] = selectedDate.split('-')
     const firstDay = new Date(parseInt(year), parseInt(month) - 1, 1)
@@ -55,8 +55,8 @@ export function GraficoPendenciasLideres({ selectedDate, colaboradores, moviment
       chamadas.map(c => `${c.colaborador_id}_${c.data}`)
     )
 
-    // Contar pendências por líder apenas no mês selecionado
-    const pendenciasPorLider: Record<string, number> = {}
+    // Rastrear datas com pendência por líder (usamos Set para contar cada data apenas uma vez)
+    const datasComPendenciaPorLider: Record<string, Set<string>> = {}
     const currentDate = new Date(firstDay)
 
     while (currentDate <= lastDay && currentDate <= today) {
@@ -76,7 +76,11 @@ export function GraficoPendenciasLideres({ selectedDate, colaboradores, moviment
           if (!temChamada) {
             const liderancaNaData = getLiderancaNaData(colaborador.id, colaborador.lideranca || '', dateStr)
             if (liderancaNaData) {
-              pendenciasPorLider[liderancaNaData] = (pendenciasPorLider[liderancaNaData] || 0) + 1
+              if (!datasComPendenciaPorLider[liderancaNaData]) {
+                datasComPendenciaPorLider[liderancaNaData] = new Set()
+              }
+              // Adiciona a data ao Set do líder (cada data conta apenas 1 vez)
+              datasComPendenciaPorLider[liderancaNaData].add(dateStr)
             }
           }
         })
@@ -85,8 +89,8 @@ export function GraficoPendenciasLideres({ selectedDate, colaboradores, moviment
       currentDate.setDate(currentDate.getDate() + 1)
     }
 
-    return Object.entries(pendenciasPorLider)
-      .map(([lideranca, total]) => ({ lideranca, total }))
+    return Object.entries(datasComPendenciaPorLider)
+      .map(([lideranca, datas]) => ({ lideranca, total: datas.size }))
       .filter(item => item.total > 0)
       .sort((a, b) => b.total - a.total)
       .slice(0, 5)
