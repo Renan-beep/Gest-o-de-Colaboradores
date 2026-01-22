@@ -33,6 +33,7 @@ interface Colaborador {
   horario_cafe: string;
   admissao: string;
   sexo: string;
+  rapdo: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -90,6 +91,7 @@ export default function ListaColaboradores() {
     horarioAlmoco: [] as string[],
     horarioCafe: [] as string[],
     sexo: [] as string[],
+    rapdo: "todos" as "todos" | "sim" | "nao",
     tempoEmpresa: "todos"
   });
 
@@ -333,6 +335,9 @@ export default function ListaColaboradores() {
     if (filtros.sexo.length > 0) {
       filtered = filtered.filter(c => filtros.sexo.includes(c.sexo));
     }
+    if (filtros.rapdo !== "todos") {
+      filtered = filtered.filter(c => filtros.rapdo === "sim" ? c.rapdo === true : c.rapdo === false);
+    }
     if (filtros.tempoEmpresa !== "todos") {
       filtered = filtered.filter(c => {
         const tempo = calcularTempoEmpresa(c.admissao);
@@ -387,6 +392,7 @@ export default function ListaColaboradores() {
       horarioAlmoco: [],
       horarioCafe: [],
       sexo: [],
+      rapdo: "todos",
       tempoEmpresa: "todos"
     });
   };
@@ -796,6 +802,24 @@ export default function ListaColaboradores() {
                     onChange={(values) => setFiltros(prev => ({ ...prev, sexo: values }))}
                     placeholder="Todos"
                   />
+                </div>
+
+                {/* RAPDO */}
+                <div className="space-y-2">
+                  <Label>RAPDO</Label>
+                  <Select value={filtros.rapdo} onValueChange={value => setFiltros(prev => ({
+                    ...prev,
+                    rapdo: value as "todos" | "sim" | "nao"
+                  }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos</SelectItem>
+                      <SelectItem value="sim">Sim</SelectItem>
+                      <SelectItem value="nao">Não</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Tempo de Empresa */}
