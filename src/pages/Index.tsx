@@ -155,7 +155,7 @@ const Index = () => {
         }
       });
 
-      // Calcular turnover do ano atual
+      // Calcular turnover do ano atual (mesma fórmula do TurnoverIndicator)
       const anoAtual = new Date().getFullYear();
       const { data: demissoes, error: demissoesError } = await supabase
         .from('demissoes')
@@ -172,8 +172,13 @@ const Index = () => {
       }).length || 0;
       
       const demissoesAno = demissoes?.length || 0;
-      const mediaColaboradores = totalColaboradores > 0 ? totalColaboradores : 1;
-      const turnoverRate = ((admissoesAno + demissoesAno) / 2 / mediaColaboradores) * 100;
+      
+      // Base de colaboradores no início do ano = ativos atuais - admissões do ano + demissões do ano
+      const colaboradoresBaseInicio = totalColaboradores - admissoesAno + demissoesAno;
+      // Média de colaboradores = base início + (admissões / 2) - (demissões / 2)
+      const mediaColaboradores = colaboradoresBaseInicio + (admissoesAno / 2) - (demissoesAno / 2);
+      // Turnover = (Demissões / Média de colaboradores) * 100
+      const turnoverRate = mediaColaboradores > 0 ? ((demissoesAno / mediaColaboradores) * 100) : 0;
 
       // Calcular estatísticas de gênero
       const masculino = porSexo['Masculino'] || 0;
