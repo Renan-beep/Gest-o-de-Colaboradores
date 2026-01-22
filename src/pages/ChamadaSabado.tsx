@@ -27,6 +27,7 @@ interface Colaborador {
   setor: string
   lideranca: string
   status: string
+  turno: string | null
 }
 
 export default function ChamadaSabado() {
@@ -108,7 +109,7 @@ export default function ChamadaSabado() {
     try {
       const { data, error } = await supabase
         .from('colaboradores')
-        .select('id, matricula, colaborador, setor, lideranca, status')
+        .select('id, matricula, colaborador, setor, lideranca, status, turno')
         .order('colaborador')
 
       if (error) {
@@ -293,6 +294,9 @@ export default function ChamadaSabado() {
 
     // Filtrar apenas colaboradores ativos
     filtered = filtered.filter(col => col.status === 'Ativo')
+
+    // Excluir colaboradores do turno noturno (22:00 - 06:52)
+    filtered = filtered.filter(col => col.turno !== '22:00 - 06:52')
 
     // Filtrar por liderança
     if (filterLideranca !== "todos") {
