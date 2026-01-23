@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Factory, CalendarDays, AlertCircle } from "lucide-react";
+import { Users, Factory, CalendarDays, AlertCircle, UserCheck, X, Home, Heart, Coffee } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -356,6 +356,45 @@ export default function Operacao() {
 
   const totalAtivos = colaboradoresFiltrados.length;
 
+  // Contagem por status para os indicadores
+  const statusCounts = useMemo(() => {
+    const counts = {
+      presente: 0,
+      falta: 0,
+      folga: 0,
+      atestado: 0,
+      ferias: 0,
+      semRegistro: 0
+    };
+    
+    colaboradoresFiltrados.forEach(colab => {
+      const status = chamadasMap.get(colab.id)?.toLowerCase();
+      if (!status) {
+        counts.semRegistro++;
+      } else if (status === 'presente') {
+        counts.presente++;
+      } else if (status === 'falta') {
+        counts.falta++;
+      } else if (status === 'folga') {
+        counts.folga++;
+      } else if (status === 'atestado') {
+        counts.atestado++;
+      } else if (status === 'ferias') {
+        counts.ferias++;
+      }
+    });
+    
+    return counts;
+  }, [colaboradoresFiltrados, chamadasMap]);
+
+  const statusIndicators = [
+    { key: 'presente', label: 'Presente', icon: UserCheck, bgColor: 'bg-green-100 dark:bg-green-900/30', textColor: 'text-green-600 dark:text-green-400' },
+    { key: 'falta', label: 'Falta', icon: X, bgColor: 'bg-red-100 dark:bg-red-900/30', textColor: 'text-red-600 dark:text-red-400' },
+    { key: 'folga', label: 'Folga', icon: Home, bgColor: 'bg-orange-100 dark:bg-orange-900/30', textColor: 'text-orange-600 dark:text-orange-400' },
+    { key: 'atestado', label: 'Atestado', icon: Heart, bgColor: 'bg-pink-100 dark:bg-pink-900/30', textColor: 'text-pink-600 dark:text-pink-400' },
+    { key: 'ferias', label: 'Férias', icon: Coffee, bgColor: 'bg-purple-100 dark:bg-purple-900/30', textColor: 'text-purple-600 dark:text-purple-400' },
+  ];
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -411,6 +450,23 @@ export default function Operacao() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Indicadores do Dia */}
+      <div className="grid grid-cols-5 gap-2 md:gap-4">
+        {statusIndicators.map(indicator => {
+          const IconComponent = indicator.icon;
+          const count = statusCounts[indicator.key as keyof typeof statusCounts];
+          return (
+            <div key={indicator.key} className="text-center p-2 md:p-4 border rounded-lg bg-card">
+              <div className={`w-8 h-8 md:w-12 md:h-12 mx-auto rounded-lg flex items-center justify-center mb-1 md:mb-2 ${indicator.bgColor}`}>
+                <IconComponent className={`w-4 h-4 md:w-6 md:h-6 ${indicator.textColor}`} />
+              </div>
+              <div className="text-lg md:text-2xl font-bold">{count}</div>
+              <div className="text-xs md:text-sm text-muted-foreground">{indicator.label}</div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Filtros Toggle */}
