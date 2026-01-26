@@ -95,8 +95,16 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
         const dateStr = currentDate.toISOString().split('T')[0]
         const dayOfWeek = currentDate.getDay()
         
-        // Pular datas antes do sistema, domingos e sábados
-        if (currentDate < dataInicioSistema || dayOfWeek === 0 || dayOfWeek === 6) {
+        // Pular datas antes do sistema e domingos
+        if (currentDate < dataInicioSistema || dayOfWeek === 0) {
+          currentDate.setDate(currentDate.getDate() + 1)
+          continue
+        }
+
+        // Para sábados, só verificar pendência se houve pelo menos 1 registro
+        // (indica que era dia de trabalho e alguém fez chamada)
+        const registrosSabado = chamadasPorData.get(dateStr) || new Set()
+        if (dayOfWeek === 6 && registrosSabado.size === 0) {
           currentDate.setDate(currentDate.getDate() + 1)
           continue
         }
