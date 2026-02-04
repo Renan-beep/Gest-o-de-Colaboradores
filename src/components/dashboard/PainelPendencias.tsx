@@ -111,14 +111,16 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
 
         // Calcular colaboradores esperados nesta data específica
         const colaboradoresEsperados = colaboradores?.filter(col => {
-          // Regra 1: Só aparecer se já foi admitido
-          if (col.admissao) {
-            const dataAdmissao = new Date(col.admissao)
-            dataAdmissao.setHours(0, 0, 0, 0)
-            const dataAtual = new Date(currentDate)
-            dataAtual.setHours(0, 0, 0, 0)
-            
-            if (dataAtual < dataAdmissao) {
+          // Regra 1: Só aparecer se já foi admitido (usar comparação de string para evitar problemas de timezone)
+          // Se não tem data de admissão, não incluir em datas anteriores a hoje
+          if (!col.admissao) {
+            // Colaborador sem data de admissão: só considerar a partir de hoje
+            if (dateStr < new Date().toISOString().split('T')[0]) {
+              return false
+            }
+          } else {
+            // Comparação direta de strings YYYY-MM-DD funciona corretamente
+            if (dateStr < col.admissao) {
               return false
             }
           }
