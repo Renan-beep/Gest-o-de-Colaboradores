@@ -364,6 +364,30 @@ export type Database = {
           },
         ]
       }
+      headcount_custos_cargo: {
+        Row: {
+          cargo: string
+          created_at: string
+          custo_mensal: number
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          cargo: string
+          created_at?: string
+          custo_mensal?: number
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          cargo?: string
+          created_at?: string
+          custo_mensal?: number
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       headcount_motivos: {
         Row: {
           ativo: boolean
@@ -454,6 +478,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      headcount_planejado: {
+        Row: {
+          cargo: string
+          created_at: string
+          criado_por: string | null
+          id: string
+          lideranca: string | null
+          mes_referencia: string
+          quantidade: number
+          setor: string
+          subsetor: string | null
+          turno: string | null
+          updated_at: string
+        }
+        Insert: {
+          cargo: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          lideranca?: string | null
+          mes_referencia?: string
+          quantidade?: number
+          setor: string
+          subsetor?: string | null
+          turno?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cargo?: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          lideranca?: string | null
+          mes_referencia?: string
+          quantidade?: number
+          setor?: string
+          subsetor?: string | null
+          turno?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       historico_chamadas_pendentes: {
         Row: {
