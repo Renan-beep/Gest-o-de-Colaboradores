@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,10 @@ import { differenceInMonths, differenceInYears, parseISO } from "date-fns";
 import { MovimentacaoModal } from "@/components/headcount/MovimentacaoModal";
 import { LinhaTempoModal } from "@/components/headcount/LinhaTempoModal";
 import { AdicionarColaboradorModal } from "@/components/headcount/AdicionarColaboradorModal";
-import type { HeadcountColaborador } from "@/types/headcount";
+import { PainelVagas } from "@/components/headcount/PainelVagas";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import type { HeadcountColaborador, HeadcountVaga } from "@/types/headcount";
 
 interface TabelaHeadcountProps {
   colaboradores: HeadcountColaborador[];
@@ -20,6 +23,7 @@ interface TabelaHeadcountProps {
 }
 
 export function TabelaHeadcount({ colaboradores, onRefresh }: TabelaHeadcountProps) {
+  const { toast } = useToast();
   const [filtros, setFiltros] = useState({
     busca: "",
     status: [] as string[],
@@ -36,6 +40,33 @@ export function TabelaHeadcount({ colaboradores, onRefresh }: TabelaHeadcountPro
   const [linhaTempoOpen, setLinhaTempoOpen] = useState(false);
   const [addColabOpen, setAddColabOpen] = useState(false);
   const [selectedColab, setSelectedColab] = useState<HeadcountColaborador | null>(null);
+  const [vagas, setVagas] = useState<HeadcountVaga[]>([]);
+
+  useEffect(() => { fetchVagas(); }, []);
+
+  const fetchVagas = async () => {
+    const { data } = await supabase.from("headcount_vagas").select("*").eq("ativa", true).order("nome");
+    setVagas((data as HeadcountVaga[]) || []);
+  };
+
+  const vagasMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    vagas.forEach(v => { map[v.id] = v.nome; });
+    return map;
+  }, [vagas]);
+
+  const atribuirVaga = async (colaboradorId: string, vagaId: string | null) => {
+    try {
+      const { error } = await supabase
+        .from("headcount_colaboradores")
+        .update({ vaga_id: vagaId })
+        .eq("id", colaboradorId);
+      if (error) throw error;
+      onRefresh();
+    } catch (error: any) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    }
+  };
 
   const opcoesFiltros = useMemo(() => {
     const get = (field: keyof HeadcountColaborador) =>
@@ -126,46 +157,47 @@ export function TabelaHeadcount({ colaboradores, onRefresh }: TabelaHeadcountPro
         </Button>
       </div>
 
-      {/* Filtros */}
-      <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><Filter className="w-5 h-5" />Filtros</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <div className="space-y-2 lg:col-span-2">
-              <Label>Busca Geral</Label>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Nome, matrícula, cargo, setor..." value={filtros.busca} onChange={e => setFiltros(p => ({ ...p, busca: e.target.value }))} className="pl-8" />
+      {/* Filtros + Painel Vagas lado a lado */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2"><Filter className="w-5 h-5" />Filtros</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-2 md:col-span-2 lg:col-span-3">
+                <Label>Busca Geral</Label>
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Nome, matrícula, cargo, setor..." value={filtros.busca} onChange={e => setFiltros(p => ({ ...p, busca: e.target.value }))} className="pl-8" />
+                </div>
               </div>
+              <div className="space-y-2"><Label>Status</Label><MultiSelect options={opcoesFiltros.statuses} selected={filtros.status} onChange={v => setFiltros(p => ({ ...p, status: v }))} placeholder="Todos" /></div>
+              <div className="space-y-2">
+                <Label>Movimentação</Label>
+                <Select value={filtros.movimentacao} onValueChange={v => setFiltros(p => ({ ...p, movimentacao: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todas</SelectItem>
+                    <SelectItem value="sem">Sem movimentação</SelectItem>
+                    <SelectItem value="aumento_quadro">Aumento de Quadro</SelectItem>
+                    <SelectItem value="substituicao">Substituição</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2"><Label>Cargo</Label><MultiSelect options={opcoesFiltros.cargos} selected={filtros.cargo} onChange={v => setFiltros(p => ({ ...p, cargo: v }))} placeholder="Todos" /></div>
+              <div className="space-y-2"><Label>Setor</Label><MultiSelect options={opcoesFiltros.setores} selected={filtros.setor} onChange={v => setFiltros(p => ({ ...p, setor: v }))} placeholder="Todos" /></div>
+              <div className="space-y-2"><Label>Subsetor</Label><MultiSelect options={opcoesFiltros.subsetores} selected={filtros.subsetor} onChange={v => setFiltros(p => ({ ...p, subsetor: v }))} placeholder="Todos" /></div>
+              <div className="space-y-2"><Label>Liderança</Label><MultiSelect options={opcoesFiltros.liderancas} selected={filtros.lideranca} onChange={v => setFiltros(p => ({ ...p, lideranca: v }))} placeholder="Todas" /></div>
+              <div className="space-y-2"><Label>Turno</Label><MultiSelect options={opcoesFiltros.turnos} selected={filtros.turno} onChange={v => setFiltros(p => ({ ...p, turno: v }))} placeholder="Todos" /></div>
+              <div className="space-y-2"><Label>Sexo</Label><MultiSelect options={opcoesFiltros.sexos.length > 0 ? opcoesFiltros.sexos : ["Masculino", "Feminino"]} selected={filtros.sexo} onChange={v => setFiltros(p => ({ ...p, sexo: v }))} placeholder="Todos" /></div>
             </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <MultiSelect options={opcoesFiltros.statuses} selected={filtros.status} onChange={v => setFiltros(p => ({ ...p, status: v }))} placeholder="Todos" />
+            <div className="flex items-center gap-4 mt-4">
+              <Button variant="outline" onClick={limparFiltros}><RefreshCw className="w-4 h-4 mr-2" />Limpar Filtros</Button>
             </div>
-            <div className="space-y-2">
-              <Label>Movimentação</Label>
-              <Select value={filtros.movimentacao} onValueChange={v => setFiltros(p => ({ ...p, movimentacao: v as any }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todas</SelectItem>
-                  <SelectItem value="sem">Sem movimentação</SelectItem>
-                  <SelectItem value="aumento_quadro">Aumento de Quadro</SelectItem>
-                  <SelectItem value="substituicao">Substituição</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2"><Label>Cargo</Label><MultiSelect options={opcoesFiltros.cargos} selected={filtros.cargo} onChange={v => setFiltros(p => ({ ...p, cargo: v }))} placeholder="Todos" /></div>
-            <div className="space-y-2"><Label>Setor</Label><MultiSelect options={opcoesFiltros.setores} selected={filtros.setor} onChange={v => setFiltros(p => ({ ...p, setor: v }))} placeholder="Todos" /></div>
-            <div className="space-y-2"><Label>Subsetor</Label><MultiSelect options={opcoesFiltros.subsetores} selected={filtros.subsetor} onChange={v => setFiltros(p => ({ ...p, subsetor: v }))} placeholder="Todos" /></div>
-            <div className="space-y-2"><Label>Liderança</Label><MultiSelect options={opcoesFiltros.liderancas} selected={filtros.lideranca} onChange={v => setFiltros(p => ({ ...p, lideranca: v }))} placeholder="Todas" /></div>
-            <div className="space-y-2"><Label>Turno</Label><MultiSelect options={opcoesFiltros.turnos} selected={filtros.turno} onChange={v => setFiltros(p => ({ ...p, turno: v }))} placeholder="Todos" /></div>
-            <div className="space-y-2"><Label>Sexo</Label><MultiSelect options={opcoesFiltros.sexos.length > 0 ? opcoesFiltros.sexos : ["Masculino", "Feminino"]} selected={filtros.sexo} onChange={v => setFiltros(p => ({ ...p, sexo: v }))} placeholder="Todos" /></div>
-          </div>
-          <div className="flex items-center gap-4 mt-4">
-            <Button variant="outline" onClick={limparFiltros}><RefreshCw className="w-4 h-4 mr-2" />Limpar Filtros</Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <PainelVagas vagas={vagas} onRefresh={() => { fetchVagas(); onRefresh(); }} />
+      </div>
 
       <Card><CardContent className="p-4"><div className="text-sm text-muted-foreground">Exibindo {filteredColaboradores.length} de {colaboradores.length} colaboradores</div></CardContent></Card>
 
@@ -177,7 +209,7 @@ export function TabelaHeadcount({ colaboradores, onRefresh }: TabelaHeadcountPro
               <TableHeader>
                 <TableRow>
                   <TableHead>Matrícula</TableHead><TableHead>Nome</TableHead><TableHead>Sexo</TableHead>
-                  <TableHead>Status</TableHead><TableHead>Cargo</TableHead><TableHead>Setor</TableHead>
+                  <TableHead>Status</TableHead><TableHead>Vaga</TableHead><TableHead>Cargo</TableHead><TableHead>Setor</TableHead>
                   <TableHead>Subsetor</TableHead><TableHead>Liderança</TableHead><TableHead>Turno</TableHead>
                   <TableHead>Admissão</TableHead><TableHead>Tempo</TableHead><TableHead>Movimentação</TableHead>
                   <TableHead>Data Efetiva</TableHead><TableHead>Ações</TableHead>
@@ -193,6 +225,22 @@ export function TabelaHeadcount({ colaboradores, onRefresh }: TabelaHeadcountPro
                     <TableCell>{colab.colaborador}</TableCell>
                     <TableCell>{colab.sexo || "-"}</TableCell>
                     <TableCell>{getStatusBadge(colab.status)}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={colab.vaga_id || "sem_vaga"}
+                        onValueChange={v => atribuirVaga(colab.id, v === "sem_vaga" ? null : v)}
+                      >
+                        <SelectTrigger className="h-7 text-xs w-[130px]">
+                          <SelectValue placeholder="Selecionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="sem_vaga">Sem vaga</SelectItem>
+                          {vagas.map(v => (
+                            <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell>{colab.cargo || "-"}</TableCell>
                     <TableCell>{colab.setor || "-"}</TableCell>
                     <TableCell>{colab.subsetor || "-"}</TableCell>

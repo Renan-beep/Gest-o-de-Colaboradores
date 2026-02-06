@@ -12,7 +12,17 @@ export interface HeadcountColaborador {
   admissao: string | null;
   status: string;
   adicionado_manualmente: boolean;
+  vaga_id?: string | null;
   movimentacao_tipo?: string | null;
   movimentacao_data?: string | null;
   movimentacao_id?: string | null;
+}
+
+export interface HeadcountVaga {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  ativa: boolean;
+  created_at: string;
+  updated_at: string;
 }

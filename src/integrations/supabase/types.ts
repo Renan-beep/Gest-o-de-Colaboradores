@@ -319,6 +319,7 @@ export type Database = {
           subsetor: string | null
           turno: string | null
           updated_at: string
+          vaga_id: string | null
         }
         Insert: {
           adicionado_manualmente?: boolean
@@ -336,6 +337,7 @@ export type Database = {
           subsetor?: string | null
           turno?: string | null
           updated_at?: string
+          vaga_id?: string | null
         }
         Update: {
           adicionado_manualmente?: boolean
@@ -353,6 +355,7 @@ export type Database = {
           subsetor?: string | null
           turno?: string | null
           updated_at?: string
+          vaga_id?: string | null
         }
         Relationships: [
           {
@@ -360,6 +363,13 @@ export type Database = {
             columns: ["colaborador_origem_id"]
             isOneToOne: false
             referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "headcount_colaboradores_vaga_id_fkey"
+            columns: ["vaga_id"]
+            isOneToOne: false
+            referencedRelation: "headcount_vagas"
             referencedColumns: ["id"]
           },
         ]
@@ -517,6 +527,33 @@ export type Database = {
           setor?: string
           subsetor?: string | null
           turno?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      headcount_vagas: {
+        Row: {
+          ativa: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativa?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativa?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
           updated_at?: string
         }
         Relationships: []
