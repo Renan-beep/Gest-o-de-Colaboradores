@@ -1,14 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Map } from "lucide-react";
+import { TabelaIdealEditavel } from "./TabelaIdealEditavel";
 import type { HeadcountColaborador } from "@/types/headcount";
 
 interface MapaHeadcountProps {
   colaboradores: HeadcountColaborador[];
 }
 
-// Gauge SVG component
 function GaugeChart({ atual, ideal }: { atual: number; ideal: number }) {
   const pct = ideal > 0 ? Math.min((atual / ideal) * 100, 100) : 0;
   const radius = 80;
@@ -33,7 +32,6 @@ function GaugeChart({ atual, ideal }: { atual: number; ideal: number }) {
   return (
     <div className="flex flex-col items-center">
       <svg width="200" height="120" viewBox="0 0 200 120">
-        {/* Background arc */}
         <path
           d={`M ${bgStart.x} ${bgStart.y} A ${radius} ${radius} 0 1 1 ${bgEnd.x} ${bgEnd.y}`}
           fill="none"
@@ -41,7 +39,6 @@ function GaugeChart({ atual, ideal }: { atual: number; ideal: number }) {
           strokeWidth={strokeWidth}
           strokeLinecap="round"
         />
-        {/* Filled arc */}
         {pct > 0 && (
           <path
             d={`M ${bgStart.x} ${bgStart.y} A ${radius} ${radius} 0 ${largeArc} 1 ${fillEnd.x} ${fillEnd.y}`}
@@ -51,11 +48,9 @@ function GaugeChart({ atual, ideal }: { atual: number; ideal: number }) {
             strokeLinecap="round"
           />
         )}
-        {/* Center text */}
         <text x={cx} y={cy - 8} textAnchor="middle" className="fill-foreground text-3xl font-bold" fontSize="32">
           {atual}
         </text>
-        {/* Min/Max labels */}
         <text x={cx - radius} y={cy + 18} textAnchor="middle" className="fill-muted-foreground" fontSize="12">0</text>
         <text x={cx + radius} y={cy + 18} textAnchor="middle" className="fill-muted-foreground" fontSize="12">{ideal}</text>
       </svg>
@@ -63,7 +58,6 @@ function GaugeChart({ atual, ideal }: { atual: number; ideal: number }) {
   );
 }
 
-// Build a pivot: rows × cols → count
 function buildPivot(
   colaboradores: HeadcountColaborador[],
   rowKey: (c: HeadcountColaborador) => string,
@@ -84,8 +78,6 @@ function buildPivot(
 
   const sortedRows = Array.from(rows).sort();
   const sortedCols = Array.from(cols).sort();
-
-  // Row totals, col totals
   const rowTotals: Record<string, number> = {};
   const colTotals: Record<string, number> = {};
   let grandTotal = 0;
@@ -111,8 +103,6 @@ function PivotTable({
   pivot: ReturnType<typeof buildPivot>;
 }) {
   const { sortedRows, sortedCols, data, rowTotals, colTotals, grandTotal } = pivot;
-
-  // Color intensity for total cells
   const maxRowTotal = Math.max(...Object.values(rowTotals), 1);
 
   return (
@@ -136,25 +126,19 @@ function PivotTable({
               {sortedRows.map(r => (
                 <TableRow key={r}>
                   <TableCell className="font-medium sticky left-0 bg-background z-10 whitespace-nowrap">{r}</TableCell>
-                  {sortedCols.map(c => {
-                    const val = data[r]?.[c] || 0;
-                    return (
-                      <TableCell key={c} className="text-center px-2">
-                        {val > 0 ? val : ""}
-                      </TableCell>
-                    );
-                  })}
+                  {sortedCols.map(c => (
+                    <TableCell key={c} className="text-center px-2">
+                      {(data[r]?.[c] || 0) > 0 ? data[r][c] : ""}
+                    </TableCell>
+                  ))}
                   <TableCell
                     className="text-center font-bold px-2"
-                    style={{
-                      backgroundColor: `hsl(var(--primary) / ${Math.max(0.08, (rowTotals[r] / maxRowTotal) * 0.35)})`,
-                    }}
+                    style={{ backgroundColor: `hsl(var(--primary) / ${Math.max(0.08, (rowTotals[r] / maxRowTotal) * 0.35)})` }}
                   >
                     {rowTotals[r]}
                   </TableCell>
                 </TableRow>
               ))}
-              {/* Total row */}
               <TableRow className="border-t-2">
                 <TableCell className="font-bold sticky left-0 bg-background z-10">Total</TableCell>
                 {sortedCols.map(c => (
@@ -171,22 +155,18 @@ function PivotTable({
 }
 
 export function MapaHeadcount({ colaboradores }: MapaHeadcountProps) {
+  const [totalIdeal, setTotalIdeal] = useState(0);
+
+  // Atual = ALL collaborators (full headcount, all statuses)
+  const totalAtual = colaboradores.length;
+
+  // Atual pivot: Turno × Cargo (active only for distribution view)
   const ativos = useMemo(() => colaboradores.filter(c => c.status?.toLowerCase() === "ativo"), [colaboradores]);
-
-  // "Ideal" = all collaborators by Status × Cargo
-  const pivotIdeal = useMemo(
-    () => buildPivot(colaboradores, c => c.status || "—", c => c.cargo || "—"),
-    [colaboradores]
-  );
-
-  // "Atual" = active collaborators by Turno × Cargo
   const pivotAtual = useMemo(
     () => buildPivot(ativos, c => c.turno || "—", c => c.cargo || "—"),
     [ativos]
   );
 
-  const totalIdeal = pivotIdeal.grandTotal;
-  const totalAtual = pivotAtual.grandTotal;
   const pctAlcancado = totalIdeal > 0 ? ((totalAtual / totalIdeal) * 100).toFixed(2) : "0";
 
   return (
@@ -200,11 +180,11 @@ export function MapaHeadcount({ colaboradores }: MapaHeadcountProps) {
         <GaugeChart atual={totalAtual} ideal={totalIdeal} />
       </div>
 
-      {/* Ideal pivot: Status × Cargo */}
-      <PivotTable title="Ideal" rowLabel="Status" pivot={pivotIdeal} />
+      {/* Ideal: editable table from headcount_planejado */}
+      <TabelaIdealEditavel onTotalChange={setTotalIdeal} />
 
       {/* Atual pivot: Turno × Cargo */}
-      <PivotTable title="Atual" rowLabel="Turno" pivot={pivotAtual} />
+      <PivotTable title="Atual (Ativos por Turno × Cargo)" rowLabel="Turno" pivot={pivotAtual} />
     </div>
   );
 }
