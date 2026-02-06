@@ -302,6 +302,159 @@ export type Database = {
         }
         Relationships: []
       }
+      headcount_colaboradores: {
+        Row: {
+          adicionado_manualmente: boolean
+          admissao: string | null
+          cargo: string | null
+          colaborador: string
+          colaborador_origem_id: string | null
+          created_at: string
+          id: string
+          lideranca: string | null
+          matricula: string
+          setor: string | null
+          sexo: string | null
+          status: string
+          subsetor: string | null
+          turno: string | null
+          updated_at: string
+        }
+        Insert: {
+          adicionado_manualmente?: boolean
+          admissao?: string | null
+          cargo?: string | null
+          colaborador: string
+          colaborador_origem_id?: string | null
+          created_at?: string
+          id?: string
+          lideranca?: string | null
+          matricula: string
+          setor?: string | null
+          sexo?: string | null
+          status?: string
+          subsetor?: string | null
+          turno?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adicionado_manualmente?: boolean
+          admissao?: string | null
+          cargo?: string | null
+          colaborador?: string
+          colaborador_origem_id?: string | null
+          created_at?: string
+          id?: string
+          lideranca?: string | null
+          matricula?: string
+          setor?: string | null
+          sexo?: string | null
+          status?: string
+          subsetor?: string | null
+          turno?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "headcount_colaboradores_colaborador_origem_id_fkey"
+            columns: ["colaborador_origem_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      headcount_motivos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      headcount_movimentacoes: {
+        Row: {
+          ativo: boolean
+          colaborador_substituido_id: string | null
+          created_at: string
+          criado_por: string | null
+          data_efetiva: string
+          headcount_colaborador_id: string
+          id: string
+          motivo_complementar: string | null
+          motivo_id: string | null
+          tipo_movimentacao: string
+          tipo_substituicao: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          colaborador_substituido_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data_efetiva: string
+          headcount_colaborador_id: string
+          id?: string
+          motivo_complementar?: string | null
+          motivo_id?: string | null
+          tipo_movimentacao: string
+          tipo_substituicao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          colaborador_substituido_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data_efetiva?: string
+          headcount_colaborador_id?: string
+          id?: string
+          motivo_complementar?: string | null
+          motivo_id?: string | null
+          tipo_movimentacao?: string
+          tipo_substituicao?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "headcount_movimentacoes_colaborador_substituido_id_fkey"
+            columns: ["colaborador_substituido_id"]
+            isOneToOne: false
+            referencedRelation: "headcount_colaboradores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "headcount_movimentacoes_headcount_colaborador_id_fkey"
+            columns: ["headcount_colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "headcount_colaboradores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "headcount_movimentacoes_motivo_id_fkey"
+            columns: ["motivo_id"]
+            isOneToOne: false
+            referencedRelation: "headcount_motivos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       historico_chamadas_pendentes: {
         Row: {
           created_at: string
@@ -693,6 +846,7 @@ export type Database = {
       is_valid_email: { Args: { email: string }; Returns: boolean }
       processar_fechamento_mensal: { Args: never; Returns: number }
       registrar_quantitativo_diario: { Args: never; Returns: undefined }
+      sync_colaboradores_to_headcount: { Args: never; Returns: undefined }
       verificar_limpeza_mensal: { Args: never; Returns: boolean }
     }
     Enums: {

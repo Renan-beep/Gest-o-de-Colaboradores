@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Users, UserCheck, Home, Building2, CalendarCheck, LogOut, User, FileText, UserPlus, UserCog, ClipboardList, Factory } from "lucide-react";
+import { Users, UserCheck, Home, Building2, CalendarCheck, LogOut, User, FileText, UserPlus, UserCog, ClipboardList, Factory, ArrowRightLeft } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
@@ -34,6 +34,11 @@ const gerenciaItems = [{
   url: "/solicitacao-movimentacao",
   icon: FileText,
   description: "Movimentações"
+}, {
+  title: "Movimentações HC",
+  url: "/movimentacoes-headcount",
+  icon: ArrowRightLeft,
+  description: "Headcount e movimentações"
 }];
 const chamadaGroupItems = [{
   title: "Controle de presença",
