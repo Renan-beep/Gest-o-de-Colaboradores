@@ -37,6 +37,7 @@ export default function MovimentacoesHeadcount() {
 
       const enriched: HeadcountColaborador[] = (hcData || []).map(c => ({
         ...c,
+        vaga_id: c.vaga_id || null,
         movimentacao_tipo: movsRecord[c.id]?.tipo_movimentacao || null,
         movimentacao_data: movsRecord[c.id]?.data_efetiva || null,
         movimentacao_id: movsRecord[c.id]?.id || null,
