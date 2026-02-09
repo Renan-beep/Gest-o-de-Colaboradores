@@ -371,8 +371,11 @@ export default function Chamada() {
           // Apenas colaboradores ativos hoje
           if (col.status !== 'Ativo') return false
 
-          // Nos sábados, excluir turno noturno
-          if (isSaturday && col.turno === '22:00 - 06:52') return false
+          // Nos sábados, excluir turno noturno e quem não trabalha no sábado
+          if (isSaturday) {
+            if (col.turno === '22:00 - 06:52') return false
+            if (col.sabado_trabalho !== 'Sim') return false
+          }
 
           // Data mínima = maior entre admissão e movimentação mais recente
           let dataMinima: Date | null = null
