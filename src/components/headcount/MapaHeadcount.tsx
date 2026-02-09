@@ -1,11 +1,22 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TabelaIdealEditavel } from "./TabelaIdealEditavel";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import type { HeadcountColaborador } from "@/types/headcount";
 
 interface MapaHeadcountProps {
   colaboradores: HeadcountColaborador[];
+}
+
+interface PlanejadoRow {
+  id: string;
+  cargo: string;
+  setor: string;
+  quantidade: number;
 }
 
 function GaugeChart({ atual, ideal }: { atual: number; ideal: number }) {
@@ -154,13 +165,154 @@ function PivotTable({
   );
 }
 
+function TabelaIdeal({ onTotalChange }: { onTotalChange: (total: number) => void }) {
+  const { toast } = useToast();
+  const [rows, setRows] = useState<PlanejadoRow[]>([]);
+  const [novoCargo, setNovoCargo] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+
+  const fetchData = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("headcount_planejado")
+      .select("id, cargo, setor, quantidade")
+      .order("cargo");
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      return;
+    }
+    const parsed = (data || []) as PlanejadoRow[];
+    setRows(parsed);
+    onTotalChange(parsed.reduce((s, r) => s + r.quantidade, 0));
+  }, [onTotalChange, toast]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const updateQuantidade = async (id: string, quantidade: number) => {
+    const { error } = await supabase
+      .from("headcount_planejado")
+      .update({ quantidade })
+      .eq("id", id);
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      return;
+    }
+    fetchData();
+  };
+
+  const addRow = async () => {
+    const cargo = novoCargo.trim();
+    if (!cargo) return;
+    const { error } = await supabase
+      .from("headcount_planejado")
+      .insert({ cargo, setor: "Geral", quantidade: 0 });
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      return;
+    }
+    setNovoCargo("");
+    fetchData();
+  };
+
+  const deleteRow = async (id: string) => {
+    await supabase.from("headcount_planejado").delete().eq("id", id);
+    fetchData();
+  };
+
+  const handleBlur = (id: string) => {
+    const val = parseInt(editValue, 10);
+    if (!isNaN(val) && val >= 0) {
+      updateQuantidade(id, val);
+    }
+    setEditingId(null);
+  };
+
+  const total = rows.reduce((s, r) => s + r.quantidade, 0);
+  const maxQtd = Math.max(...rows.map(r => r.quantidade), 1);
+
+  return (
+    <Card>
+      <CardHeader className="py-3 px-4">
+        <CardTitle className="text-base">Ideal (Meta Editável)</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table className="text-xs">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-bold sticky left-0 bg-background z-10 min-w-[120px]">Cargo</TableHead>
+                <TableHead className="text-center font-bold px-2 w-[100px]">Qtd. Ideal</TableHead>
+                <TableHead className="w-[50px]" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map(row => (
+                <TableRow key={row.id}>
+                  <TableCell className="font-medium sticky left-0 bg-background z-10 whitespace-nowrap">{row.cargo}</TableCell>
+                  <TableCell
+                    className="text-center px-2"
+                    style={{ backgroundColor: `hsl(var(--primary) / ${Math.max(0.08, (row.quantidade / maxQtd) * 0.35)})` }}
+                  >
+                    {editingId === row.id ? (
+                      <Input
+                        type="number"
+                        min={0}
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        onBlur={() => handleBlur(row.id)}
+                        onKeyDown={e => e.key === "Enter" && handleBlur(row.id)}
+                        className="h-7 w-16 mx-auto text-center text-xs"
+                        autoFocus
+                      />
+                    ) : (
+                      <span
+                        className="cursor-pointer hover:bg-muted px-2 py-1 rounded"
+                        onClick={() => {
+                          setEditingId(row.id);
+                          setEditValue(String(row.quantidade));
+                        }}
+                      >
+                        {row.quantidade}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteRow(row.id)}>
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              <TableRow className="border-t-2">
+                <TableCell className="font-bold sticky left-0 bg-background z-10">Total (Meta)</TableCell>
+                <TableCell className="text-center font-bold px-2 bg-primary/10">{total}</TableCell>
+                <TableCell />
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+        <div className="flex items-center gap-2 p-3 border-t">
+          <Input
+            placeholder="Novo cargo..."
+            value={novoCargo}
+            onChange={e => setNovoCargo(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && addRow()}
+            className="h-8 text-xs"
+          />
+          <Button size="sm" variant="outline" className="h-8" onClick={addRow}>
+            <Plus className="h-3 w-3 mr-1" /> Adicionar
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function MapaHeadcount({ colaboradores }: MapaHeadcountProps) {
   const [totalIdeal, setTotalIdeal] = useState(0);
 
-  // Atual = ALL collaborators (full headcount, all statuses)
   const totalAtual = colaboradores.length;
 
-  // Atual pivot: Turno × Cargo (active only for distribution view)
   const ativos = useMemo(() => colaboradores.filter(c => c.status?.toLowerCase() === "ativo"), [colaboradores]);
   const pivotAtual = useMemo(
     () => buildPivot(ativos, c => c.turno || "—", c => c.cargo || "—"),
@@ -171,7 +323,6 @@ export function MapaHeadcount({ colaboradores }: MapaHeadcountProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header with gauge */}
       <div className="flex flex-col md:flex-row items-center justify-center gap-8">
         <Card className="px-8 py-4 text-center">
           <p className="text-sm text-muted-foreground font-medium">Alcançado</p>
@@ -180,10 +331,8 @@ export function MapaHeadcount({ colaboradores }: MapaHeadcountProps) {
         <GaugeChart atual={totalAtual} ideal={totalIdeal} />
       </div>
 
-      {/* Ideal: editable table from headcount_planejado */}
-      <TabelaIdealEditavel onTotalChange={setTotalIdeal} />
+      <TabelaIdeal onTotalChange={setTotalIdeal} />
 
-      {/* Atual pivot: Turno × Cargo */}
       <PivotTable title="Atual (Ativos por Turno × Cargo)" rowLabel="Turno" pivot={pivotAtual} />
     </div>
   );
