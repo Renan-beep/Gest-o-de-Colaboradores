@@ -349,16 +349,30 @@ export default function Chamada() {
         
         const dayOfWeek = currentDate.getDay()
         
-        // Pular domingos e sábados
-        if (dayOfWeek === 0 || dayOfWeek === 6) {
+        // Pular domingos (sábados tratados abaixo com lógica especial)
+        if (dayOfWeek === 0) {
           currentDate.setDate(currentDate.getDate() + 1)
           continue
+        }
+
+        const isSaturday = dayOfWeek === 6
+
+        // Para sábados: só considerar pendente se houver ao menos 1 chamada registrada
+        if (isSaturday) {
+          const registrosSabado = chamadasPorData[dateStr]
+          if (!registrosSabado || registrosSabado.size === 0) {
+            currentDate.setDate(currentDate.getDate() + 1)
+            continue
+          }
         }
 
         // Calcular quantos colaboradores DEVERIAM ter registro nesta data
         const colaboradoresEsperadosNaData = colaboradores.filter(col => {
           // Apenas colaboradores ativos hoje
           if (col.status !== 'Ativo') return false
+
+          // Nos sábados, excluir turno noturno
+          if (isSaturday && col.turno === '22:00 - 06:52') return false
 
           // Data mínima = maior entre admissão e movimentação mais recente
           let dataMinima: Date | null = null
@@ -604,6 +618,12 @@ export default function Chamada() {
 
     // Filtrar apenas colaboradores ativos
     filtered = filtered.filter(col => col.status === 'Ativo')
+
+    // Nos sábados, excluir turno noturno "22:00 - 06:52"
+    const selectedDayOfWeek = new Date(selectedDate + 'T12:00:00').getDay()
+    if (selectedDayOfWeek === 6) {
+      filtered = filtered.filter(col => col.turno !== '22:00 - 06:52')
+    }
 
     // Determinar a data mínima de ativação para cada colaborador
     // Considera: admissão, movimentações e mudanças de status (especialmente Afastado -> Ativo)
