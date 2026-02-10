@@ -40,11 +40,11 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
       const startDate = firstDay.toISOString().split('T')[0]
       const endDate = lastDayToCheck.toISOString().split('T')[0]
 
-      // 1. Buscar apenas colaboradores ativos
+      // 1. Buscar colaboradores ativos e afastados (espelhar BancoChamadas)
       const { data: colaboradores, error: colError } = await supabase
         .from('colaboradores')
         .select('id, admissao, status, turno, sabado_trabalho')
-        .eq('status', 'Ativo')
+        .in('status', ['Ativo', 'Afastado'])
 
       if (colError) throw colError
 
@@ -167,7 +167,9 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
 
         const totalEsperado = colaboradoresEsperados.length
         const registrosNaData = chamadasPorData.get(dateStr) || new Set()
-        const totalRegistrado = registrosNaData.size
+        // Contar apenas registros de colaboradores esperados (ativos)
+        const idsEsperados = new Set(colaboradoresEsperados.map(c => c.id))
+        const totalRegistrado = [...registrosNaData].filter(id => idsEsperados.has(id)).length
 
         // Debug para outubro
         if (dateStr.startsWith('2025-10')) {
