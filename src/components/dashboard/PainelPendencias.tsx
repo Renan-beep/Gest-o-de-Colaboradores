@@ -103,6 +103,7 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
       console.log('🔍 [PainelPendencias] Iniciando cálculo para:', mesAno)
       console.log('📅 Período:', startDate, 'até', endDate)
       console.log('👥 Total colaboradores ativos:', colaboradores?.length)
+      console.log('📊 Total chamadas carregadas:', chamadas?.length)
 
       while (currentDate <= lastDayToCheck) {
         const dateStr = currentDate.toISOString().split('T')[0]
@@ -167,12 +168,12 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
 
         const totalEsperado = colaboradoresEsperados.length
         const registrosNaData = chamadasPorData.get(dateStr) || new Set()
-        const totalRegistrado = registrosNaData.size
+        
+        // Contar apenas registros dos colaboradores ESPERADOS (ignorar registros de inativos)
+        const totalRegistrado = colaboradoresEsperados.filter(col => registrosNaData.has(col.id)).length
 
-        // Debug para outubro
-        if (dateStr.startsWith('2025-10')) {
-          console.log(`📊 ${dateStr}: ${totalRegistrado}/${totalEsperado} registros`)
-        }
+        // Log detalhado para cada data
+        console.log(`📊 [Painel] ${dateStr}: registrados=${totalRegistrado}/${totalEsperado} (total na tabela: ${registrosNaData.size})${isSabado ? ' (sábado)' : ''}`)
 
         // Só adicionar se houver pendência (falta pelo menos 1 registro)
         if (totalRegistrado < totalEsperado && totalEsperado > 0) {
