@@ -64,17 +64,34 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
       if (movError) throw movError
 
       // 4. Buscar chamadas do período
-      const { data: chamadas, error: chamError } = await supabase
-        .from('chamadas')
-        .select('data, colaborador_id')
-        .gte('data', startDate)
-        .lte('data', endDate)
+      // Buscar chamadas com paginação para evitar limite de 1000 rows do Supabase
+      let allChamadas: { data: string; colaborador_id: string }[] = []
+      let from = 0
+      const pageSize = 1000
+      let hasMore = true
 
-      if (chamError) throw chamError
+      while (hasMore) {
+        const { data: chamadaPage, error: chamError } = await supabase
+          .from('chamadas')
+          .select('data, colaborador_id')
+          .gte('data', startDate)
+          .lte('data', endDate)
+          .range(from, from + pageSize - 1)
+
+        if (chamError) throw chamError
+        
+        if (chamadaPage && chamadaPage.length > 0) {
+          allChamadas = allChamadas.concat(chamadaPage)
+          from += pageSize
+          hasMore = chamadaPage.length === pageSize
+        } else {
+          hasMore = false
+        }
+      }
 
       // Agrupar chamadas por data
       const chamadasPorData = new Map<string, Set<string>>()
-      chamadas?.forEach(ch => {
+      allChamadas.forEach(ch => {
         if (!chamadasPorData.has(ch.data)) {
           chamadasPorData.set(ch.data, new Set())
         }
