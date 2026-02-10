@@ -40,22 +40,14 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
       const startDate = firstDay.toISOString().split('T')[0]
       const endDate = lastDayToCheck.toISOString().split('T')[0]
 
-      // 1. Buscar colaboradores ativos (com campos necessários)
+      // 1. Buscar TODOS os colaboradores (mesmo que a Chamada faz - sem filtrar por status no DB)
       const { data: colaboradores, error: colError } = await supabase
         .from('colaboradores')
         .select('id, admissao, status, turno, sabado_trabalho')
-        .eq('status', 'Ativo')
 
       if (colError) throw colError
 
-      // 2. Buscar demissões
-      const { data: demissoes, error: demError } = await supabase
-        .from('demissoes')
-        .select('colaborador_id, data_demissao')
-
-      if (demError) throw demError
-
-      // 3. Buscar movimentações aprovadas
+      // 2. Buscar movimentações aprovadas
       const { data: movimentacoes, error: movError } = await supabase
         .from('solicitacoes_movimentacao')
         .select('colaborador_id, data_inicio')
@@ -63,7 +55,7 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
 
       if (movError) throw movError
 
-      // 4. Buscar TODAS as chamadas do período (paginando para evitar limite de 1000)
+      // 3. Buscar TODAS as chamadas do período (paginando para evitar limite de 1000)
       let allChamadas: { data: string; colaborador_id: string }[] = []
       let from = 0
       const pageSize = 1000
@@ -83,11 +75,9 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
         from += pageSize
       }
 
-      const chamadas = allChamadas
-
       // Agrupar chamadas por data
       const chamadasPorData = new Map<string, Set<string>>()
-      chamadas?.forEach(ch => {
+      allChamadas.forEach(ch => {
         if (!chamadasPorData.has(ch.data)) {
           chamadasPorData.set(ch.data, new Set())
         }
@@ -96,14 +86,8 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
 
       // Calcular pendências dia por dia
       const pendenciasEncontradas: PendenciaData[] = []
-      // Só verificar chamadas a partir de 16/01/2026
       const dataInicioSistema = new Date('2026-01-16')
       const currentDate = new Date(firstDay)
-
-      console.log('🔍 [PainelPendencias] Iniciando cálculo para:', mesAno)
-      console.log('📅 Período:', startDate, 'até', endDate)
-      console.log('👥 Total colaboradores ativos:', colaboradores?.length)
-      console.log('📊 Total chamadas carregadas:', chamadas?.length)
 
       while (currentDate <= lastDayToCheck) {
         const dateStr = currentDate.toISOString().split('T')[0]
@@ -117,7 +101,7 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
 
         const isSabado = dayOfWeek === 6
 
-        // Nos sábados, só considerar pendência se houver pelo menos 1 registro na data
+        // Nos sábados, só considerar se houver pelo menos 1 registro (indica que houve operação)
         if (isSabado) {
           const registrosNaData = chamadasPorData.get(dateStr)
           if (!registrosNaData || registrosNaData.size === 0) {
@@ -126,9 +110,10 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
           }
         }
 
-        // Calcular colaboradores esperados nesta data (mesma lógica da página Chamada)
-        const colaboradoresEsperados = colaboradores?.filter(col => {
-          // Apenas colaboradores ativos
+        // ESPELHAR EXATAMENTE a lógica de getFilteredColaboradores() da Chamada
+        // Sem filtros de UI (liderança, turno, sexo, subsetor)
+        const colaboradoresEsperados = (colaboradores || []).filter(col => {
+          // Apenas ativos
           if (col.status !== 'Ativo') return false
 
           // Nos sábados: excluir turno noturno e quem não trabalha no sábado
@@ -138,45 +123,47 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
           }
 
           // Data mínima = maior entre admissão e movimentação mais recente
-          let dataMinima: string | null = null
+          // (usa Date objects igual à Chamada)
+          let dataMinima: Date | null = null
           
           if (col.admissao) {
-            dataMinima = col.admissao
+            dataMinima = new Date(col.admissao)
           }
           
-          const colMovs = movimentacoes?.filter(m => m.colaborador_id === col.id) || []
+          const colMovs = (movimentacoes || []).filter(m => m.colaborador_id === col.id)
           if (colMovs.length > 0) {
             const movsAplicaveis = colMovs
               .filter(m => m.data_inicio && m.data_inicio <= dateStr)
               .sort((a, b) => b.data_inicio.localeCompare(a.data_inicio))
             
             if (movsAplicaveis.length > 0) {
-              const movMaisRecente = movsAplicaveis[0]
-              if (!dataMinima || movMaisRecente.data_inicio > dataMinima) {
-                dataMinima = movMaisRecente.data_inicio
+              const dataMov = new Date(movsAplicaveis[0].data_inicio)
+              if (!dataMinima || dataMov > dataMinima) {
+                dataMinima = dataMov
               }
             }
           }
           
-          if (dataMinima && dateStr < dataMinima) return false
-          
-          const demissao = demissoes?.find(d => d.colaborador_id === col.id)
-          if (demissao && demissao.data_demissao <= dateStr) return false
+          // Colaborador só aparece se a data >= data mínima (igual getFilteredColaboradores)
+          if (dataMinima) {
+            const dataAtual = new Date(dateStr)
+            if (dataAtual < dataMinima) {
+              return false
+            }
+          }
 
           return true
-        }) || []
+        })
 
-        const totalEsperado = colaboradoresEsperados.length
+        // ESPELHAR getPendingColaboradores(): quem NÃO tem registro na data
         const registrosNaData = chamadasPorData.get(dateStr) || new Set()
+        const pendentes = colaboradoresEsperados.filter(col => !registrosNaData.has(col.id))
         
-        // Contar apenas registros dos colaboradores ESPERADOS (ignorar registros de inativos)
-        const totalRegistrado = colaboradoresEsperados.filter(col => registrosNaData.has(col.id)).length
+        const totalEsperado = colaboradoresEsperados.length
+        const totalRegistrado = totalEsperado - pendentes.length
 
-        // Log detalhado para cada data
-        console.log(`📊 [Painel] ${dateStr}: registrados=${totalRegistrado}/${totalEsperado} (total na tabela: ${registrosNaData.size})${isSabado ? ' (sábado)' : ''}`)
-
-        // Só adicionar se houver pendência (falta pelo menos 1 registro)
-        if (totalRegistrado < totalEsperado && totalEsperado > 0) {
+        // Só adicionar se houver pendência
+        if (pendentes.length > 0 && totalEsperado > 0) {
           pendenciasEncontradas.push({
             data: dateStr,
             esperado: totalEsperado,
@@ -186,8 +173,6 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
 
         currentDate.setDate(currentDate.getDate() + 1)
       }
-
-      console.log(`✅ Total de pendências encontradas: ${pendenciasEncontradas.length}`)
 
       setPendencias(pendenciasEncontradas.sort((a, b) => b.data.localeCompare(a.data)))
     } catch (error) {
@@ -255,7 +240,6 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    // Executar callback imediatamente sem aguardar
                     if (onDateClick) {
                       onDateClick(p.data)
                     }
