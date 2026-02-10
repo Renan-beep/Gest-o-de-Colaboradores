@@ -43,7 +43,7 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
       // 1. Buscar colaboradores ativos (com campos necessários)
       const { data: colaboradores, error: colError } = await supabase
         .from('colaboradores')
-        .select('id, admissao, status')
+        .select('id, admissao, status, turno, sabado_trabalho')
         .eq('status', 'Ativo')
 
       if (colError) throw colError
@@ -95,10 +95,21 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
         const dateStr = currentDate.toISOString().split('T')[0]
         const dayOfWeek = currentDate.getDay()
         
-        // Pular datas antes do sistema, domingos e sábados (igual à página Chamada)
-        if (currentDate < dataInicioSistema || dayOfWeek === 0 || dayOfWeek === 6) {
+        // Pular datas antes do sistema e domingos
+        if (currentDate < dataInicioSistema || dayOfWeek === 0) {
           currentDate.setDate(currentDate.getDate() + 1)
           continue
+        }
+
+        const isSabado = dayOfWeek === 6
+
+        // Nos sábados, só considerar pendência se houver pelo menos 1 registro na data
+        if (isSabado) {
+          const registrosNaData = chamadasPorData.get(dateStr)
+          if (!registrosNaData || registrosNaData.size === 0) {
+            currentDate.setDate(currentDate.getDate() + 1)
+            continue
+          }
         }
 
         // Calcular colaboradores esperados nesta data (mesma lógica da página Chamada)
@@ -106,15 +117,19 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
           // Apenas colaboradores ativos
           if (col.status !== 'Ativo') return false
 
+          // Nos sábados: excluir turno noturno e quem não trabalha no sábado
+          if (isSabado) {
+            if (col.turno === '22:00 - 06:52') return false
+            if (col.sabado_trabalho !== 'Sim') return false
+          }
+
           // Data mínima = maior entre admissão e movimentação mais recente
           let dataMinima: string | null = null
           
-          // Data de admissão
           if (col.admissao) {
             dataMinima = col.admissao
           }
           
-          // Verificar movimentações
           const colMovs = movimentacoes?.filter(m => m.colaborador_id === col.id) || []
           if (colMovs.length > 0) {
             const movsAplicaveis = colMovs
@@ -129,16 +144,10 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
             }
           }
           
-          // Se existe data mínima, colaborador só deveria aparecer a partir dela
-          if (dataMinima && dateStr < dataMinima) {
-            return false
-          }
+          if (dataMinima && dateStr < dataMinima) return false
           
-          // Verificar se estava demitido nesta data (comparação de string YYYY-MM-DD)
           const demissao = demissoes?.find(d => d.colaborador_id === col.id)
-          if (demissao && demissao.data_demissao <= dateStr) {
-            return false
-          }
+          if (demissao && demissao.data_demissao <= dateStr) return false
 
           return true
         }) || []
