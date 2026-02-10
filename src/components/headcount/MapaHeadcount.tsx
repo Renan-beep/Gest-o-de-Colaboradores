@@ -16,6 +16,7 @@ interface PlanejadoRow {
   id: string;
   cargo: string;
   setor: string;
+  turno: string | null;
   quantidade: number;
 }
 
@@ -168,14 +169,13 @@ function PivotTable({
 function TabelaIdeal({ onTotalChange }: { onTotalChange: (total: number) => void }) {
   const { toast } = useToast();
   const [rows, setRows] = useState<PlanejadoRow[]>([]);
-  const [novoCargo, setNovoCargo] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingCell, setEditingCell] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
 
   const fetchData = useCallback(async () => {
     const { data, error } = await supabase
       .from("headcount_planejado")
-      .select("id, cargo, setor, quantidade")
+      .select("id, cargo, setor, quantidade, turno")
       .order("cargo");
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
@@ -187,6 +187,38 @@ function TabelaIdeal({ onTotalChange }: { onTotalChange: (total: number) => void
   }, [onTotalChange, toast]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  const pivot = useMemo(() => {
+    const turnos = new Set<string>();
+    const cargos = new Set<string>();
+    const dataMap: Record<string, Record<string, { id: string; quantidade: number }>> = {};
+
+    rows.forEach(r => {
+      const turno = r.turno || "—";
+      const cargo = r.cargo || "—";
+      turnos.add(turno);
+      cargos.add(cargo);
+      if (!dataMap[turno]) dataMap[turno] = {};
+      dataMap[turno][cargo] = { id: r.id, quantidade: r.quantidade };
+    });
+
+    const sortedTurnos = Array.from(turnos).sort();
+    const sortedCargos = Array.from(cargos).sort();
+
+    const rowTotals: Record<string, number> = {};
+    const colTotals: Record<string, number> = {};
+    let grandTotal = 0;
+
+    sortedTurnos.forEach(t => {
+      rowTotals[t] = sortedCargos.reduce((s, c) => s + (dataMap[t]?.[c]?.quantidade || 0), 0);
+      grandTotal += rowTotals[t];
+    });
+    sortedCargos.forEach(c => {
+      colTotals[c] = sortedTurnos.reduce((s, t) => s + (dataMap[t]?.[c]?.quantidade || 0), 0);
+    });
+
+    return { sortedTurnos, sortedCargos, dataMap, rowTotals, colTotals, grandTotal };
+  }, [rows]);
 
   const updateQuantidade = async (id: string, quantidade: number) => {
     const { error } = await supabase
@@ -200,35 +232,16 @@ function TabelaIdeal({ onTotalChange }: { onTotalChange: (total: number) => void
     fetchData();
   };
 
-  const addRow = async () => {
-    const cargo = novoCargo.trim();
-    if (!cargo) return;
-    const { error } = await supabase
-      .from("headcount_planejado")
-      .insert({ cargo, setor: "Geral", quantidade: 0 });
-    if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-      return;
-    }
-    setNovoCargo("");
-    fetchData();
-  };
-
-  const deleteRow = async (id: string) => {
-    await supabase.from("headcount_planejado").delete().eq("id", id);
-    fetchData();
-  };
-
   const handleBlur = (id: string) => {
     const val = parseInt(editValue, 10);
     if (!isNaN(val) && val >= 0) {
       updateQuantidade(id, val);
     }
-    setEditingId(null);
+    setEditingCell(null);
   };
 
-  const total = rows.reduce((s, r) => s + r.quantidade, 0);
-  const maxQtd = Math.max(...rows.map(r => r.quantidade), 1);
+  const { sortedTurnos, sortedCargos, dataMap, rowTotals, colTotals, grandTotal } = pivot;
+  const maxRowTotal = Math.max(...Object.values(rowTotals), 1);
 
   return (
     <Card>
@@ -240,68 +253,67 @@ function TabelaIdeal({ onTotalChange }: { onTotalChange: (total: number) => void
           <Table className="text-xs">
             <TableHeader>
               <TableRow>
-                <TableHead className="font-bold sticky left-0 bg-background z-10 min-w-[120px]">Cargo</TableHead>
-                <TableHead className="text-center font-bold px-2 w-[100px]">Qtd. Ideal</TableHead>
-                <TableHead className="w-[50px]" />
+                <TableHead className="font-bold sticky left-0 bg-background z-10 min-w-[100px]">Turno</TableHead>
+                {sortedCargos.map(c => (
+                  <TableHead key={c} className="text-center whitespace-nowrap px-2">{c}</TableHead>
+                ))}
+                <TableHead className="text-center font-bold px-2">Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map(row => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium sticky left-0 bg-background z-10 whitespace-nowrap">{row.cargo}</TableCell>
+              {sortedTurnos.map(turno => (
+                <TableRow key={turno}>
+                  <TableCell className="font-medium sticky left-0 bg-background z-10 whitespace-nowrap">{turno}</TableCell>
+                  {sortedCargos.map(cargo => {
+                    const cell = dataMap[turno]?.[cargo];
+                    const cellKey = `${turno}-${cargo}`;
+                    const val = cell?.quantidade || 0;
+                    return (
+                      <TableCell key={cargo} className="text-center px-2">
+                        {cell ? (
+                          editingCell === cellKey ? (
+                            <Input
+                              type="number"
+                              min={0}
+                              value={editValue}
+                              onChange={e => setEditValue(e.target.value)}
+                              onBlur={() => handleBlur(cell.id)}
+                              onKeyDown={e => e.key === "Enter" && handleBlur(cell.id)}
+                              className="h-7 w-16 mx-auto text-center text-xs"
+                              autoFocus
+                            />
+                          ) : (
+                            <span
+                              className="cursor-pointer hover:bg-muted px-2 py-1 rounded"
+                              onClick={() => {
+                                setEditingCell(cellKey);
+                                setEditValue(String(val));
+                              }}
+                            >
+                              {val > 0 ? val : ""}
+                            </span>
+                          )
+                        ) : ""}
+                      </TableCell>
+                    );
+                  })}
                   <TableCell
-                    className="text-center px-2"
-                    style={{ backgroundColor: `hsl(var(--primary) / ${Math.max(0.08, (row.quantidade / maxQtd) * 0.35)})` }}
+                    className="text-center font-bold px-2"
+                    style={{ backgroundColor: `hsl(var(--primary) / ${Math.max(0.08, (rowTotals[turno] / maxRowTotal) * 0.35)})` }}
                   >
-                    {editingId === row.id ? (
-                      <Input
-                        type="number"
-                        min={0}
-                        value={editValue}
-                        onChange={e => setEditValue(e.target.value)}
-                        onBlur={() => handleBlur(row.id)}
-                        onKeyDown={e => e.key === "Enter" && handleBlur(row.id)}
-                        className="h-7 w-16 mx-auto text-center text-xs"
-                        autoFocus
-                      />
-                    ) : (
-                      <span
-                        className="cursor-pointer hover:bg-muted px-2 py-1 rounded"
-                        onClick={() => {
-                          setEditingId(row.id);
-                          setEditValue(String(row.quantidade));
-                        }}
-                      >
-                        {row.quantidade}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteRow(row.id)}>
-                      <Trash2 className="h-3 w-3 text-destructive" />
-                    </Button>
+                    {rowTotals[turno]}
                   </TableCell>
                 </TableRow>
               ))}
               <TableRow className="border-t-2">
-                <TableCell className="font-bold sticky left-0 bg-background z-10">Total (Meta)</TableCell>
-                <TableCell className="text-center font-bold px-2 bg-primary/10">{total}</TableCell>
-                <TableCell />
+                <TableCell className="font-bold sticky left-0 bg-background z-10">Total</TableCell>
+                {sortedCargos.map(c => (
+                  <TableCell key={c} className="text-center font-bold px-2">{colTotals[c]}</TableCell>
+                ))}
+                <TableCell className="text-center font-bold px-2 bg-primary/10">{grandTotal}</TableCell>
               </TableRow>
             </TableBody>
           </Table>
-        </div>
-        <div className="flex items-center gap-2 p-3 border-t">
-          <Input
-            placeholder="Novo cargo..."
-            value={novoCargo}
-            onChange={e => setNovoCargo(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && addRow()}
-            className="h-8 text-xs"
-          />
-          <Button size="sm" variant="outline" className="h-8" onClick={addRow}>
-            <Plus className="h-3 w-3 mr-1" /> Adicionar
-          </Button>
         </div>
       </CardContent>
     </Card>
