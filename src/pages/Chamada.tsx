@@ -302,16 +302,27 @@ export default function Chamada() {
         console.error('Erro ao buscar demissões:', demissoesError)
       }
 
-      // Buscar TODAS as chamadas do mês SEM filtros adicionais
-      const { data: allChamadas, error: chamadasError } = await supabase
-        .from('chamadas')
-        .select('data, colaborador_id, status')
-        .gte('data', startDate)
-        .lte('data', endDate)
+      // Buscar TODAS as chamadas do mês SEM filtros adicionais (paginando para evitar limite de 1000)
+      let allChamadas: { data: string; colaborador_id: string; status: string }[] = []
+      let from = 0
+      const pageSize = 1000
+      let hasMore = true
 
-      if (chamadasError) {
-        console.error('❌ Erro ao buscar chamadas:', chamadasError)
-        return
+      while (hasMore) {
+        const { data: batch, error: chamadasError } = await supabase
+          .from('chamadas')
+          .select('data, colaborador_id, status')
+          .gte('data', startDate)
+          .lte('data', endDate)
+          .range(from, from + pageSize - 1)
+
+        if (chamadasError) {
+          console.error('❌ Erro ao buscar chamadas:', chamadasError)
+          return
+        }
+        allChamadas = allChamadas.concat(batch || [])
+        hasMore = (batch?.length || 0) === pageSize
+        from += pageSize
       }
 
       // Salvar chamadas do mês para o gráfico de pendências
