@@ -40,22 +40,15 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
       const startDate = firstDay.toISOString().split('T')[0]
       const endDate = lastDayToCheck.toISOString().split('T')[0]
 
-      // 1. Buscar TODOS os colaboradores (ativos + demitidos) para calcular pendências históricas
+      // 1. Buscar apenas colaboradores ativos
       const { data: colaboradores, error: colError } = await supabase
         .from('colaboradores')
         .select('id, admissao, status, turno, sabado_trabalho')
-        .in('status', ['Ativo', 'Demitido'])
+        .eq('status', 'Ativo')
 
       if (colError) throw colError
 
-      // 2. Buscar demissões
-      const { data: demissoes, error: demError } = await supabase
-        .from('demissoes')
-        .select('colaborador_id, data_demissao')
-
-      if (demError) throw demError
-
-      // 3. Buscar movimentações aprovadas
+      // 2. Buscar movimentações aprovadas
       const { data: movimentacoes, error: movError } = await supabase
         .from('solicitacoes_movimentacao')
         .select('colaborador_id, data_inicio')
@@ -147,20 +140,7 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
             }
           }
 
-          // Regra 2: Não aparecer se já foi demitido
-          const demissao = demissoes?.find(d => d.colaborador_id === col.id)
-          if (demissao) {
-            const dataDemissao = new Date(demissao.data_demissao)
-            dataDemissao.setHours(0, 0, 0, 0)
-            const dataAtual = new Date(currentDate)
-            dataAtual.setHours(0, 0, 0, 0)
-            
-            if (dataAtual > dataDemissao) {
-              return false
-            }
-          }
-
-          // Regra 3: Se houve movimentação, só contar a partir da data da movimentação
+          // Regra 2: Se houve movimentação, só contar a partir da data da movimentação
           const movsDoColaborador = movimentacoes?.filter(m => m.colaborador_id === col.id) || []
           if (movsDoColaborador.length > 0) {
             // Pegar movimentações que já aconteceram até a data sendo analisada
