@@ -40,11 +40,11 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
       const startDate = firstDay.toISOString().split('T')[0]
       const endDate = lastDayToCheck.toISOString().split('T')[0]
 
-      // 1. Buscar colaboradores ativos
+      // 1. Buscar TODOS os colaboradores (ativos + demitidos) para calcular pendências históricas
       const { data: colaboradores, error: colError } = await supabase
         .from('colaboradores')
         .select('id, admissao, status, turno, sabado_trabalho')
-        .eq('status', 'Ativo')
+        .in('status', ['Ativo', 'Demitido'])
 
       if (colError) throw colError
 
