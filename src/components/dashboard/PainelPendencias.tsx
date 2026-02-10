@@ -43,7 +43,7 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
       // 1. Buscar colaboradores ativos
       const { data: colaboradores, error: colError } = await supabase
         .from('colaboradores')
-        .select('id, admissao, status')
+        .select('id, admissao, status, turno, sabado_trabalho')
         .eq('status', 'Ativo')
 
       if (colError) throw colError
@@ -102,15 +102,20 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
         }
 
         // Para sábados, só verificar pendência se houve pelo menos 1 registro
-        // (indica que era dia de trabalho e alguém fez chamada)
+        const isSaturday = dayOfWeek === 6
         const registrosSabado = chamadasPorData.get(dateStr) || new Set()
-        if (dayOfWeek === 6 && registrosSabado.size === 0) {
+        if (isSaturday && registrosSabado.size === 0) {
           currentDate.setDate(currentDate.getDate() + 1)
           continue
         }
 
         // Calcular colaboradores esperados nesta data específica
         const colaboradoresEsperados = colaboradores?.filter(col => {
+          // Nos sábados, excluir turno noturno e quem não trabalha no sábado
+          if (isSaturday) {
+            if (col.turno === '22:00 - 06:52') return false
+            if (col.sabado_trabalho !== 'Sim') return false
+          }
           // Regra 1: Só aparecer se já foi admitido (usar comparação de string para evitar problemas de timezone)
           // Se não tem data de admissão, não incluir em datas anteriores a hoje
           if (!col.admissao) {
