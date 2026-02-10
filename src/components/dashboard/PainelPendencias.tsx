@@ -43,7 +43,7 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
       // 1. Buscar colaboradores ativos/afastados (mesma query do BancoChamadas)
       const { data: colaboradores, error: colError } = await supabase
         .from('colaboradores')
-        .select('id, turno, sabado_trabalho')
+        .select('id, admissao, turno, sabado_trabalho')
         .in('status', ['Ativo', 'Afastado'])
 
       if (colError) throw colError
@@ -108,15 +108,18 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
           continue
         }
 
-        // Esperado = todos ativos/afastados (nos sábados, excluir noturno e quem não trabalha)
-        let colaboradoresEsperados = colaboradores || []
-        if (isSaturday) {
-          colaboradoresEsperados = colaboradoresEsperados.filter(col => {
+        // Esperado = ativos/afastados que já estavam admitidos nesta data
+        // (evita que novos colaboradores reabram chamadas passadas já completas)
+        let colaboradoresEsperados = (colaboradores || []).filter(col => {
+          // Só contar se já admitido na data
+          if (col.admissao && dateStr < col.admissao) return false
+          // Nos sábados, excluir noturno e quem não trabalha
+          if (isSaturday) {
             if (col.turno === '22:00 - 06:52') return false
             if (col.sabado_trabalho !== 'Sim') return false
-            return true
-          })
-        }
+          }
+          return true
+        })
 
         const idsEsperados = new Set(colaboradoresEsperados.map(c => c.id))
         const totalEsperado = idsEsperados.size
