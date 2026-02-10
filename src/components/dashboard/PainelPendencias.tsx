@@ -40,44 +40,41 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
       const startDate = firstDay.toISOString().split('T')[0]
       const endDate = lastDayToCheck.toISOString().split('T')[0]
 
-      // 1. Buscar colaboradores ativos/afastados (mesma query do BancoChamadas)
+      // 1. Buscar colaboradores ativos
       const { data: colaboradores, error: colError } = await supabase
         .from('colaboradores')
-        .select('id, admissao, turno, sabado_trabalho')
-        .in('status', ['Ativo', 'Afastado'])
+        .select('id, admissao, status')
+        .eq('status', 'Ativo')
 
       if (colError) throw colError
 
-      const allColaboradorIds = new Set((colaboradores || []).map(c => c.id))
+      // 2. Buscar demissões
+      const { data: demissoes, error: demError } = await supabase
+        .from('demissoes')
+        .select('colaborador_id, data_demissao')
 
-      // 2. Buscar chamadas do período com paginação
-      let allChamadas: { data: string; colaborador_id: string }[] = []
-      let from = 0
-      const pageSize = 1000
-      let hasMore = true
+      if (demError) throw demError
 
-      while (hasMore) {
-        const { data: chamadaPage, error: chamError } = await supabase
-          .from('chamadas')
-          .select('data, colaborador_id')
-          .gte('data', startDate)
-          .lte('data', endDate)
-          .range(from, from + pageSize - 1)
+      // 3. Buscar movimentações aprovadas
+      const { data: movimentacoes, error: movError } = await supabase
+        .from('solicitacoes_movimentacao')
+        .select('colaborador_id, data_inicio')
+        .eq('status', 'aprovada')
 
-        if (chamError) throw chamError
-        
-        if (chamadaPage && chamadaPage.length > 0) {
-          allChamadas = allChamadas.concat(chamadaPage)
-          from += pageSize
-          hasMore = chamadaPage.length === pageSize
-        } else {
-          hasMore = false
-        }
-      }
+      if (movError) throw movError
+
+      // 4. Buscar chamadas do período
+      const { data: chamadas, error: chamError } = await supabase
+        .from('chamadas')
+        .select('data, colaborador_id')
+        .gte('data', startDate)
+        .lte('data', endDate)
+
+      if (chamError) throw chamError
 
       // Agrupar chamadas por data
       const chamadasPorData = new Map<string, Set<string>>()
-      allChamadas.forEach(ch => {
+      chamadas?.forEach(ch => {
         if (!chamadasPorData.has(ch.data)) {
           chamadasPorData.set(ch.data, new Set())
         }
@@ -86,8 +83,13 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
 
       // Calcular pendências dia por dia
       const pendenciasEncontradas: PendenciaData[] = []
+      // Só verificar chamadas a partir de 16/01/2026
       const dataInicioSistema = new Date('2026-01-16')
       const currentDate = new Date(firstDay)
+
+      console.log('🔍 [PainelPendencias] Iniciando cálculo para:', mesAno)
+      console.log('📅 Período:', startDate, 'até', endDate)
+      console.log('👥 Total colaboradores ativos:', colaboradores?.length)
 
       while (currentDate <= lastDayToCheck) {
         const dateStr = currentDate.toISOString().split('T')[0]
@@ -99,35 +101,78 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
           continue
         }
 
-        const isSaturday = dayOfWeek === 6
-
-        // Para sábados, só verificar se houve pelo menos 1 registro
-        const registrosDoDia = chamadasPorData.get(dateStr) || new Set()
-        if (isSaturday && registrosDoDia.size === 0) {
+        // Para sábados, só verificar pendência se houve pelo menos 1 registro
+        // (indica que era dia de trabalho e alguém fez chamada)
+        const registrosSabado = chamadasPorData.get(dateStr) || new Set()
+        if (dayOfWeek === 6 && registrosSabado.size === 0) {
           currentDate.setDate(currentDate.getDate() + 1)
           continue
         }
 
-        // Esperado = ativos/afastados que já estavam admitidos nesta data
-        // (evita que novos colaboradores reabram chamadas passadas já completas)
-        let colaboradoresEsperados = (colaboradores || []).filter(col => {
-          // Só contar se já admitido na data
-          if (col.admissao && dateStr < col.admissao) return false
-          // Nos sábados, excluir noturno e quem não trabalha
-          if (isSaturday) {
-            if (col.turno === '22:00 - 06:52') return false
-            if (col.sabado_trabalho !== 'Sim') return false
+        // Calcular colaboradores esperados nesta data específica
+        const colaboradoresEsperados = colaboradores?.filter(col => {
+          // Regra 1: Só aparecer se já foi admitido (usar comparação de string para evitar problemas de timezone)
+          // Se não tem data de admissão, não incluir em datas anteriores a hoje
+          if (!col.admissao) {
+            // Colaborador sem data de admissão: só considerar a partir de hoje
+            if (dateStr < new Date().toISOString().split('T')[0]) {
+              return false
+            }
+          } else {
+            // Comparação direta de strings YYYY-MM-DD funciona corretamente
+            if (dateStr < col.admissao) {
+              return false
+            }
           }
+
+          // Regra 2: Não aparecer se já foi demitido
+          const demissao = demissoes?.find(d => d.colaborador_id === col.id)
+          if (demissao) {
+            const dataDemissao = new Date(demissao.data_demissao)
+            dataDemissao.setHours(0, 0, 0, 0)
+            const dataAtual = new Date(currentDate)
+            dataAtual.setHours(0, 0, 0, 0)
+            
+            if (dataAtual > dataDemissao) {
+              return false
+            }
+          }
+
+          // Regra 3: Se houve movimentação, só contar a partir da data da movimentação
+          const movsDoColaborador = movimentacoes?.filter(m => m.colaborador_id === col.id) || []
+          if (movsDoColaborador.length > 0) {
+            // Pegar movimentações que já aconteceram até a data sendo analisada
+            const movsAplicaveis = movsDoColaborador
+              .filter(m => m.data_inicio <= dateStr)
+              .sort((a, b) => b.data_inicio.localeCompare(a.data_inicio))
+            
+            if (movsAplicaveis.length > 0) {
+              const movMaisRecente = movsAplicaveis[0]
+              const dataMov = new Date(movMaisRecente.data_inicio)
+              dataMov.setHours(0, 0, 0, 0)
+              const dataAtual = new Date(currentDate)
+              dataAtual.setHours(0, 0, 0, 0)
+              
+              // Colaborador só conta a partir da data da movimentação
+              if (dataAtual < dataMov) {
+                return false
+              }
+            }
+          }
+
           return true
-        })
+        }) || []
 
-        const idsEsperados = new Set(colaboradoresEsperados.map(c => c.id))
-        const totalEsperado = idsEsperados.size
+        const totalEsperado = colaboradoresEsperados.length
+        const registrosNaData = chamadasPorData.get(dateStr) || new Set()
+        const totalRegistrado = registrosNaData.size
 
-        // Registrado = apenas colaboradores ativos/afastados que têm registro
-        const totalRegistrado = [...registrosDoDia].filter(id => idsEsperados.has(id)).length
+        // Debug para outubro
+        if (dateStr.startsWith('2025-10')) {
+          console.log(`📊 ${dateStr}: ${totalRegistrado}/${totalEsperado} registros`)
+        }
 
-        // Só adicionar se houver pendência
+        // Só adicionar se houver pendência (falta pelo menos 1 registro)
         if (totalRegistrado < totalEsperado && totalEsperado > 0) {
           pendenciasEncontradas.push({
             data: dateStr,
@@ -138,6 +183,8 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
 
         currentDate.setDate(currentDate.getDate() + 1)
       }
+
+      console.log(`✅ Total de pendências encontradas: ${pendenciasEncontradas.length}`)
 
       setPendencias(pendenciasEncontradas.sort((a, b) => b.data.localeCompare(a.data)))
     } catch (error) {
