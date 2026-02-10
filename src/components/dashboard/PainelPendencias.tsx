@@ -40,7 +40,7 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
       const startDate = firstDay.toISOString().split('T')[0]
       const endDate = lastDayToCheck.toISOString().split('T')[0]
 
-      // 1. Buscar colaboradores ativos
+      // 1. Buscar colaboradores ativos (com campos necessários)
       const { data: colaboradores, error: colError } = await supabase
         .from('colaboradores')
         .select('id, admissao, status')
@@ -95,69 +95,49 @@ export function PainelPendencias({ mesAno, onDateClick }: PainelPendenciasProps)
         const dateStr = currentDate.toISOString().split('T')[0]
         const dayOfWeek = currentDate.getDay()
         
-        // Pular datas antes do sistema e domingos
-        if (currentDate < dataInicioSistema || dayOfWeek === 0) {
+        // Pular datas antes do sistema, domingos e sábados (igual à página Chamada)
+        if (currentDate < dataInicioSistema || dayOfWeek === 0 || dayOfWeek === 6) {
           currentDate.setDate(currentDate.getDate() + 1)
           continue
         }
 
-        // Para sábados, só verificar pendência se houve pelo menos 1 registro
-        // (indica que era dia de trabalho e alguém fez chamada)
-        const registrosSabado = chamadasPorData.get(dateStr) || new Set()
-        if (dayOfWeek === 6 && registrosSabado.size === 0) {
-          currentDate.setDate(currentDate.getDate() + 1)
-          continue
-        }
-
-        // Calcular colaboradores esperados nesta data específica
+        // Calcular colaboradores esperados nesta data (mesma lógica da página Chamada)
         const colaboradoresEsperados = colaboradores?.filter(col => {
-          // Regra 1: Só aparecer se já foi admitido (usar comparação de string para evitar problemas de timezone)
-          // Se não tem data de admissão, não incluir em datas anteriores a hoje
-          if (!col.admissao) {
-            // Colaborador sem data de admissão: só considerar a partir de hoje
-            if (dateStr < new Date().toISOString().split('T')[0]) {
-              return false
-            }
-          } else {
-            // Comparação direta de strings YYYY-MM-DD funciona corretamente
-            if (dateStr < col.admissao) {
-              return false
-            }
-          }
+          // Apenas colaboradores ativos
+          if (col.status !== 'Ativo') return false
 
-          // Regra 2: Não aparecer se já foi demitido
-          const demissao = demissoes?.find(d => d.colaborador_id === col.id)
-          if (demissao) {
-            const dataDemissao = new Date(demissao.data_demissao)
-            dataDemissao.setHours(0, 0, 0, 0)
-            const dataAtual = new Date(currentDate)
-            dataAtual.setHours(0, 0, 0, 0)
-            
-            if (dataAtual > dataDemissao) {
-              return false
-            }
+          // Data mínima = maior entre admissão e movimentação mais recente
+          let dataMinima: string | null = null
+          
+          // Data de admissão
+          if (col.admissao) {
+            dataMinima = col.admissao
           }
-
-          // Regra 3: Se houve movimentação, só contar a partir da data da movimentação
-          const movsDoColaborador = movimentacoes?.filter(m => m.colaborador_id === col.id) || []
-          if (movsDoColaborador.length > 0) {
-            // Pegar movimentações que já aconteceram até a data sendo analisada
-            const movsAplicaveis = movsDoColaborador
-              .filter(m => m.data_inicio <= dateStr)
+          
+          // Verificar movimentações
+          const colMovs = movimentacoes?.filter(m => m.colaborador_id === col.id) || []
+          if (colMovs.length > 0) {
+            const movsAplicaveis = colMovs
+              .filter(m => m.data_inicio && m.data_inicio <= dateStr)
               .sort((a, b) => b.data_inicio.localeCompare(a.data_inicio))
             
             if (movsAplicaveis.length > 0) {
               const movMaisRecente = movsAplicaveis[0]
-              const dataMov = new Date(movMaisRecente.data_inicio)
-              dataMov.setHours(0, 0, 0, 0)
-              const dataAtual = new Date(currentDate)
-              dataAtual.setHours(0, 0, 0, 0)
-              
-              // Colaborador só conta a partir da data da movimentação
-              if (dataAtual < dataMov) {
-                return false
+              if (!dataMinima || movMaisRecente.data_inicio > dataMinima) {
+                dataMinima = movMaisRecente.data_inicio
               }
             }
+          }
+          
+          // Se existe data mínima, colaborador só deveria aparecer a partir dela
+          if (dataMinima && dateStr < dataMinima) {
+            return false
+          }
+          
+          // Verificar se estava demitido nesta data (comparação de string YYYY-MM-DD)
+          const demissao = demissoes?.find(d => d.colaborador_id === col.id)
+          if (demissao && demissao.data_demissao <= dateStr) {
+            return false
           }
 
           return true
