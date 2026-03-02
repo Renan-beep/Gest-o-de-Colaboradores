@@ -1022,7 +1022,7 @@ export default function Chamada() {
       {showBackButton && pendingColaboradores.length > 0 && (
         <Button
           onClick={scrollToPendencias}
-          className="fixed bottom-6 right-6 z-50 rounded-full shadow-lg h-12 w-12 p-0"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 rounded-full shadow-lg h-12 w-12 p-0"
           size="icon"
         >
           <ChevronUp className="w-6 h-6" />
