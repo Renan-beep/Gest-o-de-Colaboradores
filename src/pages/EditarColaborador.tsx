@@ -201,10 +201,10 @@ export default function EditarColaborador() {
         "Fim antecipado/contrato Empregado": "pedido",
         "Fim antecipado/contrato Empresa": "sem_justa_causa",
         "Fim do contrato de trabalho": "fim_contrato",
+        "Iniciativa colaborador": "pedido",
         "Iniciativa empregadora/sem justa causa": "sem_justa_causa",
         "Iniciativa empresa/com justa causa": "justa_causa",
         "Iniciativa empresa/sem justa causa": "sem_justa_causa",
-        "Transferência para outra filial": "pedido"
       }
 
       const tipoDemissao = tipoMap[dismissalReason] || "sem_justa_causa"
@@ -271,10 +271,10 @@ export default function EditarColaborador() {
     "Fim antecipado/contrato Empregado",
     "Fim antecipado/contrato Empresa", 
     "Fim do contrato de trabalho",
+    "Iniciativa colaborador",
     "Iniciativa empregadora/sem justa causa",
     "Iniciativa empresa/com justa causa",
     "Iniciativa empresa/sem justa causa",
-    "Transferência para outra filial"
   ]
 
   if (loading) {
