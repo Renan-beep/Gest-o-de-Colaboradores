@@ -476,13 +476,23 @@ export default function ChamadaSabado() {
               </div>
               <div className="text-2xl font-bold mb-1">{summary.confirmados}</div>
               <div className="text-sm text-muted-foreground">Virá no Sábado</div>
+              {summary.total > 0 && (
+                <div className="text-xs font-medium text-green-600 mt-1">
+                  {((summary.confirmados / summary.total) * 100).toFixed(1)}% do total
+                </div>
+              )}
             </div>
             <div className="text-center p-4 border rounded-lg">
               <div className="w-12 h-12 mx-auto rounded-lg flex items-center justify-center mb-2 bg-red-100">
                 <X className="w-6 h-6 text-red-600" />
               </div>
               <div className="text-2xl font-bold mb-1">{summary.naoVirao}</div>
-              <div className="text-sm text-muted-foreground">Não Vira</div>
+              <div className="text-sm text-muted-foreground">Não Virá</div>
+              {summary.total > 0 && (
+                <div className="text-xs font-medium text-red-600 mt-1">
+                  {((summary.naoVirao / summary.total) * 100).toFixed(1)}% do total
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
