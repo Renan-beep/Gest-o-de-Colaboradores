@@ -212,6 +212,7 @@ export default function Operacao() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [semNoturno, setSemNoturno] = useState(false);
   const [somentePresentes, setSomentePresentes] = useState(false);
+  const [filtroStatus, setFiltroStatus] = useState<string | null>(null);
 
   const formattedDate = format(selectedDate, 'yyyy-MM-dd');
   const isToday = format(new Date(), 'yyyy-MM-dd') === formattedDate;
@@ -307,6 +308,16 @@ export default function Operacao() {
         // Se "Somente Presentes" está ativado, só adiciona presentes
         if (somentePresentes && !presente) return;
         
+        // Filtro por status clicado nos indicadores
+        if (filtroStatus) {
+          const statusLower = statusChamada?.toLowerCase() || null;
+          if (filtroStatus === 'semRegistro') {
+            if (statusLower) return;
+          } else if (statusLower !== filtroStatus) {
+            return;
+          }
+        }
+        
         const colabComStatus: ColaboradorComStatus = {
           ...colab,
           presente,
@@ -344,7 +355,7 @@ export default function Operacao() {
       })
       .filter(s => s.colaboradores.length > 0) // Remove setores vazios quando só presentes
       .sort((a, b) => b.totalColaboradores - a.totalColaboradores);
-  }, [colaboradoresFiltrados, chamadasMap, somentePresentes]);
+  }, [colaboradoresFiltrados, chamadasMap, somentePresentes, filtroStatus]);
 
   const maxTotal = useMemo(() => {
     return Math.max(...setoresData.map(s => s.totalColaboradores), 1);
@@ -457,8 +468,13 @@ export default function Operacao() {
         {statusIndicators.map(indicator => {
           const IconComponent = indicator.icon;
           const count = statusCounts[indicator.key as keyof typeof statusCounts];
+          const isActive = filtroStatus === indicator.key;
           return (
-            <div key={indicator.key} className="text-center p-2 md:p-4 border rounded-lg bg-card">
+            <div 
+              key={indicator.key} 
+              className={`text-center p-2 md:p-4 border rounded-lg bg-card cursor-pointer transition-all hover:shadow-md ${isActive ? 'ring-2 ring-primary shadow-md scale-[1.02]' : 'hover:scale-[1.01]'}`}
+              onClick={() => setFiltroStatus(isActive ? null : indicator.key)}
+            >
               <div className={`w-8 h-8 md:w-12 md:h-12 mx-auto rounded-lg flex items-center justify-center mb-1 md:mb-2 ${indicator.bgColor}`}>
                 <IconComponent className={`w-4 h-4 md:w-6 md:h-6 ${indicator.textColor}`} />
               </div>
@@ -468,6 +484,16 @@ export default function Operacao() {
           );
         })}
       </div>
+      {filtroStatus && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Badge variant="secondary" className="text-xs">
+            Filtrando: {statusIndicators.find(s => s.key === filtroStatus)?.label}
+          </Badge>
+          <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setFiltroStatus(null)}>
+            Limpar filtro
+          </Button>
+        </div>
+      )}
 
       {/* Filtros Toggle */}
       <div className="flex flex-wrap items-center gap-6 p-3 bg-muted/30 rounded-lg border border-border">
