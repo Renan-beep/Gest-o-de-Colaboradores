@@ -21,6 +21,7 @@ import {
   Filter,
   AlertTriangle,
   ChevronRight,
+  ChevronUp,
   RotateCcw,
   Settings,
   Database
@@ -76,6 +77,8 @@ export default function Chamada() {
   const [movimentacoes, setMovimentacoes] = useState<Array<{colaborador_id: string, data_inicio: string, lideranca_origem: string | null, lideranca_destino: string | null, tipo_movimentacao: string}>>([])
   const [highlightedColaborador, setHighlightedColaborador] = useState<string | null>(null)
   const colaboradorRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+  const pendenciasRef = useRef<HTMLDivElement | null>(null)
+  const [showBackButton, setShowBackButton] = useState(false)
   const [chamadasMes, setChamadasMes] = useState<Array<{colaborador_id: string, data: string, status: string}>>([])
   const [pendenciasVersion, setPendenciasVersion] = useState(0) // Trigger para recalcular pendências
 
@@ -698,8 +701,14 @@ export default function Chamada() {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
       setHighlightedColaborador(colaboradorId)
+      setShowBackButton(true)
       setTimeout(() => setHighlightedColaborador(null), 3000)
     }
+  }
+
+  const scrollToPendencias = () => {
+    pendenciasRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setShowBackButton(false)
   }
 
 
@@ -980,31 +989,44 @@ export default function Chamada() {
 
       {/* Indicador de Pendências */}
       {pendingColaboradores.length > 0 && (
-        <Card className="shadow-card border-orange-200 bg-orange-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-700">
-              <AlertTriangle className="w-5 h-5" />
-              Pendências da Chamada
-            </CardTitle>
-            <CardDescription className="text-orange-600">
-              {pendingColaboradores.length} colaborador(es) ainda não tiveram presença registrada
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {pendingColaboradores.map(col => (
-                <div 
-                  key={col.id} 
-                  onClick={() => scrollToColaborador(col.id)}
-                  className="flex items-center justify-between p-2 bg-white rounded border cursor-pointer hover:bg-orange-100 transition-colors"
-                >
-                  <span className="font-medium">{col.colaborador}</span>
-                  <span className="text-sm text-muted-foreground">Liderança: {col.lideranca}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div ref={pendenciasRef}>
+          <Card className="shadow-card border-orange-200 bg-orange-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-orange-700">
+                <AlertTriangle className="w-5 h-5" />
+                Pendências da Chamada
+              </CardTitle>
+              <CardDescription className="text-orange-600">
+                {pendingColaboradores.length} colaborador(es) ainda não tiveram presença registrada
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {pendingColaboradores.map(col => (
+                  <div 
+                    key={col.id} 
+                    onClick={() => scrollToColaborador(col.id)}
+                    className="flex items-center justify-between p-2 bg-white rounded border cursor-pointer hover:bg-orange-100 transition-colors"
+                  >
+                    <span className="font-medium">{col.colaborador}</span>
+                    <span className="text-sm text-muted-foreground">Liderança: {col.lideranca}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Botão flutuante para voltar às pendências */}
+      {showBackButton && pendingColaboradores.length > 0 && (
+        <Button
+          onClick={scrollToPendencias}
+          className="fixed bottom-6 right-6 z-50 rounded-full shadow-lg h-12 w-12 p-0"
+          size="icon"
+        >
+          <ChevronUp className="w-6 h-6" />
+        </Button>
       )}
 
       {/* Indicadores Quantitativos */}
