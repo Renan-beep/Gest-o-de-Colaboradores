@@ -20,7 +20,8 @@ import {
   Database,
   Filter,
   RotateCcw,
-  BarChart3
+  BarChart3,
+  ShieldOff
 } from "lucide-react"
 import { format, parseISO } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -65,6 +66,7 @@ const statusOptions = [
   { value: "falta", label: "Falta", icon: X, color: "bg-red-500/10 text-red-600 border-red-500/20" },
   { value: "atestado", label: "Atestado", icon: Heart, color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
   { value: "ferias", label: "Férias", icon: Coffee, color: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
+  { value: "licenca", label: "Licença", icon: ShieldOff, color: "bg-teal-500/10 text-teal-600 border-teal-500/20" },
   { value: "vira_sabado", label: "Vira Sábado", icon: CalendarIcon, color: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20" }
 ]
 
