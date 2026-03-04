@@ -24,7 +24,8 @@ import {
   ChevronUp,
   RotateCcw,
   Settings,
-  Database
+  Database,
+  ShieldOff
 } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -55,7 +56,8 @@ const statusOptions = [
   { value: "folga", label: "Folga", icon: Home, color: "status-break" },
   { value: "falta", label: "Falta", icon: X, color: "status-absent" },
   { value: "atestado", label: "Atestado", icon: Heart, color: "status-sick" },
-  { value: "ferias", label: "Férias", icon: Coffee, color: "status-vacation" }
+  { value: "ferias", label: "Férias", icon: Coffee, color: "status-vacation" },
+  { value: "licenca", label: "Licença", icon: ShieldOff, color: "status-license" }
 ]
 
 export default function Chamada() {
@@ -1038,7 +1040,7 @@ export default function Chamada() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 md:gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 md:gap-4">
             {statusOptions.map(option => {
               const IconComponent = option.icon
               return (
@@ -1048,6 +1050,7 @@ export default function Chamada() {
                     option.value === 'falta' ? 'bg-red-100' :
                     option.value === 'folga' ? 'bg-orange-100' :
                     option.value === 'atestado' ? 'bg-pink-100' :
+                    option.value === 'licenca' ? 'bg-teal-100' :
                     'bg-purple-100'
                   }`}>
                     <IconComponent className={`w-4 h-4 md:w-6 md:h-6 ${
@@ -1055,6 +1058,7 @@ export default function Chamada() {
                       option.value === 'falta' ? 'text-red-600' :
                       option.value === 'folga' ? 'text-orange-600' :
                       option.value === 'atestado' ? 'text-pink-600' :
+                      option.value === 'licenca' ? 'text-teal-600' :
                       'text-purple-600'
                     }`} />
                   </div>

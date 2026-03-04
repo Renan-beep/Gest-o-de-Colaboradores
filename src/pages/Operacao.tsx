@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Factory, CalendarDays, AlertCircle, UserCheck, X, Home, Heart, Coffee } from "lucide-react";
+import { Users, Factory, CalendarDays, AlertCircle, UserCheck, X, Home, Heart, Coffee, ShieldOff } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -50,6 +50,7 @@ const formatStatus = (status: string | null): string => {
     'afastado': 'Afastado',
     'folga': 'Folga',
     'presente': 'Presente',
+    'licenca': 'Licença',
   };
   return statusMap[status.toLowerCase()] || status;
 };
@@ -72,6 +73,8 @@ const getStatusStyle = (status: string | null): string => {
       return "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/40 dark:text-orange-400 dark:border-orange-700";
     case 'folga':
       return "bg-cyan-100 text-cyan-700 border-cyan-300 dark:bg-cyan-900/40 dark:text-cyan-400 dark:border-cyan-700";
+    case 'licenca':
+      return "bg-teal-100 text-teal-700 border-teal-300 dark:bg-teal-900/40 dark:text-teal-400 dark:border-teal-700";
     default:
       return "bg-gray-200 text-gray-600 border-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600";
   }
@@ -375,6 +378,7 @@ export default function Operacao() {
       folga: 0,
       atestado: 0,
       ferias: 0,
+      licenca: 0,
       semRegistro: 0
     };
     
@@ -392,6 +396,8 @@ export default function Operacao() {
         counts.atestado++;
       } else if (status === 'ferias') {
         counts.ferias++;
+      } else if (status === 'licenca') {
+        counts.licenca++;
       }
     });
     
@@ -404,6 +410,7 @@ export default function Operacao() {
     { key: 'folga', label: 'Folga', icon: Home, bgColor: 'bg-orange-100 dark:bg-orange-900/30', textColor: 'text-orange-600 dark:text-orange-400' },
     { key: 'atestado', label: 'Atestado', icon: Heart, bgColor: 'bg-pink-100 dark:bg-pink-900/30', textColor: 'text-pink-600 dark:text-pink-400' },
     { key: 'ferias', label: 'Férias', icon: Coffee, bgColor: 'bg-purple-100 dark:bg-purple-900/30', textColor: 'text-purple-600 dark:text-purple-400' },
+    { key: 'licenca', label: 'Licença', icon: ShieldOff, bgColor: 'bg-teal-100 dark:bg-teal-900/30', textColor: 'text-teal-600 dark:text-teal-400' },
   ];
 
   if (loading) {
@@ -464,7 +471,7 @@ export default function Operacao() {
       </div>
 
       {/* Indicadores do Dia */}
-      <div className="grid grid-cols-5 gap-2 md:gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 md:gap-4">
         {statusIndicators.map(indicator => {
           const IconComponent = indicator.icon;
           const count = statusCounts[indicator.key as keyof typeof statusCounts];
@@ -556,6 +563,10 @@ export default function Operacao() {
         <div className="flex items-center gap-1.5">
           <span className="inline-block w-3 h-3 rounded-full bg-cyan-500"></span>
           <span>Folga</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-full bg-teal-500"></span>
+          <span>Licença</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="inline-block w-3 h-3 rounded-full bg-gray-400"></span>
