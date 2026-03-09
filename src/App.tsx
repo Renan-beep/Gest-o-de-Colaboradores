@@ -7,6 +7,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AppLayout } from "./components/layout/AppLayout";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
+import MenuHome from "./pages/MenuHome";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Cadastro from "./pages/Cadastro";
@@ -50,6 +51,11 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/" element={
+                <ProtectedRoute>
+                  <MenuHome />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <AppLayout>
                     <Index />
