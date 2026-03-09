@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChatContainer } from "@/components/chat";
 import { OnlineUsers } from "@/components/common/OnlineUsers";
+import { AICopilot } from "@/components/ai/AICopilot";
 
 interface MenuItem {
   title: string;
