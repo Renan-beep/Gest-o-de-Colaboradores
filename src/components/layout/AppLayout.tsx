@@ -52,11 +52,12 @@ export function AppLayout({ children }: AppLayoutProps) {
         {children}
       </main>
       
-      {/* Chat and online users */}
+      {/* Chat, online users and AI */}
       <div className="hidden sm:block">
         <ChatContainer />
       </div>
       <OnlineUsers />
+      <AICopilot />
     </div>
   );
 }

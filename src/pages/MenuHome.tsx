@@ -188,6 +188,7 @@ export default function MenuHome() {
         <ChatContainer />
       </div>
       <OnlineUsers />
+      <AICopilot />
     </div>
   );
 }
