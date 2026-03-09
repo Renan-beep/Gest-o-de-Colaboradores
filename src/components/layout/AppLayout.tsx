@@ -1,7 +1,8 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { ChatContainer } from "@/components/chat";
 import { OnlineUsers } from "@/components/common/OnlineUsers";
-import { LayoutGrid, ChevronLeft } from "lucide-react";
+import { AICopilot } from "@/components/ai/AICopilot";
+import { LayoutGrid } from "lucide-react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -51,11 +52,12 @@ export function AppLayout({ children }: AppLayoutProps) {
         {children}
       </main>
       
-      {/* Chat and online users */}
+      {/* Chat, online users and AI */}
       <div className="hidden sm:block">
         <ChatContainer />
       </div>
       <OnlineUsers />
+      <AICopilot />
     </div>
   );
 }
