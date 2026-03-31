@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Filter, Search, Download, RefreshCw, Edit, UserCheck, UserX, Clock, Eye } from "lucide-react";
+import { Users, Filter, Search, Download, RefreshCw, Edit, UserCheck, UserX, Clock, Eye, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
