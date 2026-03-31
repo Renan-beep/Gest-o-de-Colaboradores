@@ -884,21 +884,45 @@ export default function ListaColaboradores() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Matrícula</TableHead>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Sexo</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Cargo</TableHead>
-                      <TableHead>Setor</TableHead>
-                      <TableHead>Subsetor</TableHead>
-                      <TableHead>Liderança</TableHead>
-                      <TableHead>Turno</TableHead>
-                      <TableHead>Sábado</TableHead>
-                      <TableHead>Horário Sábado</TableHead>
-                      <TableHead>Horário Almoço</TableHead>
-                      <TableHead>Horário Café</TableHead>
-                      <TableHead>Admissão</TableHead>
-                      <TableHead>Tempo de Empresa</TableHead>
+                      {[
+                        { key: 'matricula', label: 'Matrícula' },
+                        { key: 'colaborador', label: 'Nome' },
+                        { key: 'sexo', label: 'Sexo' },
+                        { key: 'status', label: 'Status' },
+                        { key: 'cargo', label: 'Cargo' },
+                        { key: 'setor', label: 'Setor' },
+                        { key: 'subsetor', label: 'Subsetor' },
+                        { key: 'lideranca', label: 'Liderança' },
+                        { key: 'turno', label: 'Turno' },
+                        { key: 'sabado_trabalho', label: 'Sábado' },
+                        { key: 'sabado_horario', label: 'Horário Sábado' },
+                        { key: 'horario_almoco', label: 'Horário Almoço' },
+                        { key: 'horario_cafe', label: 'Horário Café' },
+                        { key: 'admissao', label: 'Admissão' },
+                        { key: 'tempo_empresa', label: 'Tempo de Empresa' },
+                      ].map(col => (
+                        <TableHead
+                          key={col.key}
+                          className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
+                          onClick={() => {
+                            if (sortColumn === col.key) {
+                              setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setSortColumn(col.key);
+                              setSortDirection('asc');
+                            }
+                          }}
+                        >
+                          <div className="flex items-center gap-1">
+                            {col.label}
+                            {sortColumn === col.key ? (
+                              sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                            ) : (
+                              <ArrowUpDown className="w-3 h-3 text-muted-foreground/50" />
+                            )}
+                          </div>
+                        </TableHead>
+                      ))}
                       <TableHead>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
