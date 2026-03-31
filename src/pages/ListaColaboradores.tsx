@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Filter, Search, Download, RefreshCw, Edit, UserCheck, UserX, Clock, Eye } from "lucide-react";
+import { Users, Filter, Search, Download, RefreshCw, Edit, UserCheck, UserX, Clock, Eye, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -77,6 +77,8 @@ export default function ListaColaboradores() {
   const [filteredDemitidos, setFilteredDemitidos] = useState<Demitido[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("ativos");
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Filtros com seleção múltipla
   const [filtros, setFiltros] = useState({
@@ -848,8 +850,8 @@ export default function ListaColaboradores() {
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Limpar Filtros
                 </Button>
-                
-                
+
+
                 <Button variant="default" onClick={exportarParaExcel}>
                   <Download className="w-4 h-4 mr-2" />
                   Exportar para Excel
@@ -881,26 +883,59 @@ export default function ListaColaboradores() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Matrícula</TableHead>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Sexo</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Cargo</TableHead>
-                      <TableHead>Setor</TableHead>
-                      <TableHead>Subsetor</TableHead>
-                      <TableHead>Liderança</TableHead>
-                      <TableHead>Turno</TableHead>
-                      <TableHead>Sábado</TableHead>
-                      <TableHead>Horário Sábado</TableHead>
-                      <TableHead>Horário Almoço</TableHead>
-                      <TableHead>Horário Café</TableHead>
-                      <TableHead>Admissão</TableHead>
-                      <TableHead>Tempo de Empresa</TableHead>
+                      {[
+                        { key: 'matricula', label: 'Matrícula' },
+                        { key: 'colaborador', label: 'Nome' },
+                        { key: 'sexo', label: 'Sexo' },
+                        { key: 'status', label: 'Status' },
+                        { key: 'cargo', label: 'Cargo' },
+                        { key: 'setor', label: 'Setor' },
+                        { key: 'subsetor', label: 'Subsetor' },
+                        { key: 'lideranca', label: 'Liderança' },
+                        { key: 'turno', label: 'Turno' },
+                        { key: 'sabado_trabalho', label: 'Sábado' },
+                        { key: 'sabado_horario', label: 'Horário Sábado' },
+                        { key: 'horario_almoco', label: 'Horário Almoço' },
+                        { key: 'horario_cafe', label: 'Horário Café' },
+                        { key: 'admissao', label: 'Admissão' },
+                        { key: 'tempo_empresa', label: 'Tempo de Empresa' },
+                      ].map(col => (
+                        <TableHead
+                          key={col.key}
+                          className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
+                          onClick={() => {
+                            if (sortColumn === col.key) {
+                              setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setSortColumn(col.key);
+                              setSortDirection('asc');
+                            }
+                          }}
+                        >
+                          <div className="flex items-center gap-1">
+                            {col.label}
+                            {sortColumn === col.key ? (
+                              sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                            ) : (
+                              <ArrowUpDown className="w-3 h-3 text-muted-foreground/50" />
+                            )}
+                          </div>
+                        </TableHead>
+                      ))}
                       <TableHead>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredColaboradores.map(colaborador => {
+                    {[...filteredColaboradores].sort((a, b) => {
+                      if (!sortColumn) return 0;
+                      const dir = sortDirection === 'asc' ? 1 : -1;
+                      if (sortColumn === 'tempo_empresa') {
+                        return dir * (calcularTempoEmpresa(a.admissao).totalMeses - calcularTempoEmpresa(b.admissao).totalMeses);
+                      }
+                      const valA = (a[sortColumn as keyof Colaborador] ?? '').toString().toLowerCase();
+                      const valB = (b[sortColumn as keyof Colaborador] ?? '').toString().toLowerCase();
+                      return dir * valA.localeCompare(valB, 'pt-BR', { numeric: true });
+                    }).map(colaborador => {
                       const tempoEmpresa = calcularTempoEmpresa(colaborador.admissao);
                       return (
                         <TableRow key={colaborador.id}>
