@@ -71,6 +71,7 @@ export default function Chamada() {
   const [filterTurno, setFilterTurno] = useState<string[]>([])
   const [filterSexo, setFilterSexo] = useState<string[]>([])
   const [filterSubsetor, setFilterSubsetor] = useState<string[]>([])
+  const [filterSetor, setFilterSetor] = useState<string[]>([])
   const [datesWithPendencies, setDatesWithPendencies] = useState<string[]>([])
   const [loadingPendencies, setLoadingPendencies] = useState(false)
   const [primeiraDataChamada, setPrimeiraDataChamada] = useState<Date | null>(null)
@@ -690,6 +691,11 @@ export default function Chamada() {
       filtered = filtered.filter(col => filterSexo.includes(col.sexo))
     }
 
+    // Filtrar por setor
+    if (filterSetor.length > 0) {
+      filtered = filtered.filter(col => filterSetor.includes(col.setor))
+    }
+
     // Filtrar por subsetor
     if (filterSubsetor.length > 0) {
       filtered = filtered.filter(col => filterSubsetor.includes(col.subsetor))
@@ -720,6 +726,7 @@ export default function Chamada() {
   const liderancas = [...new Set(colaboradores.map(c => c.lideranca).filter(l => l && l.trim() !== ''))]
   const turnos = [...new Set(colaboradores.map(c => c.turno).filter(t => t && t.trim() !== ''))]
   const subsetores = [...new Set(colaboradores.map(c => c.subsetor).filter(s => s && s.trim() !== ''))]
+  const setores = [...new Set(colaboradores.map(c => c.setor).filter(s => s && s.trim() !== ''))]
 
   if (loading) {
     return (
@@ -966,6 +973,16 @@ export default function Chamada() {
                 selected={filterSexo}
                 onChange={setFilterSexo}
                 placeholder="Todos"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Filtrar por Setor</Label>
+              <MultiSelect
+                options={setores}
+                selected={filterSetor}
+                onChange={setFilterSetor}
+                placeholder="Todos os setores"
               />
             </div>
 
