@@ -926,7 +926,16 @@ export default function ListaColaboradores() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredColaboradores.map(colaborador => {
+                    {[...filteredColaboradores].sort((a, b) => {
+                      if (!sortColumn) return 0;
+                      const dir = sortDirection === 'asc' ? 1 : -1;
+                      if (sortColumn === 'tempo_empresa') {
+                        return dir * (calcularTempoEmpresa(a.admissao).totalMeses - calcularTempoEmpresa(b.admissao).totalMeses);
+                      }
+                      const valA = (a[sortColumn as keyof Colaborador] ?? '').toString().toLowerCase();
+                      const valB = (b[sortColumn as keyof Colaborador] ?? '').toString().toLowerCase();
+                      return dir * valA.localeCompare(valB, 'pt-BR', { numeric: true });
+                    }).map(colaborador => {
                       const tempoEmpresa = calcularTempoEmpresa(colaborador.admissao);
                       return (
                         <TableRow key={colaborador.id}>
