@@ -57,7 +57,6 @@ export function AppLayout({ children }: AppLayoutProps) {
         <ChatContainer />
       </div>
       <OnlineUsers />
-      <AICopilot />
     </div>
   );
 }
