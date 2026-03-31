@@ -1085,6 +1085,51 @@ export default function Chamada() {
               )
             })}
           </div>
+
+          {/* Taxa por Setor */}
+          {(() => {
+            const setoresUnicos = [...new Set(filteredColaboradores.map(c => c.setor).filter(s => s && s.trim() !== ''))].sort()
+            if (setoresUnicos.length === 0) return null
+
+            const dadosSetor = setoresUnicos.map(setor => {
+              const colsSetor = filteredColaboradores.filter(c => c.setor === setor)
+              const total = colsSetor.length
+              const presentes = colsSetor.filter(c => chamadas[c.id] === 'presente').length
+              const faltas = colsSetor.filter(c => chamadas[c.id] === 'falta').length
+              const atestados = colsSetor.filter(c => chamadas[c.id] === 'atestado').length
+              const licencas = colsSetor.filter(c => chamadas[c.id] === 'licenca').length
+              const ausencias = faltas + atestados + licencas
+              const taxaPresenca = total > 0 ? Math.round((presentes / total) * 100) : 0
+              const taxaAusencia = total > 0 ? Math.round((ausencias / total) * 100) : 0
+              return { setor, total, presentes, ausencias, taxaPresenca, taxaAusencia }
+            })
+
+            return (
+              <div className="mt-6">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Taxa por Setor</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {dadosSetor.map(d => (
+                    <div key={d.setor} className="border rounded-lg p-3">
+                      <div className="font-medium text-sm mb-2 truncate">{d.setor}</div>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-green-500 rounded-full transition-all"
+                            style={{ width: `${d.taxaPresenca}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-bold text-green-600 w-12 text-right">{d.taxaPresenca}%</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{d.presentes}/{d.total} presentes</span>
+                        <span className="text-red-500">{d.ausencias} ausências ({d.taxaAusencia}%)</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
         </CardContent>
       </Card>
 
