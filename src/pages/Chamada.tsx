@@ -977,6 +977,16 @@ export default function Chamada() {
             </div>
 
             <div className="space-y-2">
+              <Label>Filtrar por Setor</Label>
+              <MultiSelect
+                options={setores}
+                selected={filterSetor}
+                onChange={setFilterSetor}
+                placeholder="Todos os setores"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label>Filtrar por Subsetor</Label>
               <MultiSelect
                 options={subsetores}
