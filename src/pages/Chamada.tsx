@@ -691,6 +691,11 @@ export default function Chamada() {
       filtered = filtered.filter(col => filterSexo.includes(col.sexo))
     }
 
+    // Filtrar por setor
+    if (filterSetor.length > 0) {
+      filtered = filtered.filter(col => filterSetor.includes(col.setor))
+    }
+
     // Filtrar por subsetor
     if (filterSubsetor.length > 0) {
       filtered = filtered.filter(col => filterSubsetor.includes(col.subsetor))
