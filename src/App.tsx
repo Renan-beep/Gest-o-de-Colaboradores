@@ -125,13 +125,6 @@ const App = () => (
                   </AppLayout>
                 </ProtectedRoute>
               } />
-              <Route path="/movimentacoes-headcount" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <MovimentacoesHeadcount />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

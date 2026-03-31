@@ -24,7 +24,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       '/configuracoes-conta': 'Configurações',
       '/lista-colaboradores': 'Lista de Colaboradores',
       '/solicitacao-movimentacao': 'Solicitações',
-      '/movimentacoes-headcount': 'Movimentações HC',
+      
     };
     if (location.pathname.startsWith('/editar-colaborador')) return 'Editar Colaborador';
     return map[location.pathname] || 'Página';
