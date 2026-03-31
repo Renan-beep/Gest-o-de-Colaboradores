@@ -97,6 +97,11 @@ export default function Cadastro() {
       ({ campo }) => !formData[campo as keyof typeof formData]
     )
 
+    if (formData.matricula && !/^\d+$/.test(formData.matricula)) {
+      toast({ title: "Erro", description: "Matrícula deve conter apenas números", variant: "destructive" })
+      return
+    }
+
     if (camposFaltando.length > 0) {
       toast({
         title: "Erro",
