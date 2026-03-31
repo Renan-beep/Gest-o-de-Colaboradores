@@ -22,7 +22,7 @@ import EditarColaborador from "./pages/EditarColaborador";
 
 import Dashboard from "./pages/Dashboard";
 import SolicitacaoMovimentacao from "./pages/SolicitacaoMovimentacao";
-import MovimentacoesHeadcount from "./pages/MovimentacoesHeadcount";
+
 import NotFound from "./pages/NotFound";
 
 // Configuração do React Query com configurações otimizadas
@@ -122,13 +122,6 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <SolicitacaoMovimentacao />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/movimentacoes-headcount" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <MovimentacoesHeadcount />
                   </AppLayout>
                 </ProtectedRoute>
               } />

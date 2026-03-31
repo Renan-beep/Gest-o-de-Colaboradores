@@ -10,7 +10,6 @@ import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChatContainer } from "@/components/chat";
 import { OnlineUsers } from "@/components/common/OnlineUsers";
-import { AICopilot } from "@/components/ai/AICopilot";
 
 interface MenuItem {
   title: string;
@@ -27,7 +26,7 @@ const gestaoItems: MenuItem[] = [
   { title: "Cadastro", description: "Cadastrar colaboradores", url: "/cadastro", icon: UserPlus, gradient: "from-violet-500 to-violet-700", iconColor: "text-white" },
   { title: "Conta", description: "Perfil e preferências", url: "/configuracoes-conta", icon: UserCog, gradient: "from-slate-500 to-slate-700", iconColor: "text-white" },
   { title: "Solicitações", description: "Movimentações", url: "/solicitacao-movimentacao", icon: FileText, gradient: "from-amber-500 to-amber-700", iconColor: "text-white" },
-  { title: "Movimentações HC", description: "Headcount", url: "/movimentacoes-headcount", icon: ArrowRightLeft, gradient: "from-cyan-500 to-cyan-700", iconColor: "text-white" },
+  
 ];
 
 const chamadaItems: MenuItem[] = [
@@ -188,7 +187,6 @@ export default function MenuHome() {
         <ChatContainer />
       </div>
       <OnlineUsers />
-      <AICopilot />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { ChatContainer } from "@/components/chat";
 import { OnlineUsers } from "@/components/common/OnlineUsers";
-import { AICopilot } from "@/components/ai/AICopilot";
+
 import { LayoutGrid } from "lucide-react";
 
 interface AppLayoutProps {
@@ -24,7 +24,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       '/configuracoes-conta': 'Configurações',
       '/lista-colaboradores': 'Lista de Colaboradores',
       '/solicitacao-movimentacao': 'Solicitações',
-      '/movimentacoes-headcount': 'Movimentações HC',
+      
     };
     if (location.pathname.startsWith('/editar-colaborador')) return 'Editar Colaborador';
     return map[location.pathname] || 'Página';
@@ -57,7 +57,6 @@ export function AppLayout({ children }: AppLayoutProps) {
         <ChatContainer />
       </div>
       <OnlineUsers />
-      <AICopilot />
     </div>
   );
 }
