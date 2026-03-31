@@ -247,10 +247,14 @@ export default function Cadastro() {
                 <Label htmlFor="matricula">Matrícula *</Label>
                 <Input
                   id="matricula"
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   placeholder="Ex: 12345"
                   value={formData.matricula}
-                  onChange={(e) => handleChange("matricula", e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '')
+                    handleChange("matricula", val)
+                  }}
                 />
               </div>
 
