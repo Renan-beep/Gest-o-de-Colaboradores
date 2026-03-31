@@ -77,6 +77,8 @@ export default function ListaColaboradores() {
   const [filteredDemitidos, setFilteredDemitidos] = useState<Demitido[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("ativos");
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Filtros com seleção múltipla
   const [filtros, setFiltros] = useState({
