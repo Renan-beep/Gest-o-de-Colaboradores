@@ -721,6 +721,7 @@ export default function Chamada() {
   const liderancas = [...new Set(colaboradores.map(c => c.lideranca).filter(l => l && l.trim() !== ''))]
   const turnos = [...new Set(colaboradores.map(c => c.turno).filter(t => t && t.trim() !== ''))]
   const subsetores = [...new Set(colaboradores.map(c => c.subsetor).filter(s => s && s.trim() !== ''))]
+  const setores = [...new Set(colaboradores.map(c => c.setor).filter(s => s && s.trim() !== ''))]
 
   if (loading) {
     return (
