@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { ChatContainer } from "@/components/chat";
 import { OnlineUsers } from "@/components/common/OnlineUsers";
-import { AICopilot } from "@/components/ai/AICopilot";
+
 import { LayoutGrid } from "lucide-react";
 
 interface AppLayoutProps {
