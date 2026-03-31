@@ -849,9 +849,6 @@ export default function ListaColaboradores() {
                   Limpar Filtros
                 </Button>
 
-  // Sorting
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
                 <Button variant="default" onClick={exportarParaExcel}>
                   <Download className="w-4 h-4 mr-2" />
