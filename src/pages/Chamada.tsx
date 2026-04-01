@@ -703,6 +703,15 @@ export default function Chamada() {
       filtered = filtered.filter(col => filterSubsetor.includes(col.subsetor))
     }
 
+    // Filtrar por status da chamada (clique nos indicadores)
+    if (activeStatusFilter) {
+      if (activeStatusFilter === 'pendente') {
+        filtered = filtered.filter(col => !chamadas[col.id])
+      } else {
+        filtered = filtered.filter(col => chamadas[col.id] === activeStatusFilter)
+      }
+    }
+
     return filtered
   }
 
