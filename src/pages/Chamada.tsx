@@ -57,6 +57,7 @@ const statusOptions = [
   { value: "falta", label: "Falta", icon: X, color: "status-absent" },
   { value: "atestado", label: "Atestado", icon: Heart, color: "status-sick" },
   { value: "ferias", label: "Férias", icon: Coffee, color: "status-vacation" },
+  { value: "afastado", label: "Afastado", icon: AlertTriangle, color: "status-away" },
   { value: "licenca", label: "Licença", icon: ShieldOff, color: "status-license" }
 ]
 
