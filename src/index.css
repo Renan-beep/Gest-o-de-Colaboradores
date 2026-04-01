@@ -182,6 +182,14 @@
     @apply bg-muted text-muted-foreground border border-border backdrop-blur-sm;
   }
 
+  .status-away {
+    @apply bg-orange-500/10 text-orange-700 dark:text-orange-300 border border-orange-500/20 backdrop-blur-sm;
+  }
+
+  .status-license {
+    @apply bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20 backdrop-blur-sm;
+  }
+
   /* Enhanced Card Effects */
   .card-hover {
     transition: var(--transition-smooth);
