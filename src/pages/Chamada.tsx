@@ -703,13 +703,14 @@ export default function Chamada() {
       filtered = filtered.filter(col => filterSubsetor.includes(col.subsetor))
     }
 
-    // Filtrar por status da chamada (clique nos indicadores)
-    if (activeStatusFilter) {
-      if (activeStatusFilter === 'pendente') {
-        filtered = filtered.filter(col => !chamadas[col.id])
-      } else {
-        filtered = filtered.filter(col => chamadas[col.id] === activeStatusFilter)
-      }
+    // Filtrar por status da chamada (clique nos indicadores) - multi-select
+    if (activeStatusFilter.length > 0) {
+      filtered = filtered.filter(col => {
+        const status = chamadas[col.id]
+        if (activeStatusFilter.includes('pendente') && !status) return true
+        if (status && activeStatusFilter.includes(status)) return true
+        return false
+      })
     }
 
     return filtered
