@@ -73,7 +73,7 @@ export default function Chamada() {
   const [filterSexo, setFilterSexo] = useState<string[]>([])
   const [filterSubsetor, setFilterSubsetor] = useState<string[]>([])
   const [filterSetor, setFilterSetor] = useState<string[]>([])
-  const [activeStatusFilter, setActiveStatusFilter] = useState<string | null>(null)
+  const [activeStatusFilter, setActiveStatusFilter] = useState<string[]>([])
   const [datesWithPendencies, setDatesWithPendencies] = useState<string[]>([])
   const [loadingPendencies, setLoadingPendencies] = useState(false)
   const [primeiraDataChamada, setPrimeiraDataChamada] = useState<Date | null>(null)
@@ -703,13 +703,14 @@ export default function Chamada() {
       filtered = filtered.filter(col => filterSubsetor.includes(col.subsetor))
     }
 
-    // Filtrar por status da chamada (clique nos indicadores)
-    if (activeStatusFilter) {
-      if (activeStatusFilter === 'pendente') {
-        filtered = filtered.filter(col => !chamadas[col.id])
-      } else {
-        filtered = filtered.filter(col => chamadas[col.id] === activeStatusFilter)
-      }
+    // Filtrar por status da chamada (clique nos indicadores) - multi-select
+    if (activeStatusFilter.length > 0) {
+      filtered = filtered.filter(col => {
+        const status = chamadas[col.id]
+        if (activeStatusFilter.includes('pendente') && !status) return true
+        if (status && activeStatusFilter.includes(status)) return true
+        return false
+      })
     }
 
     return filtered
@@ -1069,13 +1070,18 @@ export default function Chamada() {
         </CardHeader>
         <CardContent>
           {/* Active filter indicator */}
-          {activeStatusFilter && (
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="secondary" className="text-sm">
-                Filtrando por: {activeStatusFilter === 'pendente' ? 'Pendentes' : statusOptions.find(o => o.value === activeStatusFilter)?.label}
-              </Badge>
-              <Button variant="ghost" size="sm" onClick={() => setActiveStatusFilter(null)} className="h-6 w-6 p-0">
-                <X className="w-4 h-4" />
+          {activeStatusFilter.length > 0 && (
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+              {activeStatusFilter.map(f => (
+                <Badge key={f} variant="secondary" className="text-sm gap-1">
+                  {f === 'pendente' ? 'Pendentes' : statusOptions.find(o => o.value === f)?.label}
+                  <button onClick={() => setActiveStatusFilter(prev => prev.filter(s => s !== f))} className="ml-1 hover:text-destructive">
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+              <Button variant="ghost" size="sm" onClick={() => setActiveStatusFilter([])} className="h-6 text-xs">
+                Limpar filtros
               </Button>
             </div>
           )}
@@ -1085,14 +1091,14 @@ export default function Chamada() {
             {(() => {
               const totalFiltered = filteredColaboradores.length
               const pendentes = filteredColaboradores.filter(c => !chamadas[c.id]).length
-              const isActive = activeStatusFilter === 'pendente'
+              const isActive = activeStatusFilter.includes('pendente')
               return (
                 <div
                   className={cn(
                     "text-center p-2 md:p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md",
                     isActive ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:bg-muted/50"
                   )}
-                  onClick={() => setActiveStatusFilter(isActive ? null : 'pendente')}
+                  onClick={() => setActiveStatusFilter(prev => isActive ? prev.filter(s => s !== 'pendente') : [...prev, 'pendente'])}
                 >
                   <div className="w-8 h-8 md:w-12 md:h-12 mx-auto rounded-lg flex items-center justify-center mb-1 md:mb-2 bg-gray-100">
                     <Clock className="w-4 h-4 md:w-6 md:h-6 text-gray-600" />
@@ -1108,7 +1114,7 @@ export default function Chamada() {
               const IconComponent = option.icon
               const count = statusCounts[option.value]
               const totalFiltered = filteredColaboradores.length
-              const isActive = activeStatusFilter === option.value
+              const isActive = activeStatusFilter.includes(option.value)
               return (
                 <div
                   key={option.value}
@@ -1116,7 +1122,7 @@ export default function Chamada() {
                     "text-center p-2 md:p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md",
                     isActive ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:bg-muted/50"
                   )}
-                  onClick={() => setActiveStatusFilter(isActive ? null : option.value)}
+                  onClick={() => setActiveStatusFilter(prev => isActive ? prev.filter(s => s !== option.value) : [...prev, option.value])}
                 >
                   <div className={`w-8 h-8 md:w-12 md:h-12 mx-auto rounded-lg flex items-center justify-center mb-1 md:mb-2 ${
                     option.value === 'presente' ? 'bg-green-100' :
