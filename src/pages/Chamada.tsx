@@ -1068,16 +1068,62 @@ export default function Chamada() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 md:gap-4">
+          {/* Active filter indicator */}
+          {activeStatusFilter && (
+            <div className="flex items-center gap-2 mb-4">
+              <Badge variant="secondary" className="text-sm">
+                Filtrando por: {activeStatusFilter === 'pendente' ? 'Pendentes' : statusOptions.find(o => o.value === activeStatusFilter)?.label}
+              </Badge>
+              <Button variant="ghost" size="sm" onClick={() => setActiveStatusFilter(null)} className="h-6 w-6 p-0">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-2 md:gap-3">
+            {/* Pendentes card */}
+            {(() => {
+              const totalFiltered = filteredColaboradores.length
+              const pendentes = filteredColaboradores.filter(c => !chamadas[c.id]).length
+              const isActive = activeStatusFilter === 'pendente'
+              return (
+                <div
+                  className={cn(
+                    "text-center p-2 md:p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md",
+                    isActive ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:bg-muted/50"
+                  )}
+                  onClick={() => setActiveStatusFilter(isActive ? null : 'pendente')}
+                >
+                  <div className="w-8 h-8 md:w-12 md:h-12 mx-auto rounded-lg flex items-center justify-center mb-1 md:mb-2 bg-gray-100">
+                    <Clock className="w-4 h-4 md:w-6 md:h-6 text-gray-600" />
+                  </div>
+                  <div className="text-lg md:text-2xl font-bold mb-0.5 md:mb-1">{pendentes}</div>
+                  <div className="text-[10px] md:text-xs text-muted-foreground">Pendentes</div>
+                  <div className="text-[10px] md:text-xs text-muted-foreground mt-0.5">de {totalFiltered}</div>
+                </div>
+              )
+            })()}
+
             {statusOptions.map(option => {
               const IconComponent = option.icon
+              const count = statusCounts[option.value]
+              const totalFiltered = filteredColaboradores.length
+              const isActive = activeStatusFilter === option.value
               return (
-                <div key={option.value} className="text-center p-2 md:p-4 border rounded-lg">
+                <div
+                  key={option.value}
+                  className={cn(
+                    "text-center p-2 md:p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md",
+                    isActive ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:bg-muted/50"
+                  )}
+                  onClick={() => setActiveStatusFilter(isActive ? null : option.value)}
+                >
                   <div className={`w-8 h-8 md:w-12 md:h-12 mx-auto rounded-lg flex items-center justify-center mb-1 md:mb-2 ${
                     option.value === 'presente' ? 'bg-green-100' :
                     option.value === 'falta' ? 'bg-red-100' :
                     option.value === 'folga' ? 'bg-orange-100' :
                     option.value === 'atestado' ? 'bg-pink-100' :
+                    option.value === 'afastado' ? 'bg-amber-100' :
                     option.value === 'licenca' ? 'bg-teal-100' :
                     'bg-purple-100'
                   }`}>
@@ -1086,12 +1132,14 @@ export default function Chamada() {
                       option.value === 'falta' ? 'text-red-600' :
                       option.value === 'folga' ? 'text-orange-600' :
                       option.value === 'atestado' ? 'text-pink-600' :
+                      option.value === 'afastado' ? 'text-amber-600' :
                       option.value === 'licenca' ? 'text-teal-600' :
                       'text-purple-600'
                     }`} />
                   </div>
-                  <div className="text-lg md:text-2xl font-bold mb-0.5 md:mb-1">{statusCounts[option.value]}</div>
-                  <div className="text-xs md:text-sm text-muted-foreground">{option.label}</div>
+                  <div className="text-lg md:text-2xl font-bold mb-0.5 md:mb-1">{count}</div>
+                  <div className="text-[10px] md:text-xs text-muted-foreground">{option.label}</div>
+                  <div className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{count}/{totalFiltered}</div>
                 </div>
               )
             })}
