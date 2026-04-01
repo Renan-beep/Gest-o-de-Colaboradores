@@ -1114,7 +1114,7 @@ export default function Chamada() {
               const IconComponent = option.icon
               const count = statusCounts[option.value]
               const totalFiltered = filteredColaboradores.length
-              const isActive = activeStatusFilter === option.value
+              const isActive = activeStatusFilter.includes(option.value)
               return (
                 <div
                   key={option.value}
@@ -1122,7 +1122,7 @@ export default function Chamada() {
                     "text-center p-2 md:p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md",
                     isActive ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:bg-muted/50"
                   )}
-                  onClick={() => setActiveStatusFilter(isActive ? null : option.value)}
+                  onClick={() => setActiveStatusFilter(prev => isActive ? prev.filter(s => s !== option.value) : [...prev, option.value])}
                 >
                   <div className={`w-8 h-8 md:w-12 md:h-12 mx-auto rounded-lg flex items-center justify-center mb-1 md:mb-2 ${
                     option.value === 'presente' ? 'bg-green-100' :
