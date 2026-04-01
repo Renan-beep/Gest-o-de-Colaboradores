@@ -73,7 +73,7 @@ export default function Chamada() {
   const [filterSexo, setFilterSexo] = useState<string[]>([])
   const [filterSubsetor, setFilterSubsetor] = useState<string[]>([])
   const [filterSetor, setFilterSetor] = useState<string[]>([])
-  const [activeStatusFilter, setActiveStatusFilter] = useState<string | null>(null)
+  const [activeStatusFilter, setActiveStatusFilter] = useState<string[]>([])
   const [datesWithPendencies, setDatesWithPendencies] = useState<string[]>([])
   const [loadingPendencies, setLoadingPendencies] = useState(false)
   const [primeiraDataChamada, setPrimeiraDataChamada] = useState<Date | null>(null)
