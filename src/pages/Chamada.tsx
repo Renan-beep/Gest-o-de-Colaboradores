@@ -1070,13 +1070,18 @@ export default function Chamada() {
         </CardHeader>
         <CardContent>
           {/* Active filter indicator */}
-          {activeStatusFilter && (
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="secondary" className="text-sm">
-                Filtrando por: {activeStatusFilter === 'pendente' ? 'Pendentes' : statusOptions.find(o => o.value === activeStatusFilter)?.label}
-              </Badge>
-              <Button variant="ghost" size="sm" onClick={() => setActiveStatusFilter(null)} className="h-6 w-6 p-0">
-                <X className="w-4 h-4" />
+          {activeStatusFilter.length > 0 && (
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+              {activeStatusFilter.map(f => (
+                <Badge key={f} variant="secondary" className="text-sm gap-1">
+                  {f === 'pendente' ? 'Pendentes' : statusOptions.find(o => o.value === f)?.label}
+                  <button onClick={() => setActiveStatusFilter(prev => prev.filter(s => s !== f))} className="ml-1 hover:text-destructive">
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+              <Button variant="ghost" size="sm" onClick={() => setActiveStatusFilter([])} className="h-6 text-xs">
+                Limpar filtros
               </Button>
             </div>
           )}
