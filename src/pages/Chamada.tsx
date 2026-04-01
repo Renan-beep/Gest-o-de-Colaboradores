@@ -1091,14 +1091,14 @@ export default function Chamada() {
             {(() => {
               const totalFiltered = filteredColaboradores.length
               const pendentes = filteredColaboradores.filter(c => !chamadas[c.id]).length
-              const isActive = activeStatusFilter === 'pendente'
+              const isActive = activeStatusFilter.includes('pendente')
               return (
                 <div
                   className={cn(
                     "text-center p-2 md:p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md",
                     isActive ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:bg-muted/50"
                   )}
-                  onClick={() => setActiveStatusFilter(isActive ? null : 'pendente')}
+                  onClick={() => setActiveStatusFilter(prev => isActive ? prev.filter(s => s !== 'pendente') : [...prev, 'pendente'])}
                 >
                   <div className="w-8 h-8 md:w-12 md:h-12 mx-auto rounded-lg flex items-center justify-center mb-1 md:mb-2 bg-gray-100">
                     <Clock className="w-4 h-4 md:w-6 md:h-6 text-gray-600" />
