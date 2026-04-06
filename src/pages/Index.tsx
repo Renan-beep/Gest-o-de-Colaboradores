@@ -279,6 +279,7 @@ const Index = () => {
           variant="primary" 
           loading={loading} 
           className="animate-slide-in" 
+          onClick={() => handleIndicatorClick('total')}
         />
         
         <StatCard 
@@ -289,6 +290,7 @@ const Index = () => {
           variant="success" 
           loading={loading} 
           className="animate-slide-in" 
+          onClick={() => handleIndicatorClick('ativos')}
         />
         
         <StatCard 
@@ -299,6 +301,7 @@ const Index = () => {
           variant="error" 
           loading={loading} 
           className="animate-slide-in" 
+          onClick={() => handleIndicatorClick('afastados')}
         />
         
         <StatCard 
