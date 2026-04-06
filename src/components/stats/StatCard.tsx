@@ -68,7 +68,7 @@ export function StatCard({
   }
 
   return (
-    <Card className={cn(styles.card, "transition-all duration-300", className)}>
+    <Card className={cn(styles.card, "transition-all duration-300", onClick && "cursor-pointer hover:scale-[1.02] active:scale-[0.98]", className)} onClick={onClick}>
       <CardContent className="p-3 md:p-6">
         <div className="flex items-center justify-between gap-2">
           <div className="space-y-0.5 md:space-y-1 min-w-0 flex-1">
