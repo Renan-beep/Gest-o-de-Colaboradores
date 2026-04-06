@@ -45,7 +45,8 @@ export function StatCard({
   variant = 'default',
   trend,
   loading = false,
-  className
+  className,
+  onClick
 }: StatCardProps) {
   const styles = variantStyles[variant];
 
