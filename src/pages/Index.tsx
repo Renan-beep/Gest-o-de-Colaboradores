@@ -189,11 +189,23 @@ const Index = () => {
     }
   };
 
-  const handleIndicatorClick = (tipo: 'setor' | 'turno' | 'lideranca' | 'cargo', valor: string) => {
+  const handleIndicatorClick = (tipo: 'setor' | 'turno' | 'lideranca' | 'cargo' | 'total' | 'ativos' | 'afastados', valor?: string) => {
     let filtered: Colaborador[] = [];
     let title = "";
     
     switch (tipo) {
+      case 'total':
+        filtered = allColaboradores.filter(c => c.status?.toLowerCase() !== 'demitido');
+        title = "Todos os Colaboradores";
+        break;
+      case 'ativos':
+        filtered = allColaboradores.filter(c => c.status?.toLowerCase() === 'ativo');
+        title = "Colaboradores Ativos";
+        break;
+      case 'afastados':
+        filtered = allColaboradores.filter(c => c.status?.toLowerCase() === 'afastado');
+        title = "Colaboradores Afastados";
+        break;
       case 'setor':
         filtered = allColaboradores.filter(c => c.setor === valor);
         title = `Colaboradores do setor: ${valor}`;
@@ -267,6 +279,7 @@ const Index = () => {
           variant="primary" 
           loading={loading} 
           className="animate-slide-in" 
+          onClick={() => handleIndicatorClick('total')}
         />
         
         <StatCard 
@@ -277,6 +290,7 @@ const Index = () => {
           variant="success" 
           loading={loading} 
           className="animate-slide-in" 
+          onClick={() => handleIndicatorClick('ativos')}
         />
         
         <StatCard 
@@ -287,6 +301,7 @@ const Index = () => {
           variant="error" 
           loading={loading} 
           className="animate-slide-in" 
+          onClick={() => handleIndicatorClick('afastados')}
         />
         
         <StatCard 
