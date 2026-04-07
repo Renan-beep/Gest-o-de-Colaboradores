@@ -1201,7 +1201,7 @@ export default function Chamada() {
       {/* Lista de Colaboradores */}
       <Card className="shadow-card">
         <CardHeader>
-          <CardTitle>Lista de Colaboradores</CardTitle>
+          <CardTitle>Lista de Chamada</CardTitle>
           <CardDescription>
             Clique nos botões para marcar a presença de cada colaborador
           </CardDescription>
