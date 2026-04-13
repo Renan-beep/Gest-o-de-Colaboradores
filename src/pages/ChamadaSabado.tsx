@@ -396,11 +396,29 @@ export default function ChamadaSabado() {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
+          <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
               {filteredColaboradores.length} colaboradores
             </div>
+            {(filterLideranca.length > 0 || filterTurno.length > 0 || filterSexo.length > 0 || filterSetor.length > 0 || filterSubsetor.length > 0 || filterStatus.length > 0) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                onClick={() => {
+                  setFilterLideranca([])
+                  setFilterTurno([])
+                  setFilterSexo([])
+                  setFilterSetor([])
+                  setFilterSubsetor([])
+                  setFilterStatus([])
+                }}
+              >
+                <X className="w-4 h-4 mr-1" />
+                Limpar filtros
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
