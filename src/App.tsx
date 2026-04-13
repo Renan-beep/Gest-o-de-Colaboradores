@@ -49,92 +49,95 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <MenuHome />
-                </ProtectedRoute>
-              } />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Index />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/cadastro" element={
-                <ProtectedRoute requireGerencia>
-                  <AppLayout>
-                    <Cadastro />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/chamada" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Chamada />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/chamada-sabado" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <ChamadaSabado />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/operacao" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Operacao />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/indicadores" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Indicadores />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/configuracoes-conta" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <ConfiguracoesConta />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/lista-colaboradores" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <ListaColaboradores />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/editar-colaborador/:id" element={
-                <ProtectedRoute requireGerencia>
-                  <AppLayout>
-                    <EditarColaborador />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/solicitacao-movimentacao" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <SolicitacaoMovimentacao />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/guia-do-sistema" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <GuiaDoSistema />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <OnboardingProvider>
+              <GlobalOnboardingOverlay />
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <MenuHome />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Index />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/cadastro" element={
+                  <ProtectedRoute requireGerencia>
+                    <AppLayout>
+                      <Cadastro />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/chamada" element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Chamada />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/chamada-sabado" element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <ChamadaSabado />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/operacao" element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Operacao />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/indicadores" element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Indicadores />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/configuracoes-conta" element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <ConfiguracoesConta />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/lista-colaboradores" element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <ListaColaboradores />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/editar-colaborador/:id" element={
+                  <ProtectedRoute requireGerencia>
+                    <AppLayout>
+                      <EditarColaborador />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/solicitacao-movimentacao" element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <SolicitacaoMovimentacao />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/guia-do-sistema" element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <GuiaDoSistema />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </OnboardingProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
