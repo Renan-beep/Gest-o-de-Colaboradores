@@ -16,21 +16,19 @@ import ChamadaSabado from "./pages/ChamadaSabado";
 import Operacao from "./pages/Operacao";
 import Indicadores from "./pages/Indicadores";
 import ConfiguracoesConta from "./pages/ConfiguracoesConta";
-
 import ListaColaboradores from "./pages/ListaColaboradores";
 import EditarColaborador from "./pages/EditarColaborador";
-
 import Dashboard from "./pages/Dashboard";
 import SolicitacaoMovimentacao from "./pages/SolicitacaoMovimentacao";
-
+import GuiaDoSistema from "./pages/GuiaDoSistema";
 import NotFound from "./pages/NotFound";
 
 // Configuração do React Query com configurações otimizadas
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      gcTime: 10 * 60 * 1000, // 10 minutos (renomeado de cacheTime)
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
       retry: 2,
       refetchOnWindowFocus: false,
     },
@@ -122,6 +120,13 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <SolicitacaoMovimentacao />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/guia-do-sistema" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <GuiaDoSistema />
                   </AppLayout>
                 </ProtectedRoute>
               } />

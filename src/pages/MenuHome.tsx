@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { 
   Home, Users, UserPlus, UserCog, FileText, ArrowRightLeft,
-  UserCheck, ClipboardList, CalendarCheck, Factory, BarChart3, LogOut, Building2, User
+  UserCheck, ClipboardList, CalendarCheck, Factory, BarChart3, LogOut, Building2, User, BookOpen
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
