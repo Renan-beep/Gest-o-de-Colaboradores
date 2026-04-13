@@ -40,6 +40,10 @@ const indicadoresItems: MenuItem[] = [
   { title: "Indicadores", description: "Métricas e relatórios", url: "/indicadores", icon: BarChart3, gradient: "from-rose-500 to-rose-700", iconColor: "text-white" },
 ];
 
+const ajudaItems: MenuItem[] = [
+  { title: "Passo a Passo", description: "Guia do sistema", url: "/guia-do-sistema", icon: BookOpen, gradient: "from-cyan-500 to-cyan-700", iconColor: "text-white" },
+];
+
 const encarregadoGestaoItems: MenuItem[] = [
   { title: "Início", description: "Dashboard e indicadores", url: "/dashboard", icon: Home, gradient: "from-blue-500 to-blue-700", iconColor: "text-white" },
   { title: "Lista de Colaboradores", description: "Visualizar colaboradores", url: "/lista-colaboradores", icon: Users, gradient: "from-emerald-500 to-emerald-700", iconColor: "text-white" },
