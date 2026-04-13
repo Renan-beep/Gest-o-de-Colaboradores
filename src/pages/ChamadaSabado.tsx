@@ -2,9 +2,10 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { MultiSelect } from "@/components/ui/multi-select"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
@@ -25,9 +26,11 @@ interface Colaborador {
   matricula: string
   colaborador: string
   setor: string
+  subsetor: string | null
   lideranca: string
   status: string
   turno: string | null
+  sexo: string | null
 }
 
 export default function ChamadaSabado() {
@@ -37,14 +40,16 @@ export default function ChamadaSabado() {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [filterLideranca, setFilterLideranca] = useState("todos")
-  const [filterStatus, setFilterStatus] = useState("todos")
+  const [filterLideranca, setFilterLideranca] = useState<string[]>([])
+  const [filterTurno, setFilterTurno] = useState<string[]>([])
+  const [filterSexo, setFilterSexo] = useState<string[]>([])
+  const [filterSetor, setFilterSetor] = useState<string[]>([])
+  const [filterSubsetor, setFilterSubsetor] = useState<string[]>([])
+  const [filterStatus, setFilterStatus] = useState<string[]>([])
 
   useEffect(() => {
     fetchColaboradores()
 
-    // Configurar listener para atualizações em tempo real na tabela chamadas
-    // Isso garante sincronização quando múltiplos usuários editam simultaneamente
     const chamadasChannel = supabase
       .channel('chamadas-sabado-realtime')
       .on(
@@ -55,31 +60,20 @@ export default function ChamadaSabado() {
           table: 'chamadas'
         },
         (payload) => {
-          console.log('📡 Previsão atualizada por outro usuário:', payload)
-          
           if (!selectedSaturday) return
           const selectedDate = selectedSaturday.toISOString().split('T')[0]
           
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             const newRecord = payload.new as { colaborador_id: string; data: string; status: string }
-            
-            // Só atualiza se for da data selecionada
             if (newRecord.data === selectedDate) {
               if (newRecord.status === 'vira_sabado') {
-                setPrevisoes(prev => ({
-                  ...prev,
-                  [newRecord.colaborador_id]: true
-                }))
+                setPrevisoes(prev => ({ ...prev, [newRecord.colaborador_id]: true }))
               } else if (newRecord.status === 'nao_vira_sabado') {
-                setPrevisoes(prev => ({
-                  ...prev,
-                  [newRecord.colaborador_id]: false
-                }))
+                setPrevisoes(prev => ({ ...prev, [newRecord.colaborador_id]: false }))
               }
             }
           } else if (payload.eventType === 'DELETE') {
             const oldRecord = payload.old as { colaborador_id: string; data: string }
-            
             if (oldRecord.data === selectedDate) {
               setPrevisoes(prev => {
                 const newPrevisoes = { ...prev }
@@ -90,9 +84,7 @@ export default function ChamadaSabado() {
           }
         }
       )
-      .subscribe((status) => {
-        console.log('📡 Status do canal de previsões de sábado:', status)
-      })
+      .subscribe()
 
     return () => {
       supabase.removeChannel(chamadasChannel)
@@ -109,21 +101,16 @@ export default function ChamadaSabado() {
     try {
       const { data, error } = await supabase
         .from('colaboradores')
-        .select('id, matricula, colaborador, setor, lideranca, status, turno')
+        .select('id, matricula, colaborador, setor, subsetor, lideranca, status, turno, sexo')
         .order('colaborador')
 
       if (error) {
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar colaboradores: " + error.message,
-          variant: "destructive"
-        })
+        toast({ title: "Erro", description: "Erro ao carregar colaboradores: " + error.message, variant: "destructive" })
         return
       }
 
       setColaboradores(data || [])
       
-      // Definir automaticamente o próximo sábado
       if (!selectedSaturday) {
         const today = new Date()
         const nextSaturday = new Date(today)
@@ -132,11 +119,7 @@ export default function ChamadaSabado() {
         setSelectedSaturday(nextSaturday)
       }
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro inesperado ao carregar colaboradores",
-        variant: "destructive"
-      })
+      toast({ title: "Erro", description: "Erro inesperado ao carregar colaboradores", variant: "destructive" })
     } finally {
       setLoading(false)
     }
@@ -153,17 +136,12 @@ export default function ChamadaSabado() {
         .eq('data', selectedDate)
 
       if (error) {
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar previsões: " + error.message,
-          variant: "destructive"
-        })
+        toast({ title: "Erro", description: "Erro ao carregar previsões: " + error.message, variant: "destructive" })
         return
       }
 
       const previsoesMap: { [key: string]: boolean } = {}
       data?.forEach(chamada => {
-        // vira_sabado = true, nao_vira_sabado = false
         if (chamada.status === "vira_sabado") {
           previsoesMap[chamada.colaborador_id] = true
         } else if (chamada.status === "nao_vira_sabado") {
@@ -172,37 +150,25 @@ export default function ChamadaSabado() {
       })
       setPrevisoes(previsoesMap)
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro inesperado ao carregar previsões",
-        variant: "destructive"
-      })
+      toast({ title: "Erro", description: "Erro inesperado ao carregar previsões", variant: "destructive" })
     }
   }
 
   const handlePrevisaoChange = (colaboradorId: string, vira: boolean) => {
     setPrevisoes(prev => {
-      // Se o valor atual já é o mesmo, desseleciona (remove do estado)
       if (prev[colaboradorId] === vira) {
         const newState = { ...prev }
         delete newState[colaboradorId]
         return newState
       }
-      return {
-        ...prev,
-        [colaboradorId]: vira
-      }
+      return { ...prev, [colaboradorId]: vira }
     })
   }
 
   const handleSavePrevisoes = async () => {
     const totalPrevisoes = Object.keys(previsoes).length
     if (totalPrevisoes === 0) {
-      toast({
-        title: "Atenção",
-        description: "Selecione pelo menos uma previsão para salvar",
-        variant: "destructive"
-      })
+      toast({ title: "Atenção", description: "Selecione pelo menos uma previsão para salvar", variant: "destructive" })
       return
     }
 
@@ -210,17 +176,12 @@ export default function ChamadaSabado() {
 
     try {
       if (!selectedSaturday) {
-        toast({
-          title: "Erro",
-          description: "Selecione um sábado primeiro",
-          variant: "destructive"
-        })
+        toast({ title: "Erro", description: "Selecione um sábado primeiro", variant: "destructive" })
         return
       }
 
       const selectedDate = selectedSaturday.toISOString().split('T')[0]
       
-      // Preparar todos os registros para upsert (tanto vira quanto não vira)
       const allPrevisoes = Object.entries(previsoes).map(([colaboradorId, vira]) => ({
         colaborador_id: colaboradorId,
         data: selectedDate,
@@ -230,10 +191,7 @@ export default function ChamadaSabado() {
       if (allPrevisoes.length > 0) {
         const { error: upsertError } = await supabase
           .from('chamadas')
-          .upsert(allPrevisoes, { 
-            onConflict: 'colaborador_id,data',
-            ignoreDuplicates: false 
-          })
+          .upsert(allPrevisoes, { onConflict: 'colaborador_id,data', ignoreDuplicates: false })
 
         if (upsertError) throw upsertError
       }
@@ -241,84 +199,66 @@ export default function ChamadaSabado() {
       const colaboradoresQueVirao = Object.values(previsoes).filter(v => v === true).length
       const colaboradoresQueNaoVirao = Object.values(previsoes).filter(v => v === false).length
 
-      toast({
-        title: "Sucesso",
-        description: `Previsão salva: ${colaboradoresQueVirao} virão no sábado, ${colaboradoresQueNaoVirao} não virão`,
-      })
+      toast({ title: "Sucesso", description: `Previsão salva: ${colaboradoresQueVirao} virão no sábado, ${colaboradoresQueNaoVirao} não virão` })
     } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: "Erro ao salvar previsão: " + error.message,
-        variant: "destructive"
-      })
+      toast({ title: "Erro", description: "Erro ao salvar previsão: " + error.message, variant: "destructive" })
     } finally {
       setSaving(false)
     }
-  }
-
-  const getSaturdayDates = () => {
-    const today = new Date()
-    const year = today.getFullYear()
-    const saturdays = []
-    
-    // Buscar todos os sábados do ano
-    for (let month = 0; month < 12; month++) {
-      const daysInMonth = new Date(year, month + 1, 0).getDate()
-      
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(year, month, day)
-        if (date.getDay() === 6) {
-          saturdays.push(date)
-        }
-      }
-    }
-    
-    return saturdays
-  }
-
-  const isSaturday = (date: Date) => {
-    return date.getDay() === 6
   }
 
   const disableNonSaturdays = (date: Date) => {
     return date.getDay() !== 6
   }
 
-  const getPendingColaboradores = () => {
-    const filteredCols = getFilteredColaboradores()
-    return filteredCols.filter(col => previsoes[col.id] === undefined)
+  const getBaseColaboradores = () => {
+    let filtered = colaboradores
+    // Apenas ativos
+    filtered = filtered.filter(col => col.status === 'Ativo')
+    // Excluir turno noturno
+    filtered = filtered.filter(col => col.turno !== '22:00 - 06:52')
+    return filtered
   }
 
   const getFilteredColaboradores = () => {
-    let filtered = colaboradores
+    let filtered = getBaseColaboradores()
 
-    // Filtrar apenas colaboradores ativos
-    filtered = filtered.filter(col => col.status === 'Ativo')
-
-    // Excluir colaboradores do turno noturno (22:00 - 06:52)
-    filtered = filtered.filter(col => col.turno !== '22:00 - 06:52')
-
-    // Filtrar por liderança
-    if (filterLideranca !== "todos") {
-      filtered = filtered.filter(col => col.lideranca === filterLideranca)
+    if (filterLideranca.length > 0) {
+      filtered = filtered.filter(col => filterLideranca.includes(col.lideranca))
     }
-
-    // Filtrar por status de previsão
-    if (filterStatus === "vira") {
-      filtered = filtered.filter(col => previsoes[col.id] === true)
-    } else if (filterStatus === "nao_vira") {
-      filtered = filtered.filter(col => previsoes[col.id] === false)
-    } else if (filterStatus === "pendente") {
-      filtered = filtered.filter(col => previsoes[col.id] === undefined)
+    if (filterTurno.length > 0) {
+      filtered = filtered.filter(col => col.turno && filterTurno.includes(col.turno))
+    }
+    if (filterSexo.length > 0) {
+      filtered = filtered.filter(col => col.sexo && filterSexo.includes(col.sexo))
+    }
+    if (filterSetor.length > 0) {
+      filtered = filtered.filter(col => filterSetor.includes(col.setor))
+    }
+    if (filterSubsetor.length > 0) {
+      filtered = filtered.filter(col => col.subsetor && filterSubsetor.includes(col.subsetor))
+    }
+    if (filterStatus.length > 0) {
+      filtered = filtered.filter(col => {
+        if (filterStatus.includes('vira') && previsoes[col.id] === true) return true
+        if (filterStatus.includes('nao_vira') && previsoes[col.id] === false) return true
+        if (filterStatus.includes('pendente') && previsoes[col.id] === undefined) return true
+        return false
+      })
     }
 
     return filtered
   }
 
+  const getPendingColaboradores = () => {
+    return getFilteredColaboradores().filter(col => previsoes[col.id] === undefined)
+  }
+
   const getPrevisaoSummary = () => {
-    const total = getFilteredColaboradores().length
-    const confirmados = Object.values(previsoes).filter(v => v === true).length
-    const naoVirao = Object.values(previsoes).filter(v => v === false).length
+    const base = getBaseColaboradores()
+    const total = base.length
+    const confirmados = base.filter(c => previsoes[c.id] === true).length
+    const naoVirao = base.filter(c => previsoes[c.id] === false).length
     const pendentes = total - confirmados - naoVirao
     
     return { total, confirmados, naoVirao, pendentes }
@@ -326,8 +266,18 @@ export default function ChamadaSabado() {
 
   const pendingColaboradores = getPendingColaboradores()
   const filteredColaboradores = getFilteredColaboradores()
-  const liderancas = [...new Set(colaboradores.map(c => c.lideranca).filter(l => l && l.trim() !== ''))]
+  const base = getBaseColaboradores()
+  const liderancas = [...new Set(base.map(c => c.lideranca).filter(l => l && l.trim() !== ''))]
+  const turnos = [...new Set(base.map(c => c.turno).filter((t): t is string => !!t && t.trim() !== ''))]
+  const setores = [...new Set(base.map(c => c.setor).filter(s => s && s.trim() !== ''))]
+  const subsetores = [...new Set(base.map(c => c.subsetor).filter((s): s is string => !!s && s.trim() !== ''))]
   const summary = getPrevisaoSummary()
+
+  const handleStatusFilterToggle = (status: string) => {
+    setFilterStatus(prev => 
+      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
+    )
+  }
 
   if (loading) {
     return (
@@ -362,9 +312,9 @@ export default function ChamadaSabado() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Selecione o Sábado</label>
+              <Label>Selecione o Sábado</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -396,33 +346,53 @@ export default function ChamadaSabado() {
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Filtrar por Liderança</label>
-              <Select value={filterLideranca} onValueChange={setFilterLideranca}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todas as lideranças" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todas as lideranças</SelectItem>
-                  {liderancas.map(lideranca => (
-                    <SelectItem key={lideranca} value={lideranca}>{lideranca}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Filtrar por Liderança</Label>
+              <MultiSelect
+                options={liderancas}
+                selected={filterLideranca}
+                onChange={setFilterLideranca}
+                placeholder="Todas as lideranças"
+              />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Filtrar por Status</label>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos os status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os status</SelectItem>
-                  <SelectItem value="vira">Virá no Sábado</SelectItem>
-                  <SelectItem value="nao_vira">Não Virá</SelectItem>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Filtrar por Turno</Label>
+              <MultiSelect
+                options={turnos}
+                selected={filterTurno}
+                onChange={setFilterTurno}
+                placeholder="Todos os turnos"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Filtrar por Sexo</Label>
+              <MultiSelect
+                options={["Masculino", "Feminino"]}
+                selected={filterSexo}
+                onChange={setFilterSexo}
+                placeholder="Todos"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Filtrar por Setor</Label>
+              <MultiSelect
+                options={setores}
+                selected={filterSetor}
+                onChange={setFilterSetor}
+                placeholder="Todos os setores"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Filtrar por Subsetor</Label>
+              <MultiSelect
+                options={subsetores}
+                selected={filterSubsetor}
+                onChange={setFilterSubsetor}
+                placeholder="Todos os subsetores"
+              />
             </div>
           </div>
 
@@ -469,8 +439,14 @@ export default function ChamadaSabado() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-4 border rounded-lg">
+          <div className="grid grid-cols-3 gap-4">
+            <div 
+              className={cn(
+                "text-center p-4 border rounded-lg cursor-pointer transition-all hover:scale-105",
+                filterStatus.includes('vira') && "ring-2 ring-green-500"
+              )}
+              onClick={() => handleStatusFilterToggle('vira')}
+            >
               <div className="w-12 h-12 mx-auto rounded-lg flex items-center justify-center mb-2 bg-green-100">
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
@@ -482,7 +458,13 @@ export default function ChamadaSabado() {
                 </div>
               )}
             </div>
-            <div className="text-center p-4 border rounded-lg">
+            <div 
+              className={cn(
+                "text-center p-4 border rounded-lg cursor-pointer transition-all hover:scale-105",
+                filterStatus.includes('nao_vira') && "ring-2 ring-red-500"
+              )}
+              onClick={() => handleStatusFilterToggle('nao_vira')}
+            >
               <div className="w-12 h-12 mx-auto rounded-lg flex items-center justify-center mb-2 bg-red-100">
                 <X className="w-6 h-6 text-red-600" />
               </div>
@@ -494,7 +476,40 @@ export default function ChamadaSabado() {
                 </div>
               )}
             </div>
+            <div 
+              className={cn(
+                "text-center p-4 border rounded-lg cursor-pointer transition-all hover:scale-105",
+                filterStatus.includes('pendente') && "ring-2 ring-orange-500"
+              )}
+              onClick={() => handleStatusFilterToggle('pendente')}
+            >
+              <div className="w-12 h-12 mx-auto rounded-lg flex items-center justify-center mb-2 bg-orange-100">
+                <AlertTriangle className="w-6 h-6 text-orange-600" />
+              </div>
+              <div className="text-2xl font-bold mb-1">{summary.pendentes}</div>
+              <div className="text-sm text-muted-foreground">Pendente</div>
+              {summary.total > 0 && (
+                <div className="text-xs font-medium text-orange-600 mt-1">
+                  {((summary.pendentes / summary.total) * 100).toFixed(1)}% do total
+                </div>
+              )}
+            </div>
           </div>
+
+          {filterStatus.length > 0 && (
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Filtros ativos:</span>
+              {filterStatus.map(s => (
+                <Badge key={s} variant="secondary" className="cursor-pointer" onClick={() => handleStatusFilterToggle(s)}>
+                  {s === 'vira' ? 'Virá' : s === 'nao_vira' ? 'Não Virá' : 'Pendente'}
+                  <X className="w-3 h-3 ml-1" />
+                </Badge>
+              ))}
+              <Button variant="ghost" size="sm" onClick={() => setFilterStatus([])}>
+                Limpar
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
