@@ -193,16 +193,6 @@ export default function MenuHome() {
         <ChatContainer />
       </div>
       <OnlineUsers />
-      <OnboardingOverlay
-        isActive={isActive}
-        title={currentStep?.title || ""}
-        description={currentStep?.description || ""}
-        currentStep={currentStepIndex}
-        totalSteps={totalSteps}
-        onNext={nextStep}
-        onPrev={prevStep}
-        onClose={endTour}
-      />
     </div>
   );
 }
