@@ -41,6 +41,22 @@ const queryClient = new QueryClient({
   },
 });
 
+function GlobalOnboardingOverlay() {
+  const { isActive, currentStep, currentStepIndex, totalSteps, nextStep, prevStep, endTour } = useOnboarding();
+  return (
+    <OnboardingOverlay
+      isActive={isActive}
+      title={currentStep?.title || ""}
+      description={currentStep?.description || ""}
+      currentStep={currentStepIndex}
+      totalSteps={totalSteps}
+      onNext={nextStep}
+      onPrev={prevStep}
+      onClose={endTour}
+    />
+  );
+}
+
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
