@@ -58,6 +58,7 @@ export default function MenuHome() {
   const { user, signOut, isGerencia, isEncarregado } = useAuth();
   const { toast } = useToast();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const { isActive, currentStep, currentStepIndex, totalSteps, nextStep, prevStep, endTour } = useOnboarding();
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
 
