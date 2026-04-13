@@ -10,6 +10,8 @@ import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChatContainer } from "@/components/chat";
 import { OnlineUsers } from "@/components/common/OnlineUsers";
+import { OnboardingOverlay } from "@/components/onboarding/OnboardingOverlay";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 interface MenuItem {
   title: string;
@@ -184,6 +186,7 @@ export default function MenuHome() {
         {renderGroup("Gestão", currentGestaoItems)}
         {renderGroup("Chamada", chamadaItems)}
         {isGerencia && renderGroup("Relatórios", indicadoresItems)}
+        {renderGroup("Ajuda", ajudaItems)}
       </main>
 
       {/* Chat and Online Users */}
