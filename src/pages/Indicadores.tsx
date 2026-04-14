@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { PageTour } from "@/components/onboarding/PageTour";
+import { indicadoresTourSteps } from "@/constants/tourSteps";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -354,5 +356,6 @@ export default function Indicadores() {
           </CardContent>
         </Card>
       </div>
+      <PageTour steps={indicadoresTourSteps} />
     </div>;
 }

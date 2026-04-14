@@ -1,1 +1,1 @@
-export { useOnboarding } from "@/contexts/OnboardingContext";
+export { usePageTour } from "@/hooks/usePageTour";

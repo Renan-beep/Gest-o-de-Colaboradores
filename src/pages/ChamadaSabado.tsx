@@ -20,6 +20,8 @@ import {
   CalendarIcon
 } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
+import { PageTour } from "@/components/onboarding/PageTour"
+import { chamadaSabadoTourSteps } from "@/constants/tourSteps"
 
 interface Colaborador {
   id: string
@@ -602,6 +604,7 @@ export default function ChamadaSabado() {
           </div>
         </CardContent>
       </Card>
+      <PageTour steps={chamadaSabadoTourSteps} />
     </div>
   )
 }

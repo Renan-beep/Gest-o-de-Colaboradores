@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { PageTour } from "@/components/onboarding/PageTour";
+import { solicitacaoTourSteps } from "@/constants/tourSteps";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -1125,6 +1127,7 @@ const SolicitacaoMovimentacao = () => {
           </div>
         </div>
       )}
+      <PageTour steps={solicitacaoTourSteps} />
     </div>
   );
 };

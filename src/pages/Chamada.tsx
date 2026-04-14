@@ -36,6 +36,8 @@ import { supabase } from "@/integrations/supabase/client"
 import { GraficoPendenciasLideres } from "@/components/dashboard/GraficoPendenciasLideres"
 import { PainelPendencias } from "@/components/dashboard/PainelPendencias"
 import { BancoChamadas } from "@/components/chamadas/BancoChamadas"
+import { PageTour } from "@/components/onboarding/PageTour"
+import { chamadaTourSteps } from "@/constants/tourSteps"
 
 interface Colaborador {
   id: string
@@ -1279,6 +1281,7 @@ export default function Chamada() {
           <BancoChamadas />
         </TabsContent>
       </Tabs>
+      <PageTour steps={chamadaTourSteps} />
     </div>
   )
 }
