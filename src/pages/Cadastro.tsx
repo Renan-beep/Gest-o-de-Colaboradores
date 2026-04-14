@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from "react"
+import { PageTour } from "@/components/onboarding/PageTour"
+import { cadastroTourSteps } from "@/constants/tourSteps"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -553,6 +555,7 @@ export default function Cadastro() {
           </form>
         </CardContent>
       </Card>
+      <PageTour steps={cadastroTourSteps} />
     </div>
   )
 }

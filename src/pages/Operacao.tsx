@@ -12,6 +12,8 @@ import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { PageTour } from "@/components/onboarding/PageTour";
+import { operacaoTourSteps } from "@/constants/tourSteps";
 
 interface Colaborador {
   id: string;
@@ -600,6 +602,7 @@ export default function Operacao() {
         </div>
       )}
 
+      <PageTour steps={operacaoTourSteps} />
     </div>
   );
 }

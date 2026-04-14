@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { PageTour } from "@/components/onboarding/PageTour";
+import { contaTourSteps } from "@/constants/tourSteps";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -333,6 +335,7 @@ export default function ConfiguracoesConta() {
           </Card>
         )}
       </div>
+      <PageTour steps={contaTourSteps} />
     </div>
   );
 }

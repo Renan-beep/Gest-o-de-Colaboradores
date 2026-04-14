@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Filter, Search, Download, RefreshCw, Edit, UserCheck, UserX, Clock, Eye, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { PageTour } from "@/components/onboarding/PageTour";
+import { listaColaboradoresTourSteps } from "@/constants/tourSteps";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { differenceInMonths, differenceInYears, parseISO } from "date-fns";
@@ -1159,5 +1161,6 @@ export default function ListaColaboradores() {
           </Card>
         </TabsContent>
       </Tabs>
+      <PageTour steps={listaColaboradoresTourSteps} />
     </div>;
 }

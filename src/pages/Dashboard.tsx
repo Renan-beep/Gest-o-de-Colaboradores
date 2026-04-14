@@ -27,6 +27,8 @@ import {
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
+import { PageTour } from "@/components/onboarding/PageTour"
+import { dashboardTourSteps } from "@/constants/tourSteps"
 import HistoricoDemissoes from "@/components/dashboard/HistoricoDemissoes"
 import TempoEmpresaTable from "@/components/dashboard/TempoEmpresaTable"
 
@@ -474,6 +476,7 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
+      <PageTour steps={dashboardTourSteps} />
     </div>
   )
 }

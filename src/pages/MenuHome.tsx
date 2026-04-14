@@ -3,6 +3,8 @@ import {
   Home, Users, UserPlus, UserCog, FileText, ArrowRightLeft,
   UserCheck, ClipboardList, CalendarCheck, Factory, BarChart3, LogOut, Building2, User, BookOpen
 } from "lucide-react";
+import { PageTour } from "@/components/onboarding/PageTour";
+import { menuHomeTourSteps } from "@/constants/tourSteps";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -193,6 +195,7 @@ export default function MenuHome() {
         <ChatContainer />
       </div>
       <OnlineUsers />
+      <PageTour steps={menuHomeTourSteps} />
     </div>
   );
 }
