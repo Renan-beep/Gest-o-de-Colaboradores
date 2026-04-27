@@ -496,10 +496,21 @@ export default function Operacao() {
           <Clock className="w-4 h-4" />
           Visão Cargo por Horário
         </Button>
+        <Button
+          variant={viewMode === "setorHorario" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setViewMode("setorHorario")}
+          className="gap-2"
+        >
+          <Building2 className="w-4 h-4" />
+          Visão Setor por Horário
+        </Button>
       </div>
 
       {viewMode === "cargoHorario" ? (
         <CargoPorHorario colaboradores={colaboradoresFiltrados} />
+      ) : viewMode === "setorHorario" ? (
+        <SetorPorHorario colaboradores={colaboradoresFiltrados} />
       ) : (
         <>
       {/* Indicadores do Dia */}
