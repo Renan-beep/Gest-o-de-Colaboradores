@@ -38,6 +38,31 @@ const formatHora = (min: number) => {
   return `${String(h).padStart(2, "0")}:00`;
 };
 
+const maiorFaixaContigua = (
+  slots: number[],
+  totais: Record<number, number>,
+  alvo: number
+): string => {
+  let bestStart = -1;
+  let bestLen = 0;
+  let curStart = -1;
+  let curLen = 0;
+  for (const s of slots) {
+    if (totais[s] === alvo) {
+      if (curLen === 0) curStart = s;
+      curLen++;
+      if (curLen > bestLen) {
+        bestLen = curLen;
+        bestStart = curStart;
+      }
+    } else {
+      curLen = 0;
+    }
+  }
+  if (bestStart < 0) return "—";
+  return `${formatHora(bestStart)} - ${formatHora(bestStart + bestLen * STEP)}`;
+};
+
 export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
   const setoresData = useMemo(() => {
     const map = new Map<string, ColaboradorTurno[]>();
