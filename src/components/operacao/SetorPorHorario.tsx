@@ -131,9 +131,9 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
                 {slots.map((s) => (
                   <th
                     key={s}
-                    className="px-1 py-2 font-medium text-center whitespace-nowrap min-w-[44px]"
+                    className="px-2 py-2 font-medium text-center whitespace-nowrap min-w-[80px]"
                   >
-                    {formatHora(s)}
+                    {formatHora(s)} - {formatHora(s + STEP)}
                   </th>
                 ))}
                 <th className="px-2 py-2 font-semibold text-center bg-primary/10 min-w-[60px]">
