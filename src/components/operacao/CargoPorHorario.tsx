@@ -42,6 +42,32 @@ const formatHora = (min: number) => {
   return `${String(h).padStart(2, "0")}:00`;
 };
 
+// Encontra a maior faixa contígua de slots com o valor alvo e retorna "HH:00 - HH:00"
+const maiorFaixaContigua = (
+  slots: number[],
+  totais: Record<number, number>,
+  alvo: number
+): string => {
+  let bestStart = -1;
+  let bestLen = 0;
+  let curStart = -1;
+  let curLen = 0;
+  for (const s of slots) {
+    if (totais[s] === alvo) {
+      if (curLen === 0) curStart = s;
+      curLen++;
+      if (curLen > bestLen) {
+        bestLen = curLen;
+        bestStart = curStart;
+      }
+    } else {
+      curLen = 0;
+    }
+  }
+  if (bestStart < 0) return "—";
+  return `${formatHora(bestStart)} - ${formatHora(bestStart + bestLen * STEP)}`;
+};
+
 export function CargoPorHorario({ colaboradores }: CargoPorHorarioProps) {
   // Agrupa por cargo
   const cargosData = useMemo(() => {
@@ -118,11 +144,11 @@ export function CargoPorHorario({ colaboradores }: CargoPorHorarioProps) {
     let picoF: { faixa: string; qtd: number } | null = null;
     let valeF: { faixa: string; qtd: number } | null = null;
     if (slotsComDados.length > 0) {
-      const sortedAsc = [...slotsComDados].sort((a, b) => totaisPorSlot[a] - totaisPorSlot[b]);
-      const top = sortedAsc[sortedAsc.length - 1];
-      const bot = sortedAsc[0];
-      picoF = { faixa: `${formatHora(top)} - ${formatHora(top + STEP)}`, qtd: totaisPorSlot[top] };
-      valeF = { faixa: `${formatHora(bot)} - ${formatHora(bot + STEP)}`, qtd: totaisPorSlot[bot] };
+      const valores = slotsComDados.map((s) => totaisPorSlot[s]);
+      const maxVal = Math.max(...valores);
+      const minVal = Math.min(...valores);
+      picoF = { faixa: maiorFaixaContigua(slots, totaisPorSlot, maxVal), qtd: maxVal };
+      valeF = { faixa: maiorFaixaContigua(slots, totaisPorSlot, minVal), qtd: minVal };
     }
     let picoE = null;
     let valeE = null;
