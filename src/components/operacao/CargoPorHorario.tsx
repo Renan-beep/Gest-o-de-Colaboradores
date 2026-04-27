@@ -1,0 +1,283 @@
+import { useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Clock, Users } from "lucide-react";
+
+interface ColaboradorTurno {
+  id: string;
+  colaborador: string;
+  cargo: string;
+  turno: string | null;
+}
+
+interface CargoPorHorarioProps {
+  colaboradores: ColaboradorTurno[];
+}
+
+// Converte "HH:MM" em minutos
+const toMin = (hhmm: string) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+};
+
+// Parse turno "06:00 - 15:15" → { startMin, endMin }
+const parseTurno = (turno: string): { start: number; end: number } | null => {
+  const match = turno.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+  if (!match) return null;
+  const start = toMin(match[1]);
+  let end = toMin(match[2]);
+  // Se atravessa a meia-noite (ex: 22:00 - 06:52), adiciona 24h
+  if (end <= start) end += 24 * 60;
+  return { start, end };
+};
+
+// Faixa de horas para exibir: 06:00 → 30:00 (06:00 do dia seguinte)
+const HORA_INICIO = 6 * 60;
+const HORA_FIM = 30 * 60; // 06:00 do dia seguinte
+const STEP = 60; // intervalos de 1h
+
+const formatHora = (min: number) => {
+  const h = Math.floor(min / 60) % 24;
+  return `${String(h).padStart(2, "0")}:00`;
+};
+
+export function CargoPorHorario({ colaboradores }: CargoPorHorarioProps) {
+  // Agrupa por cargo
+  const cargosData = useMemo(() => {
+    const map = new Map<string, ColaboradorTurno[]>();
+    colaboradores.forEach((c) => {
+      if (!c.cargo || !c.turno) return;
+      const arr = map.get(c.cargo) || [];
+      arr.push(c);
+      map.set(c.cargo, arr);
+    });
+    return Array.from(map.entries())
+      .map(([cargo, colabs]) => ({ cargo, colabs }))
+      .sort((a, b) => b.colabs.length - a.colabs.length);
+  }, [colaboradores]);
+
+  // Slots de hora
+  const slots = useMemo(() => {
+    const arr: number[] = [];
+    for (let m = HORA_INICIO; m < HORA_FIM; m += STEP) arr.push(m);
+    return arr;
+  }, []);
+
+  // Para cada cargo × slot, calcula quantos colaboradores estão ativos
+  const matriz = useMemo(() => {
+    const result: Record<string, Record<number, ColaboradorTurno[]>> = {};
+
+    cargosData.forEach(({ cargo, colabs }) => {
+      result[cargo] = {};
+      slots.forEach((slotStart) => {
+        const slotEnd = slotStart + STEP;
+        const presentes = colabs.filter((c) => {
+          const t = parseTurno(c.turno!);
+          if (!t) return false;
+          // Considera turno tanto no dia "normal" quanto deslocado +24h
+          const overlap = (s: number, e: number) =>
+            s < slotEnd && e > slotStart;
+          return overlap(t.start, t.end) || overlap(t.start - 1440, t.end - 1440);
+        });
+        result[cargo][slotStart] = presentes;
+      });
+    });
+    return result;
+  }, [cargosData, slots]);
+
+  // Total geral por slot (para destacar picos)
+  const totaisPorSlot = useMemo(() => {
+    const totais: Record<number, number> = {};
+    slots.forEach((s) => {
+      totais[s] = cargosData.reduce(
+        (acc, { cargo }) => acc + (matriz[cargo]?.[s]?.length || 0),
+        0
+      );
+    });
+    return totais;
+  }, [matriz, cargosData, slots]);
+
+  // Máximo por cargo (para colorimetria)
+  const maxPorCargo = useMemo(() => {
+    const max: Record<string, number> = {};
+    cargosData.forEach(({ cargo }) => {
+      max[cargo] = Math.max(
+        ...slots.map((s) => matriz[cargo]?.[s]?.length || 0),
+        1
+      );
+    });
+    return max;
+  }, [matriz, cargosData, slots]);
+
+  const maxTotalSlot = Math.max(...Object.values(totaisPorSlot), 1);
+
+  if (cargosData.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="py-12 text-center text-muted-foreground">
+          Nenhum colaborador com cargo e turno definidos.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Clock className="w-5 h-5 text-primary" />
+          Distribuição de Cargos por Horário
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Quantidade de colaboradores ativos por cargo ao longo do dia. Clique nas células para ver detalhes.
+        </p>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr className="border-b bg-muted/40">
+                <th className="sticky left-0 bg-muted/40 z-10 text-left px-3 py-2 font-semibold min-w-[200px]">
+                  Cargo
+                </th>
+                {slots.map((s) => (
+                  <th
+                    key={s}
+                    className="px-1 py-2 font-medium text-center whitespace-nowrap min-w-[44px]"
+                  >
+                    {formatHora(s)}
+                  </th>
+                ))}
+                <th className="px-2 py-2 font-semibold text-center bg-primary/10 min-w-[60px]">
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {cargosData.map(({ cargo, colabs }) => (
+                <tr key={cargo} className="border-b hover:bg-muted/20 transition-colors">
+                  <td className="sticky left-0 bg-background z-10 px-3 py-2 font-medium whitespace-nowrap border-r">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate max-w-[180px]">{cargo}</span>
+                      <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                        {colabs.length}
+                      </span>
+                    </div>
+                  </td>
+                  {slots.map((s) => {
+                    const presentes = matriz[cargo]?.[s] || [];
+                    const qtd = presentes.length;
+                    const intensidade = qtd / maxPorCargo[cargo];
+                    const opacity = qtd === 0 ? 0 : Math.max(0.15, intensidade);
+                    return (
+                      <Tooltip key={s}>
+                        <TooltipTrigger asChild>
+                          <td
+                            className="text-center px-1 py-2 cursor-pointer transition-all hover:ring-2 hover:ring-primary hover:ring-inset"
+                            style={{
+                              backgroundColor:
+                                qtd > 0
+                                  ? `hsl(var(--primary) / ${opacity})`
+                                  : undefined,
+                            }}
+                          >
+                            <span
+                              className={`font-semibold ${
+                                opacity > 0.5
+                                  ? "text-primary-foreground"
+                                  : "text-foreground"
+                              }`}
+                            >
+                              {qtd > 0 ? qtd : ""}
+                            </span>
+                          </td>
+                        </TooltipTrigger>
+                        {qtd > 0 && (
+                          <TooltipContent side="top" className="max-w-xs">
+                            <div className="text-xs">
+                              <p className="font-semibold mb-1">
+                                {cargo} • {formatHora(s)}–{formatHora(s + STEP)}
+                              </p>
+                              <p className="text-muted-foreground mb-1">
+                                {qtd} colaborador(es) ativo(s)
+                              </p>
+                              <ul className="max-h-40 overflow-auto space-y-0.5">
+                                {presentes.slice(0, 15).map((c) => (
+                                  <li key={c.id} className="text-[11px]">
+                                    • {c.colaborador}
+                                  </li>
+                                ))}
+                                {presentes.length > 15 && (
+                                  <li className="text-[11px] text-muted-foreground">
+                                    +{presentes.length - 15} outros…
+                                  </li>
+                                )}
+                              </ul>
+                            </div>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    );
+                  })}
+                  <td className="text-center px-2 py-2 font-bold bg-primary/5">
+                    {colabs.length}
+                  </td>
+                </tr>
+              ))}
+
+              {/* Linha de totais */}
+              <tr className="border-t-2 bg-muted/30 font-bold">
+                <td className="sticky left-0 bg-muted/30 z-10 px-3 py-2 border-r">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-3.5 h-3.5" />
+                    Total no horário
+                  </div>
+                </td>
+                {slots.map((s) => {
+                  const total = totaisPorSlot[s];
+                  const isPico = total === maxTotalSlot && total > 0;
+                  return (
+                    <td
+                      key={s}
+                      className={`text-center px-1 py-2 ${
+                        isPico
+                          ? "bg-primary text-primary-foreground"
+                          : total > 0
+                          ? "bg-primary/15"
+                          : ""
+                      }`}
+                    >
+                      {total > 0 ? total : ""}
+                      {isPico && <span className="ml-0.5">🔥</span>}
+                    </td>
+                  );
+                })}
+                <td className="text-center px-2 py-2 bg-primary/20">
+                  {colaboradores.filter((c) => c.cargo && c.turno).length}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Legenda */}
+        <div className="flex items-center gap-4 p-3 border-t text-xs text-muted-foreground">
+          <span className="font-medium">Intensidade:</span>
+          <div className="flex items-center gap-1">
+            <span className="inline-block w-4 h-3 rounded border bg-primary/15"></span>
+            <span>baixa</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="inline-block w-4 h-3 rounded bg-primary/50"></span>
+            <span>média</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="inline-block w-4 h-3 rounded bg-primary"></span>
+            <span>pico</span>
+          </div>
+          <span className="ml-auto">🔥 = horário de maior concentração geral</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
