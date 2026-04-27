@@ -630,6 +630,8 @@ export default function Operacao() {
           ))}
         </div>
       )}
+        </>
+      )}
 
       <PageTour steps={operacaoTourSteps} />
     </div>
