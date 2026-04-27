@@ -134,6 +134,14 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
   }
 
   return (
+    <div>
+      <IndicadoresConcentracao
+        entidadeLabel="Setor"
+        picoFaixa={picoFaixa}
+        valeFaixa={valeFaixa}
+        picoEntidade={picoEntidade}
+        valeEntidade={valeEntidade}
+      />
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
