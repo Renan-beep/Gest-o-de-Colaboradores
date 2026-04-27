@@ -475,6 +475,32 @@ export default function Operacao() {
         </div>
       </div>
 
+      {/* Seletor de Visão */}
+      <div className="flex items-center gap-2 p-1 bg-muted/40 rounded-lg border w-fit">
+        <Button
+          variant={viewMode === "macro" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setViewMode("macro")}
+          className="gap-2"
+        >
+          <Layers className="w-4 h-4" />
+          Visão Macro
+        </Button>
+        <Button
+          variant={viewMode === "cargoHorario" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setViewMode("cargoHorario")}
+          className="gap-2"
+        >
+          <Clock className="w-4 h-4" />
+          Visão Cargo por Horário
+        </Button>
+      </div>
+
+      {viewMode === "cargoHorario" ? (
+        <CargoPorHorario colaboradores={colaboradoresFiltrados} />
+      ) : (
+        <>
       {/* Indicadores do Dia */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 md:gap-4">
         {statusIndicators.map(indicator => {
