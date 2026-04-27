@@ -147,6 +147,14 @@ export function CargoPorHorario({ colaboradores }: CargoPorHorarioProps) {
   }
 
   return (
+    <div>
+      <IndicadoresConcentracao
+        entidadeLabel="Cargo"
+        picoFaixa={picoFaixa}
+        valeFaixa={valeFaixa}
+        picoEntidade={picoEntidade}
+        valeEntidade={valeEntidade}
+      />
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
