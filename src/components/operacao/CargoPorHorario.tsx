@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Clock, Users } from "lucide-react";
+import { IndicadoresConcentracao } from "./IndicadoresConcentracao";
 
 interface ColaboradorTurno {
   id: string;
