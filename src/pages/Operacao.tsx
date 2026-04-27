@@ -15,7 +15,8 @@ import { Label } from "@/components/ui/label";
 import { PageTour } from "@/components/onboarding/PageTour";
 import { operacaoTourSteps } from "@/constants/tourSteps";
 import { CargoPorHorario } from "@/components/operacao/CargoPorHorario";
-import { Layers, Clock } from "lucide-react";
+import { SetorPorHorario } from "@/components/operacao/SetorPorHorario";
+import { Layers, Clock, Building2 } from "lucide-react";
 
 interface Colaborador {
   id: string;
@@ -220,7 +221,7 @@ export default function Operacao() {
   const [semNoturno, setSemNoturno] = useState(false);
   const [somentePresentes, setSomentePresentes] = useState(false);
   const [filtroStatus, setFiltroStatus] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"macro" | "cargoHorario">("macro");
+  const [viewMode, setViewMode] = useState<"macro" | "cargoHorario" | "setorHorario">("macro");
 
   const formattedDate = format(selectedDate, 'yyyy-MM-dd');
   const isToday = format(new Date(), 'yyyy-MM-dd') === formattedDate;
@@ -495,10 +496,21 @@ export default function Operacao() {
           <Clock className="w-4 h-4" />
           Visão Cargo por Horário
         </Button>
+        <Button
+          variant={viewMode === "setorHorario" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setViewMode("setorHorario")}
+          className="gap-2"
+        >
+          <Building2 className="w-4 h-4" />
+          Visão Setor por Horário
+        </Button>
       </div>
 
       {viewMode === "cargoHorario" ? (
         <CargoPorHorario colaboradores={colaboradoresFiltrados} />
+      ) : viewMode === "setorHorario" ? (
+        <SetorPorHorario colaboradores={colaboradoresFiltrados} />
       ) : (
         <>
       {/* Indicadores do Dia */}
