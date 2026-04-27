@@ -220,6 +220,7 @@ export default function Operacao() {
   const [semNoturno, setSemNoturno] = useState(false);
   const [somentePresentes, setSomentePresentes] = useState(false);
   const [filtroStatus, setFiltroStatus] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"macro" | "cargoHorario">("macro");
 
   const formattedDate = format(selectedDate, 'yyyy-MM-dd');
   const isToday = format(new Date(), 'yyyy-MM-dd') === formattedDate;
