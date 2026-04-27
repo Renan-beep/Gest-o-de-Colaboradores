@@ -312,5 +312,6 @@ export function CargoPorHorario({ colaboradores }: CargoPorHorarioProps) {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }
