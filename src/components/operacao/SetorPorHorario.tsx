@@ -293,5 +293,6 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }
