@@ -15,7 +15,8 @@ import { Label } from "@/components/ui/label";
 import { PageTour } from "@/components/onboarding/PageTour";
 import { operacaoTourSteps } from "@/constants/tourSteps";
 import { CargoPorHorario } from "@/components/operacao/CargoPorHorario";
-import { Layers, Clock } from "lucide-react";
+import { SetorPorHorario } from "@/components/operacao/SetorPorHorario";
+import { Layers, Clock, Building2 } from "lucide-react";
 
 interface Colaborador {
   id: string;
