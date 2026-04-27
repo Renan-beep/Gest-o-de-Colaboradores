@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Building2, Users } from "lucide-react";
+import { IndicadoresConcentracao } from "./IndicadoresConcentracao";
 
 interface ColaboradorTurno {
   id: string;
@@ -99,6 +100,29 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
 
   const maxTotalSlot = Math.max(...Object.values(totaisPorSlot), 1);
 
+  const { picoFaixa, valeFaixa, picoEntidade, valeEntidade } = useMemo(() => {
+    const slotsComDados = slots.filter((s) => totaisPorSlot[s] > 0);
+    let picoF: { faixa: string; qtd: number } | null = null;
+    let valeF: { faixa: string; qtd: number } | null = null;
+    if (slotsComDados.length > 0) {
+      const sortedAsc = [...slotsComDados].sort((a, b) => totaisPorSlot[a] - totaisPorSlot[b]);
+      const top = sortedAsc[sortedAsc.length - 1];
+      const bot = sortedAsc[0];
+      picoF = { faixa: `${formatHora(top)} - ${formatHora(top + STEP)}`, qtd: totaisPorSlot[top] };
+      valeF = { faixa: `${formatHora(bot)} - ${formatHora(bot + STEP)}`, qtd: totaisPorSlot[bot] };
+    }
+    let picoE = null;
+    let valeE = null;
+    if (setoresData.length > 0) {
+      const sorted = [...setoresData].sort((a, b) => a.colabs.length - b.colabs.length);
+      const max = sorted[sorted.length - 1];
+      const min = sorted[0];
+      picoE = { label: max.setor, qtd: max.colabs.length };
+      valeE = { label: min.setor, qtd: min.colabs.length };
+    }
+    return { picoFaixa: picoF, valeFaixa: valeF, picoEntidade: picoE, valeEntidade: valeE };
+  }, [slots, totaisPorSlot, setoresData]);
+
   if (setoresData.length === 0) {
     return (
       <Card className="border-dashed">
@@ -110,6 +134,14 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
   }
 
   return (
+    <div>
+      <IndicadoresConcentracao
+        entidadeLabel="Setor"
+        picoFaixa={picoFaixa}
+        valeFaixa={valeFaixa}
+        picoEntidade={picoEntidade}
+        valeEntidade={valeEntidade}
+      />
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -261,5 +293,6 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }

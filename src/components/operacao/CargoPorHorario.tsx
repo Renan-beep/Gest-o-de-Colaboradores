@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Clock, Users } from "lucide-react";
+import { IndicadoresConcentracao } from "./IndicadoresConcentracao";
 
 interface ColaboradorTurno {
   id: string;
@@ -111,6 +112,30 @@ export function CargoPorHorario({ colaboradores }: CargoPorHorarioProps) {
 
   const maxTotalSlot = Math.max(...Object.values(totaisPorSlot), 1);
 
+  // Indicadores: pico/vale por faixa e por cargo
+  const { picoFaixa, valeFaixa, picoEntidade, valeEntidade } = useMemo(() => {
+    const slotsComDados = slots.filter((s) => totaisPorSlot[s] > 0);
+    let picoF: { faixa: string; qtd: number } | null = null;
+    let valeF: { faixa: string; qtd: number } | null = null;
+    if (slotsComDados.length > 0) {
+      const sortedAsc = [...slotsComDados].sort((a, b) => totaisPorSlot[a] - totaisPorSlot[b]);
+      const top = sortedAsc[sortedAsc.length - 1];
+      const bot = sortedAsc[0];
+      picoF = { faixa: `${formatHora(top)} - ${formatHora(top + STEP)}`, qtd: totaisPorSlot[top] };
+      valeF = { faixa: `${formatHora(bot)} - ${formatHora(bot + STEP)}`, qtd: totaisPorSlot[bot] };
+    }
+    let picoE = null;
+    let valeE = null;
+    if (cargosData.length > 0) {
+      const sorted = [...cargosData].sort((a, b) => a.colabs.length - b.colabs.length);
+      const max = sorted[sorted.length - 1];
+      const min = sorted[0];
+      picoE = { label: max.cargo, qtd: max.colabs.length };
+      valeE = { label: min.cargo, qtd: min.colabs.length };
+    }
+    return { picoFaixa: picoF, valeFaixa: valeF, picoEntidade: picoE, valeEntidade: valeE };
+  }, [slots, totaisPorSlot, cargosData]);
+
   if (cargosData.length === 0) {
     return (
       <Card className="border-dashed">
@@ -122,6 +147,14 @@ export function CargoPorHorario({ colaboradores }: CargoPorHorarioProps) {
   }
 
   return (
+    <div>
+      <IndicadoresConcentracao
+        entidadeLabel="Cargo"
+        picoFaixa={picoFaixa}
+        valeFaixa={valeFaixa}
+        picoEntidade={picoEntidade}
+        valeEntidade={valeEntidade}
+      />
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -279,5 +312,6 @@ export function CargoPorHorario({ colaboradores }: CargoPorHorarioProps) {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }
