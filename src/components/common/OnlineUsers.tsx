@@ -118,14 +118,14 @@ export function OnlineUsers() {
   return (
     <div 
       className={cn(
-        "fixed bottom-3 right-3 md:bottom-4 md:right-4 z-50 transition-all duration-300",
+        "fixed bottom-3 left-3 md:bottom-4 md:left-4 z-50 transition-all duration-300",
         isExpanded ? "w-56 md:w-64" : "w-auto"
       )}
     >
       <div 
         className={cn(
           "bg-card border shadow-lg rounded-xl overflow-hidden",
-          "animate-in slide-in-from-right-5 duration-300"
+          "animate-in slide-in-from-left-5 duration-300"
         )}
       >
         {/* Header - sempre visível */}
