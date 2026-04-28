@@ -1,7 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Building2, Users } from "lucide-react";
+import { Building2, Users, UserCheck } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { IndicadoresConcentracao } from "./IndicadoresConcentracao";
 import { FullscreenWrapper } from "./FullscreenWrapper";
 
@@ -14,6 +17,7 @@ interface ColaboradorTurno {
 
 interface SetorPorHorarioProps {
   colaboradores: ColaboradorTurno[];
+  chamadasMap?: Map<string, string>;
 }
 
 const toMin = (hhmm: string) => {
