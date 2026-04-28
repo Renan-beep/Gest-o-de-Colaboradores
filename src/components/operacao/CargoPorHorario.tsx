@@ -177,16 +177,6 @@ export function CargoPorHorario({ colaboradores, chamadasMap }: CargoPorHorarioP
     return { picoFaixa: picoF, valeFaixa: valeF, picoEntidade: picoE, valeEntidade: valeE };
   }, [slots, totaisPorSlot, cargosData]);
 
-  if (cargosData.length === 0) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="py-12 text-center text-muted-foreground">
-          Nenhum colaborador com cargo e turno definidos.
-        </CardContent>
-      </Card>
-    );
-  }
-
   // Cor base: primary normal, ou verde quando filtrando "somente presentes"
   const accentHsl = somentePresentes ? "142 71% 45%" : "var(--primary)";
   const accentClasses = somentePresentes
@@ -210,6 +200,38 @@ export function CargoPorHorario({ colaboradores, chamadasMap }: CargoPorHorarioP
         bgSoft3: "bg-primary/20",
         icon: "text-primary",
       };
+
+  const toggleBar = (
+    <div className="flex items-center gap-2 mb-3 p-3 bg-muted/30 rounded-lg border border-border">
+      <Switch
+        id="cargo-somente-presentes"
+        checked={somentePresentes}
+        onCheckedChange={setSomentePresentes}
+      />
+      <Label htmlFor="cargo-somente-presentes" className="text-sm cursor-pointer flex items-center gap-1.5">
+        <UserCheck className="w-4 h-4 text-green-600" />
+        Somente os Presentes
+      </Label>
+      {somentePresentes && (
+        <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400">
+          Mostrando apenas presentes na chamada
+        </Badge>
+      )}
+    </div>
+  );
+
+  if (cargosData.length === 0) {
+    return (
+      <div>
+        {toggleBar}
+        <Card className="border-dashed">
+          <CardContent className="py-12 text-center text-muted-foreground">
+            Nenhum colaborador com cargo e turno definidos.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div>
