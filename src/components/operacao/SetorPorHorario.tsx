@@ -162,13 +162,58 @@ export function SetorPorHorario({ colaboradores, chamadasMap }: SetorPorHorarioP
     return { picoFaixa: picoF, valeFaixa: valeF, picoEntidade: picoE, valeEntidade: valeE };
   }, [slots, totaisPorSlot, setoresData]);
 
+  const accentHsl = somentePresentes ? "142 71% 45%" : "var(--primary)";
+  const accentClasses = somentePresentes
+    ? {
+        ring: "hover:ring-green-600",
+        textOn: "text-white",
+        bgFaded: "bg-green-600/15",
+        bgStrong: "bg-green-600 text-white",
+        bgSoft: "bg-green-600/5",
+        bgSoft2: "bg-green-600/10",
+        bgSoft3: "bg-green-600/20",
+        icon: "text-green-600",
+      }
+    : {
+        ring: "hover:ring-primary",
+        textOn: "text-primary-foreground",
+        bgFaded: "bg-primary/15",
+        bgStrong: "bg-primary text-primary-foreground",
+        bgSoft: "bg-primary/5",
+        bgSoft2: "bg-primary/10",
+        bgSoft3: "bg-primary/20",
+        icon: "text-primary",
+      };
+
+  const toggleBar = (
+    <div className="flex items-center gap-2 mb-3 p-3 bg-muted/30 rounded-lg border border-border">
+      <Switch
+        id="setor-somente-presentes"
+        checked={somentePresentes}
+        onCheckedChange={setSomentePresentes}
+      />
+      <Label htmlFor="setor-somente-presentes" className="text-sm cursor-pointer flex items-center gap-1.5">
+        <UserCheck className="w-4 h-4 text-green-600" />
+        Somente os Presentes
+      </Label>
+      {somentePresentes && (
+        <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400">
+          Mostrando apenas presentes na chamada
+        </Badge>
+      )}
+    </div>
+  );
+
   if (setoresData.length === 0) {
     return (
-      <Card className="border-dashed">
-        <CardContent className="py-12 text-center text-muted-foreground">
-          Nenhum colaborador com setor e turno definidos.
-        </CardContent>
-      </Card>
+      <div>
+        {toggleBar}
+        <Card className="border-dashed">
+          <CardContent className="py-12 text-center text-muted-foreground">
+            Nenhum colaborador com setor e turno definidos.
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -181,12 +226,13 @@ export function SetorPorHorario({ colaboradores, chamadasMap }: SetorPorHorarioP
         picoEntidade={picoEntidade}
         valeEntidade={valeEntidade}
       />
+      {toggleBar}
       <FullscreenWrapper>
         {(isFullscreen) => (
     <Card className={isFullscreen ? "h-full flex flex-col" : ""}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-primary" />
+          <Building2 className={`w-5 h-5 ${accentClasses.icon}`} />
           Distribuição de Setores por Horário
         </CardTitle>
         <p className="text-sm text-muted-foreground">
