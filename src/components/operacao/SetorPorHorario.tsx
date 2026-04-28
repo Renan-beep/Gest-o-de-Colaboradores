@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Building2, Users } from "lucide-react";
 import { IndicadoresConcentracao } from "./IndicadoresConcentracao";
+import { FullscreenWrapper } from "./FullscreenWrapper";
 
 interface ColaboradorTurno {
   id: string;
