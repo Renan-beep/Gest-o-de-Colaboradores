@@ -55,7 +55,7 @@ export function IndicadoresConcentracao({
   valeEntidade,
 }: IndicadoresConcentracaoProps) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
       <IndicadorCard
         icon={Flame}
         iconColor="text-red-600 dark:text-red-400"
@@ -71,22 +71,6 @@ export function IndicadoresConcentracao({
         title="Vale de horário"
         value={valeFaixa ? valeFaixa.faixa : "—"}
         subtitle={valeFaixa ? `${valeFaixa.qtd} colaboradores` : "Sem dados"}
-      />
-      <IndicadorCard
-        icon={TrendingUp}
-        iconColor="text-emerald-600 dark:text-emerald-400"
-        bgColor="bg-emerald-100 dark:bg-emerald-900/30"
-        title={`${entidadeLabel} com maior concentração`}
-        value={picoEntidade ? picoEntidade.label : "—"}
-        subtitle={picoEntidade ? `${picoEntidade.qtd} colaboradores` : "Sem dados"}
-      />
-      <IndicadorCard
-        icon={TrendingDown}
-        iconColor="text-amber-600 dark:text-amber-400"
-        bgColor="bg-amber-100 dark:bg-amber-900/30"
-        title={`${entidadeLabel} com menor concentração`}
-        value={valeEntidade ? valeEntidade.label : "—"}
-        subtitle={valeEntidade ? `${valeEntidade.qtd} colaboradores` : "Sem dados"}
       />
     </div>
   );
