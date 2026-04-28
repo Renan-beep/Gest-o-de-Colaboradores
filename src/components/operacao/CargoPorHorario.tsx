@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Clock, Users } from "lucide-react";
 import { IndicadoresConcentracao } from "./IndicadoresConcentracao";
+import { FullscreenWrapper } from "./FullscreenWrapper";
 
 interface ColaboradorTurno {
   id: string;
@@ -181,7 +182,9 @@ export function CargoPorHorario({ colaboradores }: CargoPorHorarioProps) {
         picoEntidade={picoEntidade}
         valeEntidade={valeEntidade}
       />
-    <Card>
+      <FullscreenWrapper>
+        {(isFullscreen) => (
+    <Card className={isFullscreen ? "h-full flex flex-col" : ""}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="w-5 h-5 text-primary" />
@@ -191,23 +194,23 @@ export function CargoPorHorario({ colaboradores }: CargoPorHorarioProps) {
           Quantidade de colaboradores ativos por cargo ao longo do dia. Clique nas células para ver detalhes.
         </p>
       </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs border-collapse">
+      <CardContent className={isFullscreen ? "p-0 flex-1 min-h-0 flex flex-col" : "p-0"}>
+        <div className={isFullscreen ? "flex-1 min-h-0 overflow-auto" : "overflow-x-auto"}>
+          <table className={`text-xs border-collapse ${isFullscreen ? "w-full table-fixed" : "w-full"}`}>
             <thead>
               <tr className="border-b bg-muted/40">
-                <th className="sticky left-0 bg-muted/40 z-10 text-left px-3 py-2 font-semibold min-w-[200px]">
+                <th className={`sticky left-0 bg-muted/40 z-10 text-left px-3 py-2 font-semibold ${isFullscreen ? "w-[180px]" : "min-w-[200px]"}`}>
                   Cargo
                 </th>
                 {slots.map((s) => (
                   <th
                     key={s}
-                    className="px-2 py-2 font-medium text-center whitespace-nowrap min-w-[80px]"
+                    className={`px-2 py-2 font-medium text-center whitespace-nowrap ${isFullscreen ? "" : "min-w-[80px]"}`}
                   >
                     {formatHora(s)} - {formatHora(s + STEP)}
                   </th>
                 ))}
-                <th className="px-2 py-2 font-semibold text-center bg-primary/10 min-w-[60px]">
+                <th className={`px-2 py-2 font-semibold text-center bg-primary/10 ${isFullscreen ? "w-[60px]" : "min-w-[60px]"}`}>
                   Total
                 </th>
               </tr>
@@ -338,6 +341,8 @@ export function CargoPorHorario({ colaboradores }: CargoPorHorarioProps) {
         </div>
       </CardContent>
     </Card>
+        )}
+      </FullscreenWrapper>
     </div>
   );
 }
