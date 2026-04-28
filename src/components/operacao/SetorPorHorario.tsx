@@ -1,7 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Building2, Users } from "lucide-react";
+import { Building2, Users, UserCheck } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { IndicadoresConcentracao } from "./IndicadoresConcentracao";
 import { FullscreenWrapper } from "./FullscreenWrapper";
 
@@ -14,6 +17,7 @@ interface ColaboradorTurno {
 
 interface SetorPorHorarioProps {
   colaboradores: ColaboradorTurno[];
+  chamadasMap?: Map<string, string>;
 }
 
 const toMin = (hhmm: string) => {
@@ -64,10 +68,19 @@ const maiorFaixaContigua = (
   return `${formatHora(bestStart)} - ${formatHora(bestStart + bestLen * STEP)}`;
 };
 
-export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
+export function SetorPorHorario({ colaboradores, chamadasMap }: SetorPorHorarioProps) {
+  const [somentePresentes, setSomentePresentes] = useState(false);
+
+  const colaboradoresBase = useMemo(() => {
+    if (!somentePresentes || !chamadasMap) return colaboradores;
+    return colaboradores.filter(
+      (c) => chamadasMap.get(c.id)?.toLowerCase() === "presente"
+    );
+  }, [colaboradores, chamadasMap, somentePresentes]);
+
   const setoresData = useMemo(() => {
     const map = new Map<string, ColaboradorTurno[]>();
-    colaboradores.forEach((c) => {
+    colaboradoresBase.forEach((c) => {
       if (!c.setor || !c.turno) return;
       const arr = map.get(c.setor) || [];
       arr.push(c);
@@ -76,7 +89,7 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
     return Array.from(map.entries())
       .map(([setor, colabs]) => ({ setor, colabs }))
       .sort((a, b) => b.colabs.length - a.colabs.length);
-  }, [colaboradores]);
+  }, [colaboradoresBase]);
 
   const slots = useMemo(() => {
     const arr: number[] = [];
@@ -149,13 +162,58 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
     return { picoFaixa: picoF, valeFaixa: valeF, picoEntidade: picoE, valeEntidade: valeE };
   }, [slots, totaisPorSlot, setoresData]);
 
+  const accentHsl = somentePresentes ? "142 71% 45%" : "var(--primary)";
+  const accentClasses = somentePresentes
+    ? {
+        ring: "hover:ring-green-600",
+        textOn: "text-white",
+        bgFaded: "bg-green-600/15",
+        bgStrong: "bg-green-600 text-white",
+        bgSoft: "bg-green-600/5",
+        bgSoft2: "bg-green-600/10",
+        bgSoft3: "bg-green-600/20",
+        icon: "text-green-600",
+      }
+    : {
+        ring: "hover:ring-primary",
+        textOn: "text-primary-foreground",
+        bgFaded: "bg-primary/15",
+        bgStrong: "bg-primary text-primary-foreground",
+        bgSoft: "bg-primary/5",
+        bgSoft2: "bg-primary/10",
+        bgSoft3: "bg-primary/20",
+        icon: "text-primary",
+      };
+
+  const toggleBar = (
+    <div className="flex items-center gap-2 mb-3 p-3 bg-muted/30 rounded-lg border border-border">
+      <Switch
+        id="setor-somente-presentes"
+        checked={somentePresentes}
+        onCheckedChange={setSomentePresentes}
+      />
+      <Label htmlFor="setor-somente-presentes" className="text-sm cursor-pointer flex items-center gap-1.5">
+        <UserCheck className="w-4 h-4 text-green-600" />
+        Somente os Presentes
+      </Label>
+      {somentePresentes && (
+        <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400">
+          Mostrando apenas presentes na chamada
+        </Badge>
+      )}
+    </div>
+  );
+
   if (setoresData.length === 0) {
     return (
-      <Card className="border-dashed">
-        <CardContent className="py-12 text-center text-muted-foreground">
-          Nenhum colaborador com setor e turno definidos.
-        </CardContent>
-      </Card>
+      <div>
+        {toggleBar}
+        <Card className="border-dashed">
+          <CardContent className="py-12 text-center text-muted-foreground">
+            Nenhum colaborador com setor e turno definidos.
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -168,12 +226,13 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
         picoEntidade={picoEntidade}
         valeEntidade={valeEntidade}
       />
+      {toggleBar}
       <FullscreenWrapper>
         {(isFullscreen) => (
     <Card className={isFullscreen ? "h-full flex flex-col" : ""}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-primary" />
+          <Building2 className={`w-5 h-5 ${accentClasses.icon}`} />
           Distribuição de Setores por Horário
         </CardTitle>
         <p className="text-sm text-muted-foreground">
@@ -196,7 +255,7 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
                     {formatHora(s)} - {formatHora(s + STEP)}
                   </th>
                 ))}
-                <th className={`px-2 py-2 font-semibold text-center bg-primary/10 ${isFullscreen ? "w-[60px]" : "min-w-[60px]"}`}>
+                <th className={`px-2 py-2 font-semibold text-center ${accentClasses.bgSoft2} ${isFullscreen ? "w-[60px]" : "min-w-[60px]"}`}>
                   Total
                 </th>
               </tr>
@@ -221,15 +280,15 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
                       <Tooltip key={s}>
                         <TooltipTrigger asChild>
                           <td
-                            className="text-center px-1 py-2 cursor-pointer transition-all hover:ring-2 hover:ring-primary hover:ring-inset"
+                            className={`text-center px-1 py-2 cursor-pointer transition-all hover:ring-2 ${accentClasses.ring} hover:ring-inset`}
                             style={{
                               backgroundColor:
-                                qtd > 0 ? `hsl(var(--primary) / ${opacity})` : undefined,
+                                qtd > 0 ? `hsl(${accentHsl} / ${opacity})` : undefined,
                             }}
                           >
                             <span
                               className={`font-semibold ${
-                                opacity > 0.5 ? "text-primary-foreground" : "text-foreground"
+                                opacity > 0.5 ? accentClasses.textOn : "text-foreground"
                               }`}
                             >
                               {qtd > 0 ? qtd : ""}
@@ -263,7 +322,7 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
                       </Tooltip>
                     );
                   })}
-                  <td className="text-center px-2 py-2 font-bold bg-primary/5">
+                  <td className={`text-center px-2 py-2 font-bold ${accentClasses.bgSoft}`}>
                     {colabs.length}
                   </td>
                 </tr>
@@ -284,9 +343,9 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
                       key={s}
                       className={`text-center px-1 py-2 ${
                         isPico
-                          ? "bg-primary text-primary-foreground"
+                          ? accentClasses.bgStrong
                           : total > 0
-                          ? "bg-primary/15"
+                          ? accentClasses.bgFaded
                           : ""
                       }`}
                     >
@@ -295,8 +354,8 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
                     </td>
                   );
                 })}
-                <td className="text-center px-2 py-2 bg-primary/20">
-                  {colaboradores.filter((c) => c.setor && c.turno).length}
+                <td className={`text-center px-2 py-2 ${accentClasses.bgSoft3}`}>
+                  {colaboradoresBase.filter((c) => c.setor && c.turno).length}
                 </td>
               </tr>
             </tbody>

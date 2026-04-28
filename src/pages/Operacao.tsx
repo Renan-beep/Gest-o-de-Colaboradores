@@ -508,9 +508,9 @@ export default function Operacao() {
       </div>
 
       {viewMode === "cargoHorario" ? (
-        <CargoPorHorario colaboradores={colaboradoresFiltrados} />
+        <CargoPorHorario colaboradores={colaboradoresFiltrados} chamadasMap={chamadasMap} />
       ) : viewMode === "setorHorario" ? (
-        <SetorPorHorario colaboradores={colaboradoresFiltrados} />
+        <SetorPorHorario colaboradores={colaboradoresFiltrados} chamadasMap={chamadasMap} />
       ) : (
         <>
       {/* Indicadores do Dia */}
