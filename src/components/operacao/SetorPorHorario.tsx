@@ -68,10 +68,19 @@ const maiorFaixaContigua = (
   return `${formatHora(bestStart)} - ${formatHora(bestStart + bestLen * STEP)}`;
 };
 
-export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
+export function SetorPorHorario({ colaboradores, chamadasMap }: SetorPorHorarioProps) {
+  const [somentePresentes, setSomentePresentes] = useState(false);
+
+  const colaboradoresBase = useMemo(() => {
+    if (!somentePresentes || !chamadasMap) return colaboradores;
+    return colaboradores.filter(
+      (c) => chamadasMap.get(c.id)?.toLowerCase() === "presente"
+    );
+  }, [colaboradores, chamadasMap, somentePresentes]);
+
   const setoresData = useMemo(() => {
     const map = new Map<string, ColaboradorTurno[]>();
-    colaboradores.forEach((c) => {
+    colaboradoresBase.forEach((c) => {
       if (!c.setor || !c.turno) return;
       const arr = map.get(c.setor) || [];
       arr.push(c);
@@ -80,7 +89,7 @@ export function SetorPorHorario({ colaboradores }: SetorPorHorarioProps) {
     return Array.from(map.entries())
       .map(([setor, colabs]) => ({ setor, colabs }))
       .sort((a, b) => b.colabs.length - a.colabs.length);
-  }, [colaboradores]);
+  }, [colaboradoresBase]);
 
   const slots = useMemo(() => {
     const arr: number[] = [];
