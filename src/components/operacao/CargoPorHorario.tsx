@@ -73,11 +73,21 @@ const maiorFaixaContigua = (
   return `${formatHora(bestStart)} - ${formatHora(bestStart + bestLen * STEP)}`;
 };
 
-export function CargoPorHorario({ colaboradores }: CargoPorHorarioProps) {
+export function CargoPorHorario({ colaboradores, chamadasMap }: CargoPorHorarioProps) {
+  const [somentePresentes, setSomentePresentes] = useState(false);
+
+  // Aplica filtro de "somente presentes" se ativado
+  const colaboradoresBase = useMemo(() => {
+    if (!somentePresentes || !chamadasMap) return colaboradores;
+    return colaboradores.filter(
+      (c) => chamadasMap.get(c.id)?.toLowerCase() === "presente"
+    );
+  }, [colaboradores, chamadasMap, somentePresentes]);
+
   // Agrupa por cargo
   const cargosData = useMemo(() => {
     const map = new Map<string, ColaboradorTurno[]>();
-    colaboradores.forEach((c) => {
+    colaboradoresBase.forEach((c) => {
       if (!c.cargo || !c.turno) return;
       const arr = map.get(c.cargo) || [];
       arr.push(c);
@@ -86,7 +96,7 @@ export function CargoPorHorario({ colaboradores }: CargoPorHorarioProps) {
     return Array.from(map.entries())
       .map(([cargo, colabs]) => ({ cargo, colabs }))
       .sort((a, b) => b.colabs.length - a.colabs.length);
-  }, [colaboradores]);
+  }, [colaboradoresBase]);
 
   // Slots de hora
   const slots = useMemo(() => {
