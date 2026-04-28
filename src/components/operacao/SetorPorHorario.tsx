@@ -255,7 +255,7 @@ export function SetorPorHorario({ colaboradores, chamadasMap }: SetorPorHorarioP
                     {formatHora(s)} - {formatHora(s + STEP)}
                   </th>
                 ))}
-                <th className={`px-2 py-2 font-semibold text-center bg-primary/10 ${isFullscreen ? "w-[60px]" : "min-w-[60px]"}`}>
+                <th className={`px-2 py-2 font-semibold text-center ${accentClasses.bgSoft2} ${isFullscreen ? "w-[60px]" : "min-w-[60px]"}`}>
                   Total
                 </th>
               </tr>
@@ -280,15 +280,15 @@ export function SetorPorHorario({ colaboradores, chamadasMap }: SetorPorHorarioP
                       <Tooltip key={s}>
                         <TooltipTrigger asChild>
                           <td
-                            className="text-center px-1 py-2 cursor-pointer transition-all hover:ring-2 hover:ring-primary hover:ring-inset"
+                            className={`text-center px-1 py-2 cursor-pointer transition-all hover:ring-2 ${accentClasses.ring} hover:ring-inset`}
                             style={{
                               backgroundColor:
-                                qtd > 0 ? `hsl(var(--primary) / ${opacity})` : undefined,
+                                qtd > 0 ? `hsl(${accentHsl} / ${opacity})` : undefined,
                             }}
                           >
                             <span
                               className={`font-semibold ${
-                                opacity > 0.5 ? "text-primary-foreground" : "text-foreground"
+                                opacity > 0.5 ? accentClasses.textOn : "text-foreground"
                               }`}
                             >
                               {qtd > 0 ? qtd : ""}
@@ -322,7 +322,7 @@ export function SetorPorHorario({ colaboradores, chamadasMap }: SetorPorHorarioP
                       </Tooltip>
                     );
                   })}
-                  <td className="text-center px-2 py-2 font-bold bg-primary/5">
+                  <td className={`text-center px-2 py-2 font-bold ${accentClasses.bgSoft}`}>
                     {colabs.length}
                   </td>
                 </tr>
@@ -343,9 +343,9 @@ export function SetorPorHorario({ colaboradores, chamadasMap }: SetorPorHorarioP
                       key={s}
                       className={`text-center px-1 py-2 ${
                         isPico
-                          ? "bg-primary text-primary-foreground"
+                          ? accentClasses.bgStrong
                           : total > 0
-                          ? "bg-primary/15"
+                          ? accentClasses.bgFaded
                           : ""
                       }`}
                     >
@@ -354,8 +354,8 @@ export function SetorPorHorario({ colaboradores, chamadasMap }: SetorPorHorarioP
                     </td>
                   );
                 })}
-                <td className="text-center px-2 py-2 bg-primary/20">
-                  {colaboradores.filter((c) => c.setor && c.turno).length}
+                <td className={`text-center px-2 py-2 ${accentClasses.bgSoft3}`}>
+                  {colaboradoresBase.filter((c) => c.setor && c.turno).length}
                 </td>
               </tr>
             </tbody>
