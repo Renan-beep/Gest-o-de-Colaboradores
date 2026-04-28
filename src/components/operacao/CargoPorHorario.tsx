@@ -187,6 +187,30 @@ export function CargoPorHorario({ colaboradores, chamadasMap }: CargoPorHorarioP
     );
   }
 
+  // Cor base: primary normal, ou verde quando filtrando "somente presentes"
+  const accentHsl = somentePresentes ? "142 71% 45%" : "var(--primary)";
+  const accentClasses = somentePresentes
+    ? {
+        ring: "hover:ring-green-600",
+        textOn: "text-white",
+        bgFaded: "bg-green-600/15",
+        bgStrong: "bg-green-600 text-white",
+        bgSoft: "bg-green-600/5",
+        bgSoft2: "bg-green-600/10",
+        bgSoft3: "bg-green-600/20",
+        icon: "text-green-600",
+      }
+    : {
+        ring: "hover:ring-primary",
+        textOn: "text-primary-foreground",
+        bgFaded: "bg-primary/15",
+        bgStrong: "bg-primary text-primary-foreground",
+        bgSoft: "bg-primary/5",
+        bgSoft2: "bg-primary/10",
+        bgSoft3: "bg-primary/20",
+        icon: "text-primary",
+      };
+
   return (
     <div>
       <IndicadoresConcentracao
@@ -196,12 +220,28 @@ export function CargoPorHorario({ colaboradores, chamadasMap }: CargoPorHorarioP
         picoEntidade={picoEntidade}
         valeEntidade={valeEntidade}
       />
+      <div className="flex items-center gap-2 mb-3 p-3 bg-muted/30 rounded-lg border border-border">
+        <Switch
+          id="cargo-somente-presentes"
+          checked={somentePresentes}
+          onCheckedChange={setSomentePresentes}
+        />
+        <Label htmlFor="cargo-somente-presentes" className="text-sm cursor-pointer flex items-center gap-1.5">
+          <UserCheck className="w-4 h-4 text-green-600" />
+          Somente os Presentes
+        </Label>
+        {somentePresentes && (
+          <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400">
+            Mostrando apenas presentes na chamada
+          </Badge>
+        )}
+      </div>
       <FullscreenWrapper>
         {(isFullscreen) => (
     <Card className={isFullscreen ? "h-full flex flex-col" : ""}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-primary" />
+          <Clock className={`w-5 h-5 ${accentClasses.icon}`} />
           Distribuição de Cargos por Horário
         </CardTitle>
         <p className="text-sm text-muted-foreground">
