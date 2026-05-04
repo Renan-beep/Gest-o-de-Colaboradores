@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { 
   Home, Users, UserPlus, UserCog, FileText, ArrowRightLeft,
-  UserCheck, ClipboardList, CalendarCheck, Factory, BarChart3, LogOut, Building2, User, BookOpen
+  UserCheck, ClipboardList, CalendarCheck, Factory, BarChart3, LogOut, Building2, User, BookOpen, LayoutGrid
 } from "lucide-react";
 import { PageTour } from "@/components/onboarding/PageTour";
 import { menuHomeTourSteps } from "@/constants/tourSteps";
@@ -40,6 +40,10 @@ const chamadaItems: MenuItem[] = [
 
 const indicadoresItems: MenuItem[] = [
   { title: "Indicadores", description: "Métricas e relatórios", url: "/indicadores", icon: BarChart3, gradient: "from-rose-500 to-rose-700", iconColor: "text-white" },
+];
+
+const encarregadoItems: MenuItem[] = [
+  { title: "Painel do Encarregado", description: "Alocação por setor e turno", url: "/painel-encarregado", icon: LayoutGrid, gradient: "from-fuchsia-500 to-fuchsia-700", iconColor: "text-white" },
 ];
 
 const ajudaItems: MenuItem[] = [
@@ -186,6 +190,7 @@ export default function MenuHome() {
       <main className="max-w-5xl mx-auto px-4 py-6 md:py-8 space-y-6 md:space-y-8 pb-20 md:pb-8">
         {renderGroup("Gestão", currentGestaoItems)}
         {renderGroup("Chamada", chamadaItems)}
+        {renderGroup("Encarregado", encarregadoItems)}
         {isGerencia && renderGroup("Relatórios", indicadoresItems)}
         {renderGroup("Ajuda", ajudaItems)}
       </main>
