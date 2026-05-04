@@ -647,6 +647,47 @@ export type Database = {
           },
         ]
       }
+      movimentacoes_colaboradores: {
+        Row: {
+          colaborador_id: string
+          id: string
+          movido_em: string
+          movido_por: string | null
+          setor_anterior: string | null
+          setor_novo: string | null
+          turno_anterior: string | null
+          turno_novo: string | null
+        }
+        Insert: {
+          colaborador_id: string
+          id?: string
+          movido_em?: string
+          movido_por?: string | null
+          setor_anterior?: string | null
+          setor_novo?: string | null
+          turno_anterior?: string | null
+          turno_novo?: string | null
+        }
+        Update: {
+          colaborador_id?: string
+          id?: string
+          movido_em?: string
+          movido_por?: string | null
+          setor_anterior?: string | null
+          setor_novo?: string | null
+          turno_anterior?: string | null
+          turno_novo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimentacoes_colaboradores_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opcoes_campos_cadastro: {
         Row: {
           ativo: boolean
