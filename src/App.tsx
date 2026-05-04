@@ -21,6 +21,7 @@ import EditarColaborador from "./pages/EditarColaborador";
 import Dashboard from "./pages/Dashboard";
 import SolicitacaoMovimentacao from "./pages/SolicitacaoMovimentacao";
 import GuiaDoSistema from "./pages/GuiaDoSistema";
+import PainelEncarregado from "./pages/PainelEncarregado";
 import NotFound from "./pages/NotFound";
 
 // Configuração do React Query com configurações otimizadas
@@ -120,6 +121,13 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <SolicitacaoMovimentacao />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/painel-encarregado" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <PainelEncarregado />
                   </AppLayout>
                 </ProtectedRoute>
               } />
