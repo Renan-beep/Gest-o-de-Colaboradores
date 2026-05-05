@@ -312,37 +312,23 @@ export default function ListaColaboradores() {
       );
     }
 
-    // Filtros de seleção múltipla
-    if (filtros.status.length > 0) {
-      filtered = filtered.filter(c => filtros.status.includes(c.status));
-    }
-    if (filtros.cargo.length > 0) {
-      filtered = filtered.filter(c => filtros.cargo.includes(c.cargo));
-    }
-    if (filtros.setor.length > 0) {
-      filtered = filtered.filter(c => filtros.setor.includes(c.setor));
-    }
-    if (filtros.subsetor.length > 0) {
-      filtered = filtered.filter(c => filtros.subsetor.includes(c.subsetor));
-    }
-    if (filtros.lideranca.length > 0) {
-      filtered = filtered.filter(c => filtros.lideranca.includes(c.lideranca));
-    }
-    if (filtros.turno.length > 0) {
-      filtered = filtered.filter(c => filtros.turno.includes(c.turno));
-    }
-    if (filtros.sabadoTrabalho.length > 0) {
-      filtered = filtered.filter(c => filtros.sabadoTrabalho.includes(c.sabado_trabalho));
-    }
-    if (filtros.horarioAlmoco.length > 0) {
-      filtered = filtered.filter(c => filtros.horarioAlmoco.includes(c.horario_almoco));
-    }
-    if (filtros.horarioCafe.length > 0) {
-      filtered = filtered.filter(c => filtros.horarioCafe.includes(c.horario_cafe));
-    }
-    if (filtros.sexo.length > 0) {
-      filtered = filtered.filter(c => filtros.sexo.includes(c.sexo));
-    }
+    // Filtros de seleção múltipla (com suporte a "(Vazio)")
+    const matchField = (selected: string[], value: any) => {
+      const isEmpty = !value || (typeof value === 'string' && value.trim() === '');
+      if (selected.includes('(Vazio)') && isEmpty) return true;
+      return selected.includes(value);
+    };
+
+    if (filtros.status.length > 0) filtered = filtered.filter(c => matchField(filtros.status, c.status));
+    if (filtros.cargo.length > 0) filtered = filtered.filter(c => matchField(filtros.cargo, c.cargo));
+    if (filtros.setor.length > 0) filtered = filtered.filter(c => matchField(filtros.setor, c.setor));
+    if (filtros.subsetor.length > 0) filtered = filtered.filter(c => matchField(filtros.subsetor, c.subsetor));
+    if (filtros.lideranca.length > 0) filtered = filtered.filter(c => matchField(filtros.lideranca, c.lideranca));
+    if (filtros.turno.length > 0) filtered = filtered.filter(c => matchField(filtros.turno, c.turno));
+    if (filtros.sabadoTrabalho.length > 0) filtered = filtered.filter(c => matchField(filtros.sabadoTrabalho, c.sabado_trabalho));
+    if (filtros.horarioAlmoco.length > 0) filtered = filtered.filter(c => matchField(filtros.horarioAlmoco, c.horario_almoco));
+    if (filtros.horarioCafe.length > 0) filtered = filtered.filter(c => matchField(filtros.horarioCafe, c.horario_cafe));
+    if (filtros.sexo.length > 0) filtered = filtered.filter(c => matchField(filtros.sexo, c.sexo));
     if (filtros.rapdo !== "todos") {
       filtered = filtered.filter(c => filtros.rapdo === "sim" ? c.rapdo === true : c.rapdo === false);
     }
