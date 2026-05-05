@@ -182,7 +182,7 @@ export default function Cadastro() {
   }
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData(prev => ({ ...prev, [field]: value === "__empty__" ? "" : value }))
   }
 
   // Obtém opções para um campo, com contador se filtradas
