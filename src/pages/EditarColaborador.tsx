@@ -117,7 +117,7 @@ export default function EditarColaborador() {
   const handleChange = (field: keyof ColaboradorForm, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value === "__empty__" ? "" : value
     }))
   }
 
