@@ -381,6 +381,7 @@ export default function EditarColaborador() {
                     <SelectValue placeholder="Selecione o sexo" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     <SelectItem value="Masculino">Masculino</SelectItem>
                     <SelectItem value="Feminino">Feminino</SelectItem>
                   </SelectContent>
@@ -398,6 +399,7 @@ export default function EditarColaborador() {
                     <SelectValue placeholder="Selecione o status" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     <SelectItem value="Ativo">Ativo</SelectItem>
                     <SelectItem value="Afastado">Afastado</SelectItem>
                     {formData.status === 'Demitido' && (
@@ -418,6 +420,7 @@ export default function EditarColaborador() {
                     <SelectValue placeholder="Selecione o cargo" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     <SelectItem value="Analista de Logística Sr">Analista de Logística Sr</SelectItem>
                     <SelectItem value="Assistente de Estoque Jr">Assistente de Estoque Jr</SelectItem>
                     <SelectItem value="Assistente de Estoque Pl">Assistente de Estoque Pl</SelectItem>
@@ -442,6 +445,7 @@ export default function EditarColaborador() {
                     <SelectValue placeholder="Selecione o setor" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     <SelectItem value="Armazenagem">Armazenagem</SelectItem>
                     <SelectItem value="Conferência">Conferência</SelectItem>
                     <SelectItem value="Controle dos pedidos">Controle dos pedidos</SelectItem>
@@ -475,6 +479,7 @@ export default function EditarColaborador() {
                     <SelectValue placeholder="Selecione o subsetor" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     <SelectItem value="Estado">Estado</SelectItem>
                     <SelectItem value="Gaiola/Retorno estoque">Gaiola/Retorno estoque</SelectItem>
                     <SelectItem value="RAPDO">RAPDO</SelectItem>
@@ -497,6 +502,7 @@ export default function EditarColaborador() {
                     <SelectValue placeholder="Selecione a liderança" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     <SelectItem value="Alexson de Moura Dettmann">Alexson de Moura Dettmann</SelectItem>
                     <SelectItem value="Almir Ribeiro de Queiroz">Almir Ribeiro de Queiroz</SelectItem>
                     <SelectItem value="Arivaldo Arlindo da Silva">Arivaldo Arlindo da Silva</SelectItem>
@@ -520,6 +526,7 @@ export default function EditarColaborador() {
                     <SelectValue placeholder="Selecione o turno" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     <SelectItem value="06:00 - 15:15">06:00 - 15:15</SelectItem>
                     <SelectItem value="06:00 - 16:03">06:00 - 16:03</SelectItem>
                     <SelectItem value="07:00 - 17:03">07:00 - 17:03</SelectItem>
@@ -548,6 +555,7 @@ export default function EditarColaborador() {
                     <SelectValue placeholder="Trabalha aos sábados?" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     <SelectItem value="Sim">Sim</SelectItem>
                     <SelectItem value="Não">Não</SelectItem>
                   </SelectContent>
@@ -566,6 +574,7 @@ export default function EditarColaborador() {
                       <SelectValue placeholder="Selecione o horário" />
                     </SelectTrigger>
                     <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                       <SelectItem value="08:00 - 12:00">08:00 - 12:00</SelectItem>
                       <SelectItem value="10:00 - 14:00">10:00 - 14:00</SelectItem>
                       <SelectItem value="12:00 - 16:00">12:00 - 16:00</SelectItem>
@@ -585,6 +594,7 @@ export default function EditarColaborador() {
                     <SelectValue placeholder="Selecione o horário" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     <SelectItem value="01:30 - 02:45">01:30 - 02:45</SelectItem>
                     <SelectItem value="11:00 - 12:15">11:00 - 12:15</SelectItem>
                     <SelectItem value="11:45 - 13:00">11:45 - 13:00</SelectItem>
@@ -606,6 +616,7 @@ export default function EditarColaborador() {
                     <SelectValue placeholder="Selecione o horário" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     <SelectItem value="05:00 - 05:10">05:00 - 05:10</SelectItem>
                     <SelectItem value="15:00 - 15:10">15:00 - 15:10</SelectItem>
                     <SelectItem value="15:15 - 15:25">15:15 - 15:25</SelectItem>
@@ -720,6 +731,7 @@ export default function EditarColaborador() {
                   <SelectValue placeholder="Selecione o motivo" />
                 </SelectTrigger>
                 <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                   {dismissalReasons.map((reason) => (
                     <SelectItem key={reason} value={reason}>
                       {reason}

@@ -284,6 +284,7 @@ export default function Cadastro() {
                     <SelectValue placeholder="Selecione o sexo" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     <SelectItem value="Masculino">Masculino</SelectItem>
                     <SelectItem value="Feminino">Feminino</SelectItem>
                   </SelectContent>
@@ -298,6 +299,7 @@ export default function Cadastro() {
                     <SelectValue placeholder="Selecione o status" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     <SelectItem value="Ativo">Ativo</SelectItem>
                     <SelectItem value="Afastado">Afastado</SelectItem>
                   </SelectContent>
@@ -334,6 +336,7 @@ export default function Cadastro() {
                     <SelectValue placeholder="Selecione o setor" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     {getOpcoesComContador("setor").opcoes.map(valor => (
                       <SelectItem key={valor} value={valor}>{valor}</SelectItem>
                     ))}
@@ -356,6 +359,7 @@ export default function Cadastro() {
                     <SelectValue placeholder="Selecione o subsetor" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     {getOpcoesComContador("subsetor").opcoes.map(valor => (
                       <SelectItem key={valor} value={valor}>{valor}</SelectItem>
                     ))}
@@ -378,6 +382,7 @@ export default function Cadastro() {
                     <SelectValue placeholder="Selecione a liderança" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     {getOpcoesComContador("lideranca").opcoes.map(valor => (
                       <SelectItem key={valor} value={valor}>{valor}</SelectItem>
                     ))}
@@ -400,6 +405,7 @@ export default function Cadastro() {
                     <SelectValue placeholder="Selecione o cargo" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     {getOpcoesComContador("cargo").opcoes.map(valor => (
                       <SelectItem key={valor} value={valor}>{valor}</SelectItem>
                     ))}
@@ -422,6 +428,7 @@ export default function Cadastro() {
                     <SelectValue placeholder="Selecione o turno" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     {getOpcoesComContador("turno").opcoes.map(valor => (
                       <SelectItem key={valor} value={valor}>{valor}</SelectItem>
                     ))}
@@ -437,6 +444,7 @@ export default function Cadastro() {
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     <SelectItem value="Sim">Sim</SelectItem>
                     <SelectItem value="Não">Não</SelectItem>
                   </SelectContent>
@@ -459,6 +467,7 @@ export default function Cadastro() {
                       <SelectValue placeholder="Selecione o horário" />
                     </SelectTrigger>
                     <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                       {getOpcoesComContador("sabado_horario").opcoes.map(valor => (
                         <SelectItem key={valor} value={valor}>{valor}</SelectItem>
                       ))}
@@ -482,6 +491,7 @@ export default function Cadastro() {
                     <SelectValue placeholder="Selecione o horário" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     {getOpcoesComContador("horario_almoco").opcoes.map(valor => (
                       <SelectItem key={valor} value={valor}>{valor}</SelectItem>
                     ))}
@@ -504,6 +514,7 @@ export default function Cadastro() {
                     <SelectValue placeholder="Selecione o horário" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__empty__">(Vazio)</SelectItem>
                     {getOpcoesComContador("horario_cafe").opcoes.map(valor => (
                       <SelectItem key={valor} value={valor}>{valor}</SelectItem>
                     ))}
