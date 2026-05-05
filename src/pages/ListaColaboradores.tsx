@@ -237,59 +237,63 @@ export default function ListaColaboradores() {
     const getColaboradoresFiltrados = (excluirFiltro: string) => {
       let filtered = colaboradores;
 
+      const matchesField = (selected: string[], value: any) => {
+        const isEmpty = !value || (typeof value === 'string' && value.trim() === '');
+        if (selected.includes('(Vazio)') && isEmpty) return true;
+        return selected.includes(value);
+      };
+
       if (excluirFiltro !== 'status' && filtros.status.length > 0) {
-        filtered = filtered.filter(c => filtros.status.includes(c.status));
+        filtered = filtered.filter(c => matchesField(filtros.status, c.status));
       }
       if (excluirFiltro !== 'cargo' && filtros.cargo.length > 0) {
-        filtered = filtered.filter(c => filtros.cargo.includes(c.cargo));
+        filtered = filtered.filter(c => matchesField(filtros.cargo, c.cargo));
       }
       if (excluirFiltro !== 'setor' && filtros.setor.length > 0) {
-        filtered = filtered.filter(c => filtros.setor.includes(c.setor));
+        filtered = filtered.filter(c => matchesField(filtros.setor, c.setor));
       }
       if (excluirFiltro !== 'subsetor' && filtros.subsetor.length > 0) {
-        filtered = filtered.filter(c => filtros.subsetor.includes(c.subsetor));
+        filtered = filtered.filter(c => matchesField(filtros.subsetor, c.subsetor));
       }
       if (excluirFiltro !== 'lideranca' && filtros.lideranca.length > 0) {
-        filtered = filtered.filter(c => filtros.lideranca.includes(c.lideranca));
+        filtered = filtered.filter(c => matchesField(filtros.lideranca, c.lideranca));
       }
       if (excluirFiltro !== 'turno' && filtros.turno.length > 0) {
-        filtered = filtered.filter(c => filtros.turno.includes(c.turno));
+        filtered = filtered.filter(c => matchesField(filtros.turno, c.turno));
       }
       if (excluirFiltro !== 'sabadoTrabalho' && filtros.sabadoTrabalho.length > 0) {
-        filtered = filtered.filter(c => filtros.sabadoTrabalho.includes(c.sabado_trabalho));
+        filtered = filtered.filter(c => matchesField(filtros.sabadoTrabalho, c.sabado_trabalho));
       }
       if (excluirFiltro !== 'horarioAlmoco' && filtros.horarioAlmoco.length > 0) {
-        filtered = filtered.filter(c => filtros.horarioAlmoco.includes(c.horario_almoco));
+        filtered = filtered.filter(c => matchesField(filtros.horarioAlmoco, c.horario_almoco));
       }
       if (excluirFiltro !== 'horarioCafe' && filtros.horarioCafe.length > 0) {
-        filtered = filtered.filter(c => filtros.horarioCafe.includes(c.horario_cafe));
+        filtered = filtered.filter(c => matchesField(filtros.horarioCafe, c.horario_cafe));
       }
       if (excluirFiltro !== 'sexo' && filtros.sexo.length > 0) {
-        filtered = filtered.filter(c => filtros.sexo.includes(c.sexo));
+        filtered = filtered.filter(c => matchesField(filtros.sexo, c.sexo));
       }
 
       return filtered;
     };
 
-    // Extrair opções únicas de cada campo baseado nos colaboradores filtrados
-    const cargosDisponiveis = [...new Set(getColaboradoresFiltrados('cargo').map(c => c.cargo).filter(c => c && c.trim() !== ''))].sort();
-    const setoresDisponiveis = [...new Set(getColaboradoresFiltrados('setor').map(c => c.setor).filter(s => s && s.trim() !== ''))].sort();
-    const subsetoresDisponiveis = [...new Set(getColaboradoresFiltrados('subsetor').map(c => c.subsetor).filter(s => s && s.trim() !== ''))].sort();
-    const liderancasDisponiveis = [...new Set(getColaboradoresFiltrados('lideranca').map(c => c.lideranca).filter(l => l && l.trim() !== ''))].sort();
-    const turnosDisponiveis = [...new Set(getColaboradoresFiltrados('turno').map(c => c.turno).filter(t => t && t.trim() !== ''))].sort();
-    const horariosAlmocoDisponiveis = [...new Set(getColaboradoresFiltrados('horarioAlmoco').map(c => c.horario_almoco).filter(h => h && h.trim() !== ''))].sort();
-    const horariosCafeDisponiveis = [...new Set(getColaboradoresFiltrados('horarioCafe').map(c => c.horario_cafe).filter(h => h && h.trim() !== ''))].sort();
-    const sexosDisponiveis = [...new Set(getColaboradoresFiltrados('sexo').map(c => c.sexo).filter(s => s && s.trim() !== ''))].sort();
+    // Adiciona "(Vazio)" como opção quando houver registros sem valor
+    const buildOpcoes = (lista: any[], campo: string) => {
+      const valores = lista.map(c => c[campo]);
+      const opcoes = [...new Set(valores.filter(v => v && String(v).trim() !== ''))].sort() as string[];
+      const temVazio = valores.some(v => !v || (typeof v === 'string' && v.trim() === ''));
+      return temVazio ? ['(Vazio)', ...opcoes] : opcoes;
+    };
 
     return {
-      cargos: cargosDisponiveis,
-      setores: setoresDisponiveis,
-      subsetores: subsetoresDisponiveis,
-      liderancas: liderancasDisponiveis,
-      turnos: turnosDisponiveis,
-      horariosAlmoco: horariosAlmocoDisponiveis,
-      horariosCafe: horariosCafeDisponiveis,
-      sexos: sexosDisponiveis
+      cargos: buildOpcoes(getColaboradoresFiltrados('cargo'), 'cargo'),
+      setores: buildOpcoes(getColaboradoresFiltrados('setor'), 'setor'),
+      subsetores: buildOpcoes(getColaboradoresFiltrados('subsetor'), 'subsetor'),
+      liderancas: buildOpcoes(getColaboradoresFiltrados('lideranca'), 'lideranca'),
+      turnos: buildOpcoes(getColaboradoresFiltrados('turno'), 'turno'),
+      horariosAlmoco: buildOpcoes(getColaboradoresFiltrados('horarioAlmoco'), 'horario_almoco'),
+      horariosCafe: buildOpcoes(getColaboradoresFiltrados('horarioCafe'), 'horario_cafe'),
+      sexos: buildOpcoes(getColaboradoresFiltrados('sexo'), 'sexo')
     };
   }, [colaboradores, filtros]);
 
