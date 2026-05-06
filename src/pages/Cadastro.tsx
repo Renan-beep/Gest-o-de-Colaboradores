@@ -304,20 +304,7 @@ export default function Cadastro() {
                 </Select>
               </div>
 
-              {/* RAPDO */}
-              <div className="space-y-2">
-                <Label htmlFor="rapdo">RAPDO</Label>
-                <div className="flex items-center space-x-3 h-10">
-                  <Switch
-                    id="rapdo"
-                    checked={formData.rapdo}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, rapdo: checked }))}
-                  />
-                  <span className="text-sm text-muted-foreground">
-                    {formData.rapdo ? "Ativado" : "Desativado"}
-                  </span>
-                </div>
-              </div>
+
 
               {/* Setor - Campo principal */}
               <div className="space-y-2">
