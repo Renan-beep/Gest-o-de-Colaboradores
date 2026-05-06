@@ -95,7 +95,7 @@ export default function ListaColaboradores() {
     horarioAlmoco: [] as string[],
     horarioCafe: [] as string[],
     sexo: [] as string[],
-    rapdo: "todos" as "todos" | "sim" | "nao",
+    
     tempoEmpresa: "todos"
   });
 
