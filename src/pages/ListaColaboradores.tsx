@@ -795,24 +795,6 @@ export default function ListaColaboradores() {
                   />
                 </div>
 
-                {/* RAPDO */}
-                <div className="space-y-2">
-                  <Label>RAPDO</Label>
-                  <Select value={filtros.rapdo} onValueChange={value => setFiltros(prev => ({
-                    ...prev,
-                    rapdo: value as "todos" | "sim" | "nao"
-                  }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todos">Todos</SelectItem>
-                      <SelectItem value="sim">Sim</SelectItem>
-                      <SelectItem value="nao">Não</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* Tempo de Empresa */}
                 <div className="space-y-2">
                   <Label>Tempo de Empresa</Label>
