@@ -36,6 +36,7 @@ export default function EditarColaborador() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const { isGerencia } = useAuth()
+  const { getOpcoesPorCampo } = useOpcoesCampos()
   
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
