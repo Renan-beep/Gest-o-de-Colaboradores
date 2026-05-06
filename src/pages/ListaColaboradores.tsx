@@ -383,7 +383,7 @@ export default function ListaColaboradores() {
       horarioAlmoco: [],
       horarioCafe: [],
       sexo: [],
-      rapdo: "todos",
+      
       tempoEmpresa: "todos"
     });
   };
