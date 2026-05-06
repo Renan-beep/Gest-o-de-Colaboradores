@@ -329,9 +329,6 @@ export default function ListaColaboradores() {
     if (filtros.horarioAlmoco.length > 0) filtered = filtered.filter(c => matchField(filtros.horarioAlmoco, c.horario_almoco));
     if (filtros.horarioCafe.length > 0) filtered = filtered.filter(c => matchField(filtros.horarioCafe, c.horario_cafe));
     if (filtros.sexo.length > 0) filtered = filtered.filter(c => matchField(filtros.sexo, c.sexo));
-    if (filtros.rapdo !== "todos") {
-      filtered = filtered.filter(c => filtros.rapdo === "sim" ? c.rapdo === true : c.rapdo === false);
-    }
     if (filtros.tempoEmpresa !== "todos") {
       filtered = filtered.filter(c => {
         const tempo = calcularTempoEmpresa(c.admissao);
