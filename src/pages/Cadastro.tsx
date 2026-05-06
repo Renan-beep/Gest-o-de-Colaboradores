@@ -166,7 +166,6 @@ export default function Cadastro() {
         horario_almoco: "",
         horario_cafe: "",
         admissao: "",
-        rapdo: false
       })
     } catch (error) {
       toast({
