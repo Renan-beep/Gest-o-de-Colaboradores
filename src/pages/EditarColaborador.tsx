@@ -12,6 +12,7 @@ import { User, Save, ArrowLeft, Clock, Calendar, Trash2 } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/AuthContext"
+import { useOpcoesCampos } from "@/hooks/useOpcoesCampos"
 
 interface ColaboradorForm {
   matricula: string
