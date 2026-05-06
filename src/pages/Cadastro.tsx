@@ -37,7 +37,6 @@ export default function Cadastro() {
     horario_almoco: "",
     horario_cafe: "",
     admissao: "",
-    rapdo: false
   })
 
   // Hook para filtros interdependentes baseados nos colaboradores existentes
@@ -134,7 +133,6 @@ export default function Cadastro() {
             horario_almoco: formData.horario_almoco || null,
             horario_cafe: formData.horario_cafe || null,
             admissao: formData.admissao || null,
-            rapdo: formData.rapdo
           }
         ])
 
@@ -168,7 +166,6 @@ export default function Cadastro() {
         horario_almoco: "",
         horario_cafe: "",
         admissao: "",
-        rapdo: false
       })
     } catch (error) {
       toast({
@@ -306,20 +303,7 @@ export default function Cadastro() {
                 </Select>
               </div>
 
-              {/* RAPDO */}
-              <div className="space-y-2">
-                <Label htmlFor="rapdo">RAPDO</Label>
-                <div className="flex items-center space-x-3 h-10">
-                  <Switch
-                    id="rapdo"
-                    checked={formData.rapdo}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, rapdo: checked }))}
-                  />
-                  <span className="text-sm text-muted-foreground">
-                    {formData.rapdo ? "Ativado" : "Desativado"}
-                  </span>
-                </div>
-              </div>
+
 
               {/* Setor - Campo principal */}
               <div className="space-y-2">
@@ -557,7 +541,6 @@ export default function Cadastro() {
                   horario_almoco: "",
                   horario_cafe: "",
                   admissao: "",
-                  rapdo: false
                 })}
               >
                 Limpar Formulário
