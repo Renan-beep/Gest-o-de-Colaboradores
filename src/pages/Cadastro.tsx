@@ -37,7 +37,6 @@ export default function Cadastro() {
     horario_almoco: "",
     horario_cafe: "",
     admissao: "",
-    rapdo: false
   })
 
   // Hook para filtros interdependentes baseados nos colaboradores existentes
