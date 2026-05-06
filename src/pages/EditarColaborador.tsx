@@ -423,7 +423,7 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    {Array.from(new Set([...getOpcoesPorCampo('cargo'), ...(formData.cargo ? [formData.cargo] : [])])).map(v => (
+                    {getOpcoesPorCampo('cargo').map(v => (
                       <SelectItem key={v} value={v}>{v}</SelectItem>
                     ))}
                   </SelectContent>
@@ -442,7 +442,7 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    {Array.from(new Set([...getOpcoesPorCampo('setor'), ...(formData.setor ? [formData.setor] : [])])).map(v => (
+                    {getOpcoesPorCampo('setor').map(v => (
                       <SelectItem key={v} value={v}>{v}</SelectItem>
                     ))}
                   </SelectContent>
@@ -461,7 +461,7 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    {Array.from(new Set([...getOpcoesPorCampo('subsetor'), ...(formData.subsetor ? [formData.subsetor] : [])])).map(v => (
+                    {getOpcoesPorCampo('subsetor').map(v => (
                       <SelectItem key={v} value={v}>{v}</SelectItem>
                     ))}
                   </SelectContent>
@@ -480,7 +480,7 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    {Array.from(new Set([...getOpcoesPorCampo('lideranca'), ...(formData.lideranca ? [formData.lideranca] : [])])).map(v => (
+                    {getOpcoesPorCampo('lideranca').map(v => (
                       <SelectItem key={v} value={v}>{v}</SelectItem>
                     ))}
                   </SelectContent>
@@ -499,7 +499,7 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    {Array.from(new Set([...getOpcoesPorCampo('turno'), ...(formData.turno ? [formData.turno] : [])])).map(v => (
+                    {getOpcoesPorCampo('turno').map(v => (
                       <SelectItem key={v} value={v}>{v}</SelectItem>
                     ))}
                   </SelectContent>
@@ -540,7 +540,7 @@ export default function EditarColaborador() {
                     </SelectTrigger>
                     <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    {Array.from(new Set([...getOpcoesPorCampo('sabado_horario'), ...(formData.sabado_horario ? [formData.sabado_horario] : [])])).map(v => (
+                    {getOpcoesPorCampo('sabado_horario').map(v => (
                       <SelectItem key={v} value={v}>{v}</SelectItem>
                     ))}
                     </SelectContent>
@@ -560,7 +560,7 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    {Array.from(new Set([...getOpcoesPorCampo('horario_almoco'), ...(formData.horario_almoco ? [formData.horario_almoco] : [])])).map(v => (
+                    {getOpcoesPorCampo('horario_almoco').map(v => (
                       <SelectItem key={v} value={v}>{v}</SelectItem>
                     ))}
                   </SelectContent>
@@ -579,7 +579,7 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    {Array.from(new Set([...getOpcoesPorCampo('horario_cafe'), ...(formData.horario_cafe ? [formData.horario_cafe] : [])])).map(v => (
+                    {getOpcoesPorCampo('horario_cafe').map(v => (
                       <SelectItem key={v} value={v}>{v}</SelectItem>
                     ))}
                   </SelectContent>
