@@ -133,7 +133,6 @@ export default function Cadastro() {
             horario_almoco: formData.horario_almoco || null,
             horario_cafe: formData.horario_cafe || null,
             admissao: formData.admissao || null,
-            rapdo: formData.rapdo
           }
         ])
 
