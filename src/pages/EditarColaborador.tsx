@@ -12,6 +12,7 @@ import { User, Save, ArrowLeft, Clock, Calendar, Trash2 } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/AuthContext"
+import { useOpcoesCampos } from "@/hooks/useOpcoesCampos"
 
 interface ColaboradorForm {
   matricula: string
@@ -35,6 +36,7 @@ export default function EditarColaborador() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const { isGerencia } = useAuth()
+  const { getOpcoesPorCampo } = useOpcoesCampos()
   
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -421,15 +423,9 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    <SelectItem value="Analista de Logística Sr">Analista de Logística Sr</SelectItem>
-                    <SelectItem value="Assistente de Estoque Jr">Assistente de Estoque Jr</SelectItem>
-                    <SelectItem value="Assistente de Estoque Pl">Assistente de Estoque Pl</SelectItem>
-                    <SelectItem value="Coordenador de Logística">Coordenador de Logística</SelectItem>
-                    <SelectItem value="Encarregado de Estoque">Encarregado de Estoque</SelectItem>
-                    <SelectItem value="Operador de Empilhadeira Jr">Operador de Empilhadeira Jr</SelectItem>
-                    <SelectItem value="Operador de Empilhadeira Pl">Operador de Empilhadeira Pl</SelectItem>
-                    <SelectItem value="Repositor de Estoque">Repositor de Estoque</SelectItem>
-                    <SelectItem value="Supervisor de Estoque">Supervisor de Estoque</SelectItem>
+                    {Array.from(new Set([...getOpcoesPorCampo('cargo'), ...(formData.cargo ? [formData.cargo] : [])])).map(v => (
+                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -446,24 +442,9 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    <SelectItem value="Armazenagem">Armazenagem</SelectItem>
-                    <SelectItem value="Conferência">Conferência</SelectItem>
-                    <SelectItem value="Controle dos pedidos">Controle dos pedidos</SelectItem>
-                    <SelectItem value="Coordenação">Coordenação</SelectItem>
-                    <SelectItem value="Embalagem">Embalagem</SelectItem>
-                    <SelectItem value="Encarregado">Encarregado</SelectItem>
-                    <SelectItem value="Expedição">Expedição</SelectItem>
-                    <SelectItem value="Garantia">Garantia</SelectItem>
-                    <SelectItem value="Inventário">Inventário</SelectItem>
-                    <SelectItem value="Logística">Logística</SelectItem>
-                    <SelectItem value="Operador de empilhadeira">Operador de empilhadeira</SelectItem>
-                    <SelectItem value="Recebimento">Recebimento</SelectItem>
-                    <SelectItem value="Ressuprimento">Ressuprimento</SelectItem>
-                    <SelectItem value="Retira">Retira</SelectItem>
-                    <SelectItem value="SAC">SAC</SelectItem>
-                    <SelectItem value="Separação">Separação</SelectItem>
-                    <SelectItem value="Separação Retira">Separação Retira</SelectItem>
-                    <SelectItem value="Supervisão">Supervisão</SelectItem>
+                    {Array.from(new Set([...getOpcoesPorCampo('setor'), ...(formData.setor ? [formData.setor] : [])])).map(v => (
+                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -480,13 +461,9 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    <SelectItem value="Estado">Estado</SelectItem>
-                    <SelectItem value="Gaiola/Retorno estoque">Gaiola/Retorno estoque</SelectItem>
-                    <SelectItem value="RAPDO">RAPDO</SelectItem>
-                    <SelectItem value="Ressuprimento">Ressuprimento</SelectItem>
-                    <SelectItem value="Transferências">Transferências</SelectItem>
-                    <SelectItem value="Transferências/Vendas">Transferências/Vendas</SelectItem>
-                    <SelectItem value="Transportadora">Transportadora</SelectItem>
+                    {Array.from(new Set([...getOpcoesPorCampo('subsetor'), ...(formData.subsetor ? [formData.subsetor] : [])])).map(v => (
+                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -503,14 +480,9 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    <SelectItem value="Alexson de Moura Dettmann">Alexson de Moura Dettmann</SelectItem>
-                    <SelectItem value="Almir Ribeiro de Queiroz">Almir Ribeiro de Queiroz</SelectItem>
-                    <SelectItem value="Arivaldo Arlindo da Silva">Arivaldo Arlindo da Silva</SelectItem>
-                    <SelectItem value="Bruno Martins Euzebio">Bruno Martins Euzebio</SelectItem>
-                    <SelectItem value="Carlos Eduardo Cavalcantes da Silva">Carlos Eduardo Cavalcantes da Silva</SelectItem>
-                    <SelectItem value="Davisson da Costa Rebuli">Davisson da Costa Rebuli</SelectItem>
-                    <SelectItem value="Josimar Santos Silva">Josimar Santos Silva</SelectItem>
-                    <SelectItem value="Klaine Xavier da Silva Martins">Klaine Xavier da Silva Martins</SelectItem>
+                    {Array.from(new Set([...getOpcoesPorCampo('lideranca'), ...(formData.lideranca ? [formData.lideranca] : [])])).map(v => (
+                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -527,16 +499,9 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    <SelectItem value="06:00 - 15:15">06:00 - 15:15</SelectItem>
-                    <SelectItem value="06:00 - 16:03">06:00 - 16:03</SelectItem>
-                    <SelectItem value="07:00 - 17:03">07:00 - 17:03</SelectItem>
-                    <SelectItem value="08:00 - 17:15">08:00 - 17:15</SelectItem>
-                    <SelectItem value="08:00 - 18:03">08:00 - 18:03</SelectItem>
-                    <SelectItem value="10:00 - 20:03">10:00 - 20:03</SelectItem>
-                    <SelectItem value="10:45 - 20:03">10:45 - 20:03</SelectItem>
-                    <SelectItem value="12:00 - 22:03">12:00 - 22:03</SelectItem>
-                    <SelectItem value="12:45 - 22:00">12:45 - 22:00</SelectItem>
-                    <SelectItem value="22:00 - 06:52">22:00 - 06:52</SelectItem>
+                    {Array.from(new Set([...getOpcoesPorCampo('turno'), ...(formData.turno ? [formData.turno] : [])])).map(v => (
+                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -575,9 +540,9 @@ export default function EditarColaborador() {
                     </SelectTrigger>
                     <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                      <SelectItem value="08:00 - 12:00">08:00 - 12:00</SelectItem>
-                      <SelectItem value="10:00 - 14:00">10:00 - 14:00</SelectItem>
-                      <SelectItem value="12:00 - 16:00">12:00 - 16:00</SelectItem>
+                    {Array.from(new Set([...getOpcoesPorCampo('sabado_horario'), ...(formData.sabado_horario ? [formData.sabado_horario] : [])])).map(v => (
+                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -595,12 +560,9 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    <SelectItem value="01:30 - 02:45">01:30 - 02:45</SelectItem>
-                    <SelectItem value="11:00 - 12:15">11:00 - 12:15</SelectItem>
-                    <SelectItem value="11:45 - 13:00">11:45 - 13:00</SelectItem>
-                    <SelectItem value="12:15 - 13:30">12:15 - 13:30</SelectItem>
-                    <SelectItem value="13:00 - 14:15">13:00 - 14:15</SelectItem>
-                    <SelectItem value="14:45 - 16:00">14:45 - 16:00</SelectItem>
+                    {Array.from(new Set([...getOpcoesPorCampo('horario_almoco'), ...(formData.horario_almoco ? [formData.horario_almoco] : [])])).map(v => (
+                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -617,12 +579,9 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    <SelectItem value="05:00 - 05:10">05:00 - 05:10</SelectItem>
-                    <SelectItem value="15:00 - 15:10">15:00 - 15:10</SelectItem>
-                    <SelectItem value="15:15 - 15:25">15:15 - 15:25</SelectItem>
-                    <SelectItem value="15:30 - 15:40">15:30 - 15:40</SelectItem>
-                    <SelectItem value="17:00 - 17:10">17:00 - 17:10</SelectItem>
-                    <SelectItem value="19:00 - 19:10">19:00 - 19:10</SelectItem>
+                    {Array.from(new Set([...getOpcoesPorCampo('horario_cafe'), ...(formData.horario_cafe ? [formData.horario_cafe] : [])])).map(v => (
+                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
