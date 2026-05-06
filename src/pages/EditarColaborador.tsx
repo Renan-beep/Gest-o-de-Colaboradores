@@ -499,16 +499,9 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    <SelectItem value="06:00 - 15:15">06:00 - 15:15</SelectItem>
-                    <SelectItem value="06:00 - 16:03">06:00 - 16:03</SelectItem>
-                    <SelectItem value="07:00 - 17:03">07:00 - 17:03</SelectItem>
-                    <SelectItem value="08:00 - 17:15">08:00 - 17:15</SelectItem>
-                    <SelectItem value="08:00 - 18:03">08:00 - 18:03</SelectItem>
-                    <SelectItem value="10:00 - 20:03">10:00 - 20:03</SelectItem>
-                    <SelectItem value="10:45 - 20:03">10:45 - 20:03</SelectItem>
-                    <SelectItem value="12:00 - 22:03">12:00 - 22:03</SelectItem>
-                    <SelectItem value="12:45 - 22:00">12:45 - 22:00</SelectItem>
-                    <SelectItem value="22:00 - 06:52">22:00 - 06:52</SelectItem>
+                    {Array.from(new Set([...getOpcoesPorCampo('turno'), ...(formData.turno ? [formData.turno] : [])])).map(v => (
+                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
