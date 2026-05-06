@@ -480,14 +480,9 @@ export default function EditarColaborador() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__empty__">(Vazio)</SelectItem>
-                    <SelectItem value="Alexson de Moura Dettmann">Alexson de Moura Dettmann</SelectItem>
-                    <SelectItem value="Almir Ribeiro de Queiroz">Almir Ribeiro de Queiroz</SelectItem>
-                    <SelectItem value="Arivaldo Arlindo da Silva">Arivaldo Arlindo da Silva</SelectItem>
-                    <SelectItem value="Bruno Martins Euzebio">Bruno Martins Euzebio</SelectItem>
-                    <SelectItem value="Carlos Eduardo Cavalcantes da Silva">Carlos Eduardo Cavalcantes da Silva</SelectItem>
-                    <SelectItem value="Davisson da Costa Rebuli">Davisson da Costa Rebuli</SelectItem>
-                    <SelectItem value="Josimar Santos Silva">Josimar Santos Silva</SelectItem>
-                    <SelectItem value="Klaine Xavier da Silva Martins">Klaine Xavier da Silva Martins</SelectItem>
+                    {Array.from(new Set([...getOpcoesPorCampo('lideranca'), ...(formData.lideranca ? [formData.lideranca] : [])])).map(v => (
+                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
